@@ -373,6 +373,11 @@ section{position:relative}
 .cmp__save-card--soft .c{color:var(--ink-2)}
 .cmp__note{font-size:.8rem;color:var(--muted);margin-top:18px;max-width:82ch}
 .pack__subnote{font-size:.82rem;color:var(--muted);margin:-8px 0 16px}
+.calc__range{display:flex;justify-content:space-between;margin-top:7px;font-size:.72rem;color:var(--muted)}
+.cmp__bar--mine{background:color-mix(in srgb,var(--a3) 8%,transparent);border-radius:12px;margin:0 -12px;padding:8px 12px}
+.cmp__bar--mine .name{font-weight:700}
+.cmp__bar--mine .val{background:linear-gradient(120deg,var(--a1),var(--a3));-webkit-background-clip:text;background-clip:text;color:transparent}
+.cmp__save-lbl{font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.9;margin-bottom:6px}
 @media (max-width:620px){
   .cmp__bar{grid-template-columns:1fr auto;grid-template-areas:"nm vl" "tr tr";row-gap:9px}
   .cmp__bar .name{grid-area:nm}.cmp__bar .val{grid-area:vl}.cmp__track{grid-area:tr}
@@ -488,7 +493,7 @@ section{position:relative}
       <figure class="reel" data-reel>
         <video src="media/taro.mp4" poster="media/taro.jpg" playsinline preload="none" loop></video>
         <span class="reel__chip">Таро</span>
-        <span class="reel__hot">🔥 100K+ в TikTok</span>
+        <span class="reel__hot">🔥 120K в TikTok</span>
         <button class="reel__play" aria-label="Включить ролик"><span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></button>
         <figcaption class="reel__cap"><div class="n">Эзотерика</div><div class="d">15 564 просмотра в Instagram</div></figcaption>
       </figure>
@@ -643,12 +648,12 @@ section{position:relative}
       <h2 class="h2">Что даёт такой контент</h2>
     </div>
     <div class="metrics" data-reveal>
-      <div class="metric metric--hot"><div class="k">100<small>K+</small></div><div class="cap">просмотров у ролика в TikTok</div></div>
+      <div class="metric metric--hot"><div class="k">120<small>K</small></div><div class="cap">просмотров у ролика в TikTok</div></div>
       <div class="metric"><div class="k">15 564</div><div class="cap">просмотра в Instagram — один ролик, холодный старт</div></div>
-      <div class="metric"><div class="k">47<small>%</small></div><div class="cap">досмотр рилса (норма 20–30%)</div></div>
-      <div class="metric"><div class="k">22<small>×</small></div><div class="cap">рост комментариев на интерактивном формате</div></div>
+      <div class="metric"><div class="k">47<small>%</small></div><div class="cap">досмотр рилса (норма 30%)</div></div>
+      <div class="metric"><div class="k">40<small>+</small></div><div class="cap">комментариев на интерактивном формате</div></div>
     </div>
-    <p class="metrics__note">Реальные данные наших тестовых каналов (Instagram + TikTok), замер через Composio. Это не обещание — ваши цифры зависят от ниши, оффера и регулярности. Но механики, которые дают такой досмотр, зашиты в каждый ролик.</p>
+    <p class="metrics__note">Ваши цифры зависят от ниши, оффера и регулярности. Но механики, которые дают такой досмотр, зашиты в каждый ролик.</p>
   </div>
 </section>
 
@@ -658,26 +663,31 @@ section{position:relative}
     <div class="block__head" data-reveal>
       <span class="eyebrow">Сколько это приносит</span>
       <h2 class="h2">Один ролик — и что даст поток</h2>
-      <p class="lead">Наш лучший ролик по таро собрал <b style="color:var(--ink)">15 564</b> просмотра в Instagram и <b style="color:var(--ink)">100 000+</b> в TikTok. Это <b style="color:var(--ink)">один</b> ролик. Прикиньте, что даёт поток из 90 в месяц.</p>
+      <p class="lead">Наш ролик собрал <b style="color:var(--ink)">15 564</b> просмотров в Instagram и <b style="color:var(--ink)">121 000</b> в TikTok. Это <b style="color:var(--ink)">один</b> ролик. Представьте, что даёт поток из 90 в месяц.</p>
+      <p class="muted" style="font-size:.82rem;margin-top:10px">Данные на 28.08</p>
     </div>
     <div class="calc" data-reveal>
       <div class="calc__inputs">
         <div class="calc__row">
-          <div class="lab"><span>Роликов в день</span><b id="l_perday">1</b></div>
-          <input type="range" id="i_perday" min="1" max="10" step="1" value="1">
+          <div class="lab"><span>Роликов в день</span><b id="l_perday">2</b></div>
+          <input type="range" id="i_perday" min="1" max="50" step="1" value="2">
+          <div class="calc__range"><span>1</span><span>50</span></div>
         </div>
         <div class="calc__row">
-          <div class="lab"><span>Площадок (соцсетей)</span><b id="l_plat">3</b></div>
-          <input type="range" id="i_plat" min="1" max="6" step="1" value="3">
+          <div class="lab"><span>Площадок (соцсетей)</span><b id="l_plat">4</b></div>
+          <input type="range" id="i_plat" min="1" max="6" step="1" value="4">
+          <div class="calc__range"><span>1</span><span>6</span></div>
           <div class="calc__hint">минимум рекомендуем 3</div>
         </div>
         <div class="calc__row">
           <div class="lab"><span>Средний чек</span><b id="l_check">2 000 ₽</b></div>
-          <input type="range" id="i_check" min="500" max="20000" step="500" value="2000">
+          <input type="range" id="i_check" min="100" max="100000" step="100" value="2000">
+          <div class="calc__range"><span>100 ₽</span><span>100 000 ₽</span></div>
         </div>
         <div class="calc__row">
           <div class="lab"><span>Конверсия в продажу <small>от просмотров</small></span><b id="l_conv">0,2%</b></div>
-          <input type="range" id="i_conv" min="0.1" max="3" step="0.1" value="0.2">
+          <input type="range" id="i_conv" min="0.1" max="20" step="0.1" value="0.2">
+          <div class="calc__range"><span>0,1%</span><span>20%</span></div>
         </div>
       </div>
       <div class="calc__out">
@@ -710,14 +720,14 @@ section{position:relative}
       <div class="cmp__bars">
         <div class="cmp__bar"><div class="name">Агентство<small>SMM-пакет, Reels</small></div><div class="cmp__track"><div class="cmp__fill cmp__fill--grey" style="width:100%"></div></div><div class="val">4 000 ₽</div></div>
         <div class="cmp__bar"><div class="name">Фрилансер<small>монтажёр / reels-мейкер</small></div><div class="cmp__track"><div class="cmp__fill cmp__fill--grey" style="width:37%"></div></div><div class="val">1 500 ₽</div></div>
-        <div class="cmp__bar"><div class="name">Делаем за вас<small>Контент-Завод</small></div><div class="cmp__track"><div class="cmp__fill cmp__fill--lime" style="width:13%"></div></div><div class="val">500 ₽</div></div>
-        <div class="cmp__bar"><div class="name">Ваш завод<small>после запуска, только расход на ИИ</small></div><div class="cmp__track"><div class="cmp__fill cmp__fill--aur" style="width:1.5%"></div></div><div class="val">~30 ₽</div></div>
+        <div class="cmp__bar cmp__bar--mine"><div class="name">Делаем за вас<small>Контент-Завод</small></div><div class="cmp__track"><div class="cmp__fill cmp__fill--lime" style="width:13%"></div></div><div class="val">500 ₽</div></div>
+        <div class="cmp__bar cmp__bar--mine"><div class="name">Ваш завод<small>после запуска, только расход на ИИ</small></div><div class="cmp__track"><div class="cmp__fill cmp__fill--aur" style="width:4%"></div></div><div class="val">~150 ₽</div></div>
       </div>
       <div class="cmp__save">
-        <div class="cmp__save-card"><div class="k">−357 000 ₽</div><div class="c">в месяц против агентства при 90 роликах</div></div>
-        <div class="cmp__save-card cmp__save-card--soft"><div class="k">~3 дня</div><div class="c">и система за 39 000 ₽ окупается против агентства</div></div>
+        <div class="cmp__save-card"><div class="cmp__save-lbl">Экономия</div><div class="k">−115 000 ₽</div><div class="c">в месяц против агентства при 30 роликах</div></div>
+        <div class="cmp__save-card cmp__save-card--soft"><div class="k">~10 дней</div><div class="c">и система за 39 000 ₽ окупается против агентства</div></div>
       </div>
-      <p class="cmp__note">Ориентир по средним ценам Москвы, не оферта. «Ваш завод» посчитан при недорогой ИИ-подписке (~$20) + озвучка (~$10) ≈ 2 800 ₽/мес на любой объём: чем больше роликов, тем дешевле каждый. При 270 роликах/мес — от ~10 ₽ за ролик.</p>
+      <p class="cmp__note">Ориентир по средним ценам Москвы, не оферта. Чем больше роликов, тем дешевле каждый. При 270 роликах/мес ~17 ₽ за ролик.</p>
     </div>
   </div>
 </section>
