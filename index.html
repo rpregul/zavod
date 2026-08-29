@@ -192,7 +192,7 @@ section{position:relative}
 .pain p{color:var(--ink-2);font-size:.98rem}
 
 /* ================= STEPS ================= */
-.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .step{position:relative;background:var(--surface);border-radius:var(--radius);padding:26px 24px 28px;
   box-shadow:var(--shadow-sm);border:1px solid var(--line-2);overflow:hidden}
 .step__n{font-family:"Handjet",monospace;font-weight:700;font-size:2.6rem;line-height:1;
@@ -379,6 +379,20 @@ section{position:relative}
   .cmp__save{grid-template-columns:1fr}
 }
 
+/* ================= SCALE ================= */
+.scale{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius);box-shadow:var(--shadow);padding:clamp(28px,5vw,56px)}
+.scale__glow{position:absolute;right:-12%;top:-45%;width:55%;height:170%;border-radius:50%;filter:blur(80px);opacity:.5;background:radial-gradient(circle,var(--a3),transparent 60%);pointer-events:none}
+.scale>*{position:relative;z-index:1}
+.scale__markets{display:flex;flex-wrap:wrap;gap:12px;margin:26px 0}
+.scale__m{display:inline-flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:999px;padding:.6em 1.1em;font-weight:600;font-size:.95rem}
+.scale__m--more{background:linear-gradient(135deg,var(--a1),var(--a3),var(--a4));color:#fff;border:none}
+.scale__ex{display:flex;gap:14px;align-items:flex-start;background:var(--surface-2);border-radius:var(--radius-sm);padding:18px 20px}
+.scale__ex .ic{flex:none;width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--a1),var(--a3));color:#fff}
+.scale__ex .ic svg{width:20px;height:20px}
+.scale__ex p{color:var(--ink-2);font-size:.96rem}
+.scale__ex p b{color:var(--ink)}
+.scale__emp{margin-top:18px;font-size:1.02rem;color:var(--ink);font-weight:500;max-width:70ch}
+
 /* ================= RESPONSIVE ================= */
 @media (max-width:960px){
   .hero__grid{grid-template-columns:1fr;gap:36px}
@@ -521,14 +535,13 @@ section{position:relative}
   <div class="wrap">
     <div class="block__head" data-reveal>
       <span class="eyebrow">Как это работает</span>
-      <h2 class="h2">Четыре шага — и завод ваш</h2>
+      <h2 class="h2">Три шага — и завод ваш</h2>
       <p class="lead">Не разовый монтаж, а настроенная система, которую вы забираете себе.</p>
     </div>
     <div class="steps" data-reveal>
       <div class="step"><div class="step__line"></div><div class="step__n">01</div><h3 class="h3">Разбираем нишу</h3><p>Собираю дизайн-систему под вас: визуал, цвет, шрифты, маскот и голос. Узнаваемо и системно.</p></div>
       <div class="step"><div class="step__line"></div><div class="step__n">02</div><h3 class="h3">Настраиваю движок</h3><p>Шаблоны сцен, обученная база промптов и сценарных формул. Машина готова печатать ролики.</p></div>
-      <div class="step"><div class="step__line"></div><div class="step__n">03</div><h3 class="h3">Первая партия — вместе</h3><p>Делаем 30 роликов бок о бок. Вы учитесь на живом контенте и сразу уносите контент на месяц.</p></div>
-      <div class="step"><div class="step__line"></div><div class="step__n">04</div><h3 class="h3">Отдаю ключи</h3><p>Дальше нажимаете кнопку — ролик пишется и монтируется сам. Каждый следующий стоит почти ноль.</p></div>
+      <div class="step"><div class="step__line"></div><div class="step__n">03</div><h3 class="h3">Первый месяц — вместе</h3><p>Помогаю контролировать процесс создания роликов. Вы или ваш сотрудник убеждаетесь в простоте и дальше продолжаете самостоятельно.</p></div>
     </div>
   </div>
 </section>
@@ -555,16 +568,41 @@ section{position:relative}
       <div class="feat">
         <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></div>
         <h3 class="h3">ИИ как ваш маркетолог</h3>
-        <p>Сам <b>предлагает продающие сценарии</b>, прописывает хуки, следит за вовлечённостью роликов и <b>автоматически собирает статистику</b>. Вы не гадаете — вы видите, что заходит.</p>
+        <p>Сам <b>предлагает продающие сценарии</b>, прописывает хуки, следит за вовлечённостью роликов и <b>автоматически собирает статистику</b>. Вы не гадаете — вы видите, что заходит, и масштабируете это.</p>
       </div>
     </div>
     <div class="craft" data-reveal>
       <span><span class="d"></span>Крючок в первые 2 секунды</span>
-      <span><span class="d"></span>Удержание «но / поэтому»</span>
+      <span><span class="d"></span>Увеличение удержания</span>
       <span><span class="d"></span>Живой человеческий голос</span>
       <span><span class="d"></span>Караоке-субтитры</span>
       <span><span class="d"></span>Свой маскот и стиль</span>
-      <span><span class="d"></span>Русский и английский</span>
+      <span><span class="d"></span>Любой язык</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SCALE ===================== -->
+<section class="block" id="scale" style="padding-top:0">
+  <div class="wrap">
+    <div class="scale" data-reveal>
+      <div class="scale__glow"></div>
+      <span class="eyebrow">Масштаб без потолка</span>
+      <h2 class="h2" style="margin:.4em 0 .35em;max-width:22ch">Захватывайте рынок за рынком</h2>
+      <p class="lead">Настроенный завод не привязан ни к теме, ни к языку, ни к стране. Новый рынок запускаете за день и работаете на нескольких регионах одновременно — без языкового барьера и без новой команды. Ограничений ноль.</p>
+      <div class="scale__markets">
+        <span class="scale__m">🇷🇺 Русский</span>
+        <span class="scale__m">🇬🇧 English</span>
+        <span class="scale__m">🇪🇸 Español</span>
+        <span class="scale__m">🇩🇪 Deutsch</span>
+        <span class="scale__m">🇸🇦 العربية</span>
+        <span class="scale__m scale__m--more">+ любой рынок</span>
+      </div>
+      <div class="scale__ex">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span>
+        <p><b>Пример:</b> англоязычный трейдинг-канал с маскотом Tom собран тем же заводом — он в примерах выше. Так же запускается испанский рынок, арабский, любой другой. Параллельно, а не по очереди.</p>
+      </div>
+      <p class="scale__emp">Вести завод может даже ваш сотрудник — это пара кнопок в день, отдельная доплата не нужна. А на выходе — гора контента сразу на всех рынках.</p>
     </div>
   </div>
 </section>
@@ -752,7 +790,7 @@ section{position:relative}
       <details><summary>Сколько времени до первых роликов?<span class="pm"></span></summary><p>Дни, а не месяцы. Дизайн-система и первая партия обычно занимают около двух недель, дальше вы печатаете ролики за минуты.</p></details>
       <details><summary>Подойдёт ли моя ниша?<span class="pm"></span></summary><p>Да. На заводе уже собраны таро, сказки, финансы, ИИ и трейдинг — примеры выше. Стиль настраивается под любую тему, от личного бренда до локального бизнеса.</p></details>
       <details><summary>Тексты не будут «ИИшными»?<span class="pm"></span></summary><p>Нет. Сценарии пишутся на обученной базе с приёмами продаж — человеческий текст с высоким удержанием, а не типовой ИИ-набор фраз. Именно это даёт досмотр до 47%.</p></details>
-      <details><summary>На каких языках делаете?<span class="pm"></span></summary><p>Русский и английский. Пример англоязычного ролика — в портфолио выше (ниша «финансы · опционы»).</p></details>
+      <details><summary>На каких языках делаете?<span class="pm"></span></summary><p>На любом. Пример англоязычного ролика — в примерах выше (ниша «финансы · опционы»). Языкового барьера нет — можно вести несколько регионов одновременно.</p></details>
     </div>
   </div>
 </section>
