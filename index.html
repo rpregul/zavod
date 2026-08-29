@@ -423,7 +423,7 @@ section{position:relative}
 .m3-cvt__n{font-family:"Handjet",monospace;font-weight:700;font-size:2.8rem;line-height:.9;background:linear-gradient(120deg,var(--a1),var(--a3),var(--a4));-webkit-background-clip:text;background-clip:text;color:transparent}
 .m3-cvt__mid{color:var(--ink-2);font-weight:500;white-space:nowrap}
 .m3-cvt__free{background:var(--lime);color:var(--lime-ink);border-radius:999px;padding:2px 10px;font-weight:700}
-.m3-stage{position:relative;height:clamp(320px,46vh,460px);display:flex;align-items:center;justify-content:center;perspective:1400px;cursor:grab;touch-action:none;overflow:hidden;user-select:none;margin-top:4px}
+.m3-stage{position:relative;height:clamp(290px,40vh,410px);display:flex;align-items:center;justify-content:center;perspective:1400px;cursor:grab;touch-action:none;overflow:hidden;user-select:none;margin-top:2px}
 .m3-stage:active{cursor:grabbing}
 .m3-cube{position:relative;width:0;height:0;transform-style:preserve-3d}
 .m3-tile{position:absolute;left:0;top:0;border-radius:7px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.4);box-shadow:0 8px 18px rgba(20,20,30,.22)}
@@ -437,6 +437,7 @@ section{position:relative}
 .m3-legend .l i{width:13px;height:13px;border-radius:4px}
 .m3-legend .sep{width:1px;height:15px;background:var(--line)}
 .m3-legend .lang{color:var(--muted)}
+@media (max-width:620px){.scale{padding:24px 16px}.m3-cvt{gap:10px;margin:18px 0 0}.m3-cvt__n{font-size:2.1rem}.m3-cvt__tile{width:24px;height:44px}.m3-cvt__mid{font-size:.9rem}.m3-cvt__side b{font-size:.96rem}.m3-stage{height:265px}.m3-legend{font-size:.7rem;gap:5px 8px}.m3-legend .l{gap:5px}.m3-legend .l i{width:9px;height:9px}}
 
 /* ================= EXTRA MOTION ================= */
 .pain,.step,.feat,.metric,.pack{transition:transform .32s var(--ease),box-shadow .32s var(--ease)}
@@ -457,6 +458,7 @@ section{position:relative}
   .bento{max-width:460px}
   .reels{grid-template-columns:repeat(2,1fr)}
   .steps{grid-template-columns:repeat(2,1fr)}
+  .steps .step:last-child{grid-column:1 / -1}
   .feats{grid-template-columns:1fr}
   .tg{grid-template-columns:1fr;gap:26px}
   .calc{grid-template-columns:1fr;gap:26px}
@@ -680,11 +682,11 @@ section{position:relative}
       <span class="eyebrow">Матрица масштаба · 3D</span>
       <h2 class="h2" style="margin:.4em 0 .2em;max-width:20ch">Один ролик → 15 публикаций</h2>
       <div class="m3-cvt">
-        <div class="m3-cvt__side"><span class="m3-cvt__tile"></span><div><b>1 ролик</b><span>как обычно</span></div></div>
-        <div class="m3-cvt__mid">→ <span class="m3-cvt__free">бесплатно</span> превращается в →</div>
-        <div class="m3-cvt__side"><span class="m3-cvt__n" data-count="15">15</span><div><b>публикаций</b><span>5 соцсетей × 3 языка</span></div></div>
+        <div class="m3-cvt__side"><span class="m3-cvt__tile"></span><div><b>1 ролик · ~4 000 ₽</b><span>как в агентстве</span></div></div>
+        <div class="m3-cvt__mid">→ <span class="m3-cvt__free">бесплатно</span> в →</div>
+        <div class="m3-cvt__side"><span class="m3-cvt__n" data-count="15">15</span><div><b>по ~150 ₽ каждая</b><span>5 соцсетей × 3 языка</span></div></div>
       </div>
-      <div class="m3-stage" id="m3stage"><div class="m3-cube" id="m3cube"></div><div class="m3-drag">тяни, чтобы покрутить</div></div>
+      <div class="m3-stage" id="m3stage"><div class="m3-cube" id="m3cube"></div></div>
       <div class="m3-legend" id="m3legend"></div>
     </div>
   </div>
@@ -876,7 +878,7 @@ section{position:relative}
     <div class="faq" data-reveal>
       <details><summary>А если я не разберусь?<span class="pm"></span></summary><p>Первую партию из 30 роликов делаем вместе — вы учитесь на живом контенте, а не по инструкции. Плюс поддержка после передачи. По гарантии «Ключи в руках» доводим до результата, пока вы не сможете делать ролик сами.</p></details>
       <details><summary>Нужна ли камера, студия или техника?<span class="pm"></span></summary><p>Нет. Всё собирается на обычном компьютере — без съёмок, актёров и оборудования. Дальше ролик пишется и монтируется с одной кнопки.</p></details>
-      <details><summary>Сколько времени до первых роликов?<span class="pm"></span></summary><p>Дни, а не месяцы. Дизайн-система и первая партия обычно занимают около двух недель, дальше вы печатаете ролики за минуты.</p></details>
+      <details><summary>Сколько времени до первых роликов?<span class="pm"></span></summary><p>Буквально через день после оплаты ваша система будет готова к любому масштабу. Всё уже настроено — осталось перенести к вам.</p></details>
       <details><summary>Подойдёт ли моя ниша?<span class="pm"></span></summary><p>Да. На заводе уже собраны таро, сказки, финансы, ИИ и трейдинг — примеры выше. Стиль настраивается под любую тему, от личного бренда до локального бизнеса.</p></details>
       <details><summary>Тексты не будут «ИИшными»?<span class="pm"></span></summary><p>Нет. Сценарии пишутся на обученной базе с приёмами продаж — человеческий текст с высоким удержанием, а не типовой ИИ-набор фраз. Именно это даёт досмотр до 47%.</p></details>
       <details><summary>На каких языках делаете?<span class="pm"></span></summary><p>На любом. Пример англоязычного ролика — в примерах выше (ниша «финансы · опционы»). Языкового барьера нет — можно вести несколько регионов одновременно.</p></details>
@@ -1007,9 +1009,7 @@ section{position:relative}
       m3cube.appendChild(t);
     }
     var m3lg=document.getElementById('m3legend');
-    if(m3lg){M3NETS.forEach(function(n){var e=document.createElement('span');e.className='l';e.innerHTML='<i style="background:linear-gradient(150deg,'+n[1]+','+n[2]+')"></i>'+n[0];m3lg.appendChild(e);});
-      var sp=document.createElement('span');sp.className='sep';m3lg.appendChild(sp);
-      var la=document.createElement('span');la.className='lang';la.textContent='3 языка: RU · EN · ES · и любой другой';m3lg.appendChild(la);}
+    if(m3lg){M3NETS.forEach(function(n){var e=document.createElement('span');e.className='l';e.innerHTML='<i style="background:linear-gradient(150deg,'+n[1]+','+n[2]+')"></i>'+n[0];m3lg.appendChild(e);});}
     var mry=-26,mrx=-14,mauto=true,mdrag=false,mlx=0,mly=0,mres;
     function m3r(){m3cube.style.transform='rotateX('+mrx+'deg) rotateY('+mry+'deg)';}
     m3r();
