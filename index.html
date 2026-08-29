@@ -441,7 +441,7 @@ section{position:relative}
         <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>
         <svg class="moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
       </button>
-      <a class="btn btn--primary" href="https://t.me/akookoo">Написать</a>
+      <a class="btn btn--primary" href="https://t.me/akookoo" target="_blank" rel="noopener">Написать</a>
     </div>
   </div>
 </nav>
@@ -452,11 +452,11 @@ section{position:relative}
   <div class="wrap">
     <div class="hero__grid">
       <div>
-        <span class="eyebrow">сотни видео в пару кнопок</span>
+        <span class="eyebrow">сотни видео в пару кликов</span>
         <h1 class="h1 hero__h1">Рилсы под ключ<br>для <span class="grad-text">любой ниши</span></h1>
         <p class="lead">Представьте, у вас есть программа, которая в пару кликов собирает для вас фирменные ролики каждый день в автоматическом режиме: сценарий, озвучка, монтаж и дизайн — на потоке и всё в вашей визуальной стилистике.</p>
         <div class="hero__cta">
-          <a class="btn btn--primary" href="https://t.me/akookoo">Получить
+          <a class="btn btn--primary" href="https://t.me/akookoo" target="_blank" rel="noopener">Получить
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </a>
           <a class="btn btn--ghost" href="#portfolio">Смотреть примеры</a>
@@ -468,7 +468,7 @@ section{position:relative}
           <video id="heroVideo" src="media/ai.mp4" poster="media/ai.jpg" muted loop playsinline preload="auto"></video>
         </div>
         <div class="card mini-aurora">
-          <div class="k">90, 270, 900</div>
+          <div class="k">90 / 270 / 900</div>
           <div class="cap">роликов в месяц<br>на потоке</div>
         </div>
         <div class="card mini-frost">
@@ -759,7 +759,7 @@ section{position:relative}
           <div><b>Гарантия «Ключи в руках»</b><p>Не получится сделать ролик самому после совместной партии — доводим бесплатно, пока не сможете.</p></div>
         </div>
         <div class="pack__price"><span class="from">от</span><span class="num">39 000</span><span class="per">₽ · разово</span></div>
-        <a class="btn btn--primary" href="https://t.me/akookoo">Обсудить в Telegram</a>
+        <a class="btn btn--primary" href="https://t.me/akookoo" target="_blank" rel="noopener">Обсудить в Telegram</a>
       </div>
 
       <div class="pack">
@@ -779,7 +779,7 @@ section{position:relative}
         </div>
         <div class="pack__price"><span class="from">от</span><span class="num">500</span><span class="per">₽ / ролик</span></div>
         <div class="pack__subnote">≈ 45 000 ₽/мес за 90 роликов — 3 в день в 3 соцсети</div>
-        <a class="btn btn--ghost" href="https://t.me/akookoo">Обсудить в Telegram</a>
+        <a class="btn btn--ghost" href="https://t.me/akookoo" target="_blank" rel="noopener">Обсудить в Telegram</a>
       </div>
     </div>
 
@@ -811,7 +811,7 @@ section{position:relative}
     <div class="final" data-reveal>
       <h2 class="h2">Покажу, как это будет выглядеть в вашей нише</h2>
       <p>Напишите — соберу пример ролика под вашу тему и назову точную цену. Бесплатно и без обязательств.</p>
-      <a class="btn btn--lime" href="https://t.me/akookoo">Написать в Telegram
+      <a class="btn btn--lime" href="https://t.me/akookoo" target="_blank" rel="noopener">Написать в Telegram
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </a>
     </div>
@@ -848,20 +848,17 @@ section{position:relative}
   var hv=document.getElementById('heroVideo');
   if(hv && !rm){var p=hv.play();if(p&&p.catch)p.catch(function(){});}
 
-  /* PORTFOLIO click-to-play */
+  /* PORTFOLIO: overlay starts playback; then native controls manage pause/seek */
   var reels=[].slice.call(document.querySelectorAll('[data-reel]'));
   reels.forEach(function(fig){
     var v=fig.querySelector('video');
-    fig.addEventListener('click',function(){
-      if(v.paused){
-        reels.forEach(function(o){if(o!==fig){var ov=o.querySelector('video');ov.pause();o.classList.remove('playing');ov.controls=false;}});
-        v.muted=false;v.controls=true;
-        var pr=v.play();if(pr&&pr.catch)pr.catch(function(){v.muted=true;v.play();});
-        fig.classList.add('playing');
-      }else{v.pause();v.controls=false;fig.classList.remove('playing');}
+    var btn=fig.querySelector('.reel__play');
+    if(btn)btn.addEventListener('click',function(){
+      reels.forEach(function(o){if(o!==fig){o.querySelector('video').pause();}});
+      v.muted=false;v.controls=true;
+      fig.classList.add('playing');
+      var pr=v.play();if(pr&&pr.catch)pr.catch(function(err){if(err&&err.name==='NotAllowedError'){v.muted=true;v.play();}});
     });
-    v.addEventListener('pause',function(){fig.classList.remove('playing');});
-    v.addEventListener('play',function(){fig.classList.add('playing');});
   });
 
   /* CALCULATOR */
