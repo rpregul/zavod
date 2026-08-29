@@ -397,14 +397,21 @@ section{position:relative}
 .scale{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius);box-shadow:var(--shadow);padding:clamp(28px,5vw,56px)}
 .scale__glow{position:absolute;right:-12%;top:-45%;width:55%;height:170%;border-radius:50%;filter:blur(80px);opacity:.5;background:radial-gradient(circle,var(--a3),transparent 60%);pointer-events:none}
 .scale>*{position:relative;z-index:1}
-.scale__markets{display:flex;flex-wrap:wrap;gap:12px;margin:26px 0}
-.scale__m{display:inline-flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:999px;padding:.6em 1.1em;font-weight:600;font-size:.95rem}
-.scale__m--more{background:linear-gradient(135deg,var(--a1),var(--a3),var(--a4));color:#fff;border:none}
+.scale__hint{font-size:.84rem;color:var(--muted);margin:24px 0 10px}
+.scale__markets{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 22px}
+.scale__m{display:inline-flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:999px;padding:.6em 1.1em;font-weight:600;font-size:.95rem;font-family:inherit;color:var(--ink);line-height:1;cursor:pointer;transition:transform .2s var(--ease),border-color .2s,background .25s,box-shadow .25s}
+.scale__m:hover{transform:translateY(-2px);border-color:var(--a3);box-shadow:0 8px 20px -10px rgba(24,24,34,.28)}
+.scale__m:focus-visible{outline:2.5px solid var(--a3);outline-offset:2px}
+.scale__m.is-active{background:linear-gradient(135deg,var(--a1),var(--a3),var(--a4));color:#fff;border-color:transparent;animation:chipPulse 2.2s ease-in-out infinite}
+@keyframes chipPulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--a3) 45%,transparent)}55%{box-shadow:0 0 0 8px transparent}}
+.scale__m--more{background:none;border:1px dashed var(--line);color:var(--muted);cursor:default}
+.scale__m--more:hover{transform:none;border-color:var(--line);box-shadow:none}
 .scale__ex{display:flex;gap:14px;align-items:flex-start;background:var(--surface-2);border-radius:var(--radius-sm);padding:18px 20px}
 .scale__ex .ic{flex:none;width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--a1),var(--a3));color:#fff}
 .scale__ex .ic svg{width:20px;height:20px}
-.scale__ex p{color:var(--ink-2);font-size:.96rem}
-.scale__ex p b{color:var(--ink)}
+.scale__ex b{color:var(--ink)}
+.scale__hook{color:var(--ink);font-size:1.05rem;font-weight:500;margin-top:8px;transition:opacity .25s}
+.scale__exnote{color:var(--muted);font-size:.86rem;margin-top:8px}
 .scale__emp{margin-top:18px;font-size:1.02rem;color:var(--ink);font-weight:500;max-width:70ch}
 
 /* ================= RESPONSIVE ================= */
@@ -602,17 +609,22 @@ section{position:relative}
       <span class="eyebrow">Масштаб без потолка</span>
       <h2 class="h2" style="margin:.4em 0 .35em;max-width:22ch">Захватывайте зарубежный рынок</h2>
       <p class="lead">Настроенный завод не привязан ни к теме, ни к языку, ни к стране. Новый рынок запускаете за день и работаете на нескольких регионах одновременно — без языкового барьера и без новой команды. Ограничений ноль.</p>
-      <div class="scale__markets">
-        <span class="scale__m">🇷🇺 Русский</span>
-        <span class="scale__m">🇬🇧 English</span>
-        <span class="scale__m">🇪🇸 Español</span>
-        <span class="scale__m">🇩🇪 Deutsch</span>
-        <span class="scale__m">🇸🇦 العربية</span>
+      <div class="scale__hint">👆 нажмите язык — пример ниже переведётся</div>
+      <div class="scale__markets" role="group" aria-label="Выберите язык">
+        <button type="button" class="scale__m is-active" data-lang="Русский">🇷🇺 Русский</button>
+        <button type="button" class="scale__m" data-lang="English">🇬🇧 English</button>
+        <button type="button" class="scale__m" data-lang="Español">🇪🇸 Español</button>
+        <button type="button" class="scale__m" data-lang="Deutsch">🇩🇪 Deutsch</button>
+        <button type="button" class="scale__m" data-lang="العربية">🇸🇦 العربية</button>
         <span class="scale__m scale__m--more">+ любой рынок</span>
       </div>
       <div class="scale__ex">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span>
-        <p><b>Пример:</b> англоязычный трейдинг-канал собран моим же заводом — видео справа. Так же запускается испанский рынок, арабский, любой другой. Параллельно и одновременно, а не по очереди.</p>
+        <div style="flex:1;min-width:0">
+          <b>Тот же ролик — на языке: <span id="scaleLangName">🇷🇺 Русский</span></b>
+          <p id="scaleHook" class="scale__hook">«Есть один сигнал, который переворачивает всю сделку. Показываю на пальцах.»</p>
+          <div class="scale__exnote">Сценарий, озвучка и субтитры — автоматически. Рынки запускаете параллельно, а не по очереди.</div>
+        </div>
       </div>
       <p class="scale__emp">Вести завод может ваш сотрудник — это пара кликов в день. Замена целой команде и сокращение ФОТ.</p>
       </div>
@@ -887,6 +899,25 @@ section{position:relative}
   }
   [iPd,iPl,iCh,iCv].forEach(function(el){if(el){el.addEventListener('input',calc);}});
   calc();
+
+  /* SCALE: переключатель языка примера */
+  var LANGS={
+    'Русский':{flag:'🇷🇺',dir:'ltr',hook:'«Есть один сигнал, который переворачивает всю сделку. Показываю на пальцах.»'},
+    'English':{flag:'🇬🇧',dir:'ltr',hook:'"There is one signal that flips the entire trade. Let me break it down."'},
+    'Español':{flag:'🇪🇸',dir:'ltr',hook:'«Hay una señal que le da la vuelta a toda la operación. Te lo explico.»'},
+    'Deutsch':{flag:'🇩🇪',dir:'ltr',hook:'„Es gibt ein Signal, das den ganzen Trade dreht. Ich zeig es dir."'},
+    'العربية':{flag:'🇸🇦',dir:'rtl',hook:'«هناك إشارة واحدة تقلب الصفقة بالكامل. دعني أشرحها لك.»'}
+  };
+  var hookEl=document.getElementById('scaleHook'), nameEl=document.getElementById('scaleLangName');
+  document.querySelectorAll('.scale__m[data-lang]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var key=btn.getAttribute('data-lang'), L=LANGS[key]; if(!L)return;
+      document.querySelectorAll('.scale__m[data-lang]').forEach(function(b){b.classList.remove('is-active');});
+      btn.classList.add('is-active');
+      if(nameEl)nameEl.textContent=L.flag+' '+key;
+      if(hookEl){hookEl.style.opacity='0';setTimeout(function(){hookEl.textContent=L.hook;hookEl.setAttribute('dir',L.dir);hookEl.style.textAlign=(L.dir==='rtl'?'right':'left');hookEl.style.opacity='1';},180);}
+    });
+  });
 })();
 </script>
 </body>
