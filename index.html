@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Handjet:wght@400;500;600;700&display=swap">
+<script>document.documentElement.setAttribute('data-theme','light');</script>
 
 <style>
 /* ================= TOKENS ================= */
@@ -24,6 +25,7 @@
 
   --a1:#FF9A3D; --a2:#FF5E63; --a3:#FF4FA0; --a4:#C24BE8; --a5:#6E7BFF;
   --lime:#CBF23D; --lime-ink:#26310A;
+  --good:#22A96B;
 
   --btn-bg:#1C1C1E; --btn-fg:#FFFFFF;
 
@@ -270,7 +272,7 @@ section{position:relative}
 .calc__card{border-radius:var(--radius-sm);padding:22px 24px;border:1px solid var(--line-2)}
 .calc__card--reel{background:var(--surface-2)}
 .calc__card--month{position:relative;overflow:hidden;color:#fff;border:none}
-.calc__card--month::before{content:"";position:absolute;inset:0;background:linear-gradient(140deg,var(--a1),var(--a2) 45%,var(--a3) 80%,var(--a4));z-index:0}
+.calc__card--month::before{content:"";position:absolute;inset:0;background:linear-gradient(140deg,#7BE08A,#22A96B 55%,#149E86);z-index:0}
 .calc__card--month>*{position:relative;z-index:1}
 .calc__k{font-family:"Handjet",monospace;font-weight:700;font-size:2.7rem;line-height:.9;letter-spacing:.02em}
 .calc__cap{font-size:.9rem;margin-top:8px}
@@ -299,7 +301,7 @@ section{position:relative}
   color:var(--a3);display:flex;align-items:center;justify-content:center;margin-top:1px}
 .pack__list .tick svg{width:13px;height:13px}
 .pack__guar{display:flex;gap:12px;background:var(--surface-2);border-radius:var(--radius-sm);padding:16px 18px;margin-bottom:22px}
-.pack__guar .sh{flex:none;width:30px;height:30px;color:var(--a2)}
+.pack__guar .sh{flex:none;width:30px;height:30px;color:var(--good)}
 .pack__guar b{font-weight:700}
 .pack__guar p{font-size:.9rem;color:var(--ink-2);margin-top:3px}
 .pack__price{display:flex;align-items:baseline;gap:10px;margin-bottom:18px}
@@ -378,6 +380,13 @@ section{position:relative}
 .cmp__bar--mine .name{font-weight:700}
 .cmp__bar--mine .val{background:linear-gradient(120deg,var(--a1),var(--a3));-webkit-background-clip:text;background-clip:text;color:transparent}
 .cmp__save-lbl{font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.9;margin-bottom:6px}
+.soldout{margin-top:16px;display:flex;align-items:center;justify-content:center;gap:10px;background:#E5484D;color:#fff;font-weight:700;font-size:.92rem;padding:.75em 1em;border-radius:999px;animation:soldoutPulse 1.6s infinite}
+.soldout__dot{width:9px;height:9px;border-radius:50%;background:#fff;flex:none}
+@keyframes soldoutPulse{0%,100%{box-shadow:0 0 0 0 rgba(229,72,77,.55)}50%{box-shadow:0 0 0 9px rgba(229,72,77,0)}}
+.scale__grid{display:grid;grid-template-columns:1fr 250px;gap:36px;align-items:center}
+.scale__media{position:relative}
+.scale__media .phone{width:100%}
+@media (max-width:760px){.scale__grid{grid-template-columns:1fr;gap:26px}.scale__media{max-width:210px;margin:6px auto 0}}
 @media (max-width:620px){
   .cmp__bar{grid-template-columns:1fr auto;grid-template-areas:"nm vl" "tr tr";row-gap:9px}
   .cmp__bar .name{grid-area:nm}.cmp__bar .val{grid-area:vl}.cmp__track{grid-area:tr}
@@ -437,10 +446,6 @@ section{position:relative}
       <a href="#offer">Форматы</a>
     </div>
     <div class="nav__right">
-      <button class="theme-btn" id="theme" aria-label="Сменить тему">
-        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>
-        <svg class="moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
-      </button>
       <a class="btn btn--primary" href="https://t.me/akookoo" target="_blank" rel="noopener">Написать</a>
     </div>
   </div>
@@ -592,6 +597,8 @@ section{position:relative}
   <div class="wrap">
     <div class="scale" data-reveal>
       <div class="scale__glow"></div>
+      <div class="scale__grid">
+      <div class="scale__body">
       <span class="eyebrow">Масштаб без потолка</span>
       <h2 class="h2" style="margin:.4em 0 .35em;max-width:22ch">Захватывайте рынок за рынком</h2>
       <p class="lead">Настроенный завод не привязан ни к теме, ни к языку, ни к стране. Новый рынок запускаете за день и работаете на нескольких регионах одновременно — без языкового барьера и без новой команды. Ограничений ноль.</p>
@@ -608,6 +615,9 @@ section{position:relative}
         <p><b>Пример:</b> англоязычный трейдинг-канал с маскотом Tom собран тем же заводом — он в примерах выше. Так же запускается испанский рынок, арабский, любой другой. Параллельно, а не по очереди.</p>
       </div>
       <p class="scale__emp">Вести завод может даже ваш сотрудник — это пара кнопок в день, отдельная доплата не нужна. А на выходе — гора контента сразу на всех рынках.</p>
+      </div>
+      <div class="scale__media"><div class="phone"><video id="scaleVideo" src="media/options.mp4" poster="media/options.jpg" muted loop playsinline preload="auto"></video></div></div>
+      </div>
     </div>
   </div>
 </section>
@@ -662,7 +672,7 @@ section{position:relative}
   <div class="wrap">
     <div class="block__head" data-reveal>
       <span class="eyebrow">Сколько это приносит</span>
-      <h2 class="h2">Один ролик — и что даст поток</h2>
+      <h2 class="h2">Калькулятор стоимости 1 ролика</h2>
       <p class="lead">Наш ролик собрал <b style="color:var(--ink)">15 564</b> просмотров в Instagram и <b style="color:var(--ink)">121 000</b> в TikTok. Это <b style="color:var(--ink)">один</b> ролик. Представьте, что даёт поток из 90 в месяц.</p>
       <p class="muted" style="font-size:.82rem;margin-top:10px">Данные на 28.08</p>
     </div>
@@ -775,15 +785,16 @@ section{position:relative}
         </ul>
         <div class="pack__guar">
           <span class="sh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3v6c0 5-3.4 8.5-8 11-4.6-2.5-8-6-8-11V5z"/><path d="M9 12l2 2 4-4"/></svg></span>
-          <div><b>Первая партия — без риска</b><p>Не зайдёт по стилю — переделаем или вернём деньги за первую партию.</p></div>
+          <div><b>Первый ролик — бесплатно</b><p>Сначала показываю результат в вашем стиле — платите, только если нравится.</p></div>
         </div>
         <div class="pack__price"><span class="from">от</span><span class="num">500</span><span class="per">₽ / ролик</span></div>
         <div class="pack__subnote">≈ 45 000 ₽/мес за 90 роликов — 3 в день в 3 соцсети</div>
         <a class="btn btn--ghost" href="https://t.me/akookoo" target="_blank" rel="noopener">Обсудить в Telegram</a>
+        <div class="soldout"><span class="soldout__dot"></span>Осталось 1 место на Заводе</div>
       </div>
     </div>
 
-    <div class="scarcity"><span class="pulse"></span>Работаю сам, поэтому беру немного проектов за раз.</div>
+    <!-- scarcity → перенесён в пакет «Делаем за вас» как soldout -->
   </div>
 </section>
 
@@ -831,11 +842,7 @@ section{position:relative}
     document.querySelectorAll('[data-vid]').forEach(function(v){var k=v.getAttribute('data-vid');if(window.__M[k])v.src=window.__M[k];});
   }
 
-  /* THEME */
-  var root=document.documentElement, tb=document.getElementById('theme');
-  function cur(){var a=root.getAttribute('data-theme');if(a)return a;return matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}
-  try{var s=localStorage.getItem('cz-theme');if(s)root.setAttribute('data-theme',s);}catch(e){}
-  if(tb)tb.addEventListener('click',function(){var n=cur()==='dark'?'light':'dark';root.setAttribute('data-theme',n);try{localStorage.setItem('cz-theme',n);}catch(e){}});
+  /* THEME: светлая тема принудительно (стамп в inline-скрипте наверху) */
 
   /* REVEAL */
   var rm=matchMedia('(prefers-reduced-motion:reduce)').matches;
@@ -844,9 +851,8 @@ section{position:relative}
     document.querySelectorAll('[data-reveal]').forEach(function(el){io.observe(el);});
   }else{document.querySelectorAll('[data-reveal]').forEach(function(el){el.classList.add('in');});}
 
-  /* HERO autoplay */
-  var hv=document.getElementById('heroVideo');
-  if(hv && !rm){var p=hv.play();if(p&&p.catch)p.catch(function(){});}
+  /* HERO + SCALE autoplay (muted) */
+  if(!rm){['heroVideo','scaleVideo'].forEach(function(id){var el=document.getElementById(id);if(el){var p=el.play();if(p&&p.catch)p.catch(function(){});}});}
 
   /* PORTFOLIO: overlay starts playback; then native controls manage pause/seek */
   var reels=[].slice.call(document.querySelectorAll('[data-reel]'));
