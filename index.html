@@ -637,23 +637,16 @@ section{position:relative}
   </div>
 </section>
 
-<!-- ===================== SCALE ===================== -->
+<!-- ===================== LANGUAGES ===================== -->
 <section class="block" id="scale" style="padding-top:0">
   <div class="wrap">
     <div class="scale" data-reveal>
       <div class="scale__glow"></div>
+      <div class="scale__grid">
+      <div class="scale__body">
       <span class="eyebrow">Масштаб без потолка</span>
       <h2 class="h2" style="margin:.4em 0 .35em;max-width:22ch">Захватывайте зарубежный рынок</h2>
-      <p class="lead">Настроенный завод не привязан ни к теме, ни к языку, ни к стране. Один ролик уходит во все соцсети и на любой язык — параллельно, без новой команды. Покрутите матрицу мышкой.</p>
-
-      <div class="m3-cvt">
-        <div class="m3-cvt__side"><span class="m3-cvt__tile"></span><div><b>1 ролик</b><span>как обычно</span></div></div>
-        <div class="m3-cvt__mid">→ <span class="m3-cvt__free">бесплатно</span> превращается в →</div>
-        <div class="m3-cvt__side"><span class="m3-cvt__n" data-count="15">15</span><div><b>публикаций</b><span>5 соцсетей × 3 языка</span></div></div>
-      </div>
-      <div class="m3-stage" id="m3stage"><div class="m3-cube" id="m3cube"></div><div class="m3-drag">тяни, чтобы покрутить</div></div>
-      <div class="m3-legend" id="m3legend"></div>
-
+      <p class="lead">Настроенный завод не привязан ни к теме, ни к языку, ни к стране. Новый рынок запускаете за день — без языкового барьера и без новой команды. Ограничений ноль.</p>
       <div class="scale__hint">👆 нажмите язык — пример ниже переведётся</div>
       <div class="scale__markets" role="group" aria-label="Выберите язык">
         <button type="button" class="scale__m is-active" data-lang="Русский">🇷🇺 Русский</button>
@@ -672,6 +665,27 @@ section{position:relative}
         </div>
       </div>
       <p class="scale__emp">Вести завод может ваш сотрудник — это пара кликов в день. Замена целой команде и сокращение ФОТ.</p>
+      </div>
+      <div class="scale__media"><div class="phone"><video id="scaleVideo" src="media/options.mp4" poster="media/options.jpg" muted loop playsinline preload="auto"></video></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 3D MATRIX ===================== -->
+<section class="block" id="matrix" style="padding-top:0">
+  <div class="wrap">
+    <div class="scale" data-reveal>
+      <div class="scale__glow"></div>
+      <span class="eyebrow">Матрица масштаба · 3D</span>
+      <h2 class="h2" style="margin:.4em 0 .2em;max-width:20ch">Один ролик → 15 публикаций</h2>
+      <div class="m3-cvt">
+        <div class="m3-cvt__side"><span class="m3-cvt__tile"></span><div><b>1 ролик</b><span>как обычно</span></div></div>
+        <div class="m3-cvt__mid">→ <span class="m3-cvt__free">бесплатно</span> превращается в →</div>
+        <div class="m3-cvt__side"><span class="m3-cvt__n" data-count="15">15</span><div><b>публикаций</b><span>5 соцсетей × 3 языка</span></div></div>
+      </div>
+      <div class="m3-stage" id="m3stage"><div class="m3-cube" id="m3cube"></div><div class="m3-drag">тяни, чтобы покрутить</div></div>
+      <div class="m3-legend" id="m3legend"></div>
     </div>
   </div>
 </section>
@@ -766,7 +780,7 @@ section{position:relative}
         <a class="btn btn--primary calc__cta" href="#offer">Получить систему
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </a>
-        <p class="calc__note">Гипотетический потенциал при скромных ~1 500 просмотрах на ролик и настроенной воронке. Проценты и чек — ваши. Продажи не гарантированы.</p>
+        <p class="calc__note">Гипотетический потенциал при скромных ~1 500 просмотрах на ролик и настроенной воронке. Проценты и чек — ваши.</p>
       </div>
     </div>
   </div>
@@ -920,7 +934,7 @@ section{position:relative}
   }else{document.querySelectorAll('[data-reveal]').forEach(function(el){el.classList.add('in');growBars(el);});document.querySelectorAll('[data-count]').forEach(countUp);}
 
   /* HERO + SCALE autoplay (muted) */
-  if(!rm){var _hv=document.getElementById('heroVideo');if(_hv){var _p=_hv.play();if(_p&&_p.catch)_p.catch(function(){});}}
+  if(!rm){['heroVideo','scaleVideo'].forEach(function(id){var el=document.getElementById(id);if(el){var p=el.play();if(p&&p.catch)p.catch(function(){});}});}
 
   /* PORTFOLIO: overlay starts playback; then native controls manage pause/seek */
   var reels=[].slice.call(document.querySelectorAll('[data-reel]'));
