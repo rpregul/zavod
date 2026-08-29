@@ -414,6 +414,43 @@ section{position:relative}
 .scale__exnote{color:var(--muted);font-size:.86rem;margin-top:8px}
 .scale__emp{margin-top:18px;font-size:1.02rem;color:var(--ink);font-weight:500;max-width:70ch}
 
+/* ================= 3D MATRIX ================= */
+.m3-cvt{display:flex;align-items:center;justify-content:center;gap:clamp(12px,3vw,28px);flex-wrap:wrap;margin:28px 0 2px;text-align:left}
+.m3-cvt__side{display:flex;align-items:center;gap:11px}
+.m3-cvt__side b{font-weight:600;font-size:1.05rem}
+.m3-cvt__side span{display:block;color:var(--muted);font-size:.82rem}
+.m3-cvt__tile{width:28px;height:50px;border-radius:6px;background:linear-gradient(150deg,var(--a2),var(--a4));box-shadow:0 6px 14px rgba(20,20,30,.22);flex:none}
+.m3-cvt__n{font-family:"Handjet",monospace;font-weight:700;font-size:2.8rem;line-height:.9;background:linear-gradient(120deg,var(--a1),var(--a3),var(--a4));-webkit-background-clip:text;background-clip:text;color:transparent}
+.m3-cvt__mid{color:var(--ink-2);font-weight:500;white-space:nowrap}
+.m3-cvt__free{background:var(--lime);color:var(--lime-ink);border-radius:999px;padding:2px 10px;font-weight:700}
+.m3-stage{position:relative;height:clamp(320px,46vh,460px);display:flex;align-items:center;justify-content:center;perspective:1400px;cursor:grab;touch-action:none;overflow:hidden;user-select:none;margin-top:4px}
+.m3-stage:active{cursor:grabbing}
+.m3-cube{position:relative;width:0;height:0;transform-style:preserve-3d}
+.m3-tile{position:absolute;left:0;top:0;border-radius:7px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.4);box-shadow:0 8px 18px rgba(20,20,30,.22)}
+.m3-tile .pl{width:0;height:0;border-left:10px solid rgba(255,255,255,.92);border-top:7px solid transparent;border-bottom:7px solid transparent;margin-left:2px}
+.m3-tile--src{border:2px solid var(--lime);z-index:3;animation:m3pulse 1.8s ease-in-out infinite}
+.m3-badge{position:absolute;top:-10px;left:-10px;width:24px;height:24px;border-radius:50%;background:var(--lime);color:var(--lime-ink);font-size:.8rem;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 9px rgba(20,20,30,.32)}
+@keyframes m3pulse{0%,100%{box-shadow:0 0 0 4px color-mix(in srgb,var(--lime) 50%,transparent),0 12px 26px rgba(20,20,30,.32)}50%{box-shadow:0 0 0 12px color-mix(in srgb,var(--lime) 0%,transparent),0 12px 26px rgba(20,20,30,.32)}}
+.m3-drag{position:absolute;left:0;right:0;bottom:8px;text-align:center;color:var(--muted);font-size:.84rem;pointer-events:none}
+.m3-legend{display:flex;flex-wrap:wrap;gap:10px 16px;justify-content:center;align-items:center;padding:6px 0 2px;font-size:.86rem;color:var(--ink-2)}
+.m3-legend .l{display:inline-flex;align-items:center;gap:7px;font-weight:500}
+.m3-legend .l i{width:13px;height:13px;border-radius:4px}
+.m3-legend .sep{width:1px;height:15px;background:var(--line)}
+.m3-legend .lang{color:var(--muted)}
+
+/* ================= EXTRA MOTION ================= */
+.pain,.step,.feat,.metric,.pack{transition:transform .32s var(--ease),box-shadow .32s var(--ease)}
+.pain:hover,.step:hover,.feat:hover,.metric:hover{transform:translateY(-5px);box-shadow:var(--shadow)}
+.reel{transition:transform .32s var(--ease),box-shadow .32s var(--ease)}
+.reel:hover{transform:translateY(-5px) scale(1.012)}
+[data-stagger]>*{opacity:0;transform:translateY(18px);transition:opacity .55s var(--ease),transform .55s var(--ease)}
+[data-stagger].in>*{opacity:1;transform:none}
+.grad-text{background-size:220% auto;animation:gradShift 7s linear infinite}
+@keyframes gradShift{to{background-position:220% center}}
+.btn--primary{position:relative;overflow:hidden}
+.btn--primary::after{content:"";position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.4),transparent);transform:skewX(-18deg);animation:shine 5s ease-in-out infinite;pointer-events:none}
+@keyframes shine{0%,55%{left:-70%}100%{left:150%}}
+
 /* ================= RESPONSIVE ================= */
 @media (max-width:960px){
   .hero__grid{grid-template-columns:1fr;gap:36px}
@@ -438,6 +475,7 @@ section{position:relative}
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
   [data-reveal]{opacity:1;transform:none}
+  [data-stagger]>*{opacity:1!important;transform:none!important}
 }
 </style>
 </head>
@@ -501,7 +539,7 @@ section{position:relative}
       <h2 class="h2">Одна машина — разные ниши</h2>
       <p class="lead">Разный стиль, разный голос, разный ритм — но всё с одного конвейера. Нажмите на ролик, чтобы включить звук.</p>
     </div>
-    <div class="reels" data-reveal>
+    <div class="reels" data-reveal data-stagger>
       <figure class="reel" data-reel>
         <video src="media/taro.mp4" poster="media/taro.jpg" playsinline preload="none" loop></video>
         <span class="reel__chip">Таро</span>
@@ -539,7 +577,7 @@ section{position:relative}
       <span class="eyebrow">Зачем это нужно</span>
       <h2 class="h2">Контент нужен каждый день.<br>А делать его — больно</h2>
     </div>
-    <div class="pains" data-reveal>
+    <div class="pains" data-reveal data-stagger>
       <div class="pain"><div class="k">₽₽₽</div><h3 class="h3">Дорого</h3><p>Сценарист и монтажёр съедают бюджет, а рилсов нужны десятки в месяц. Агентство выставит счёт за каждый.</p></div>
       <div class="pain"><div class="k">24ч</div><h3 class="h3">Долго</h3><p>Идея, сценарий, съёмка, монтаж, субтитры. На один нормальный ролик легко уходит целый день.</p></div>
       <div class="pain"><div class="k">ИИ</div><h3 class="h3">Дёшево или дорого</h3><p>Другие ИИ-генерации создают либо дешёвый визуал, либо явный нейросетевой отталкивающий контент. Аналоги делают хорошо, но дорого. <b>Мой Контент-Завод решает проблему.</b></p></div>
@@ -555,7 +593,7 @@ section{position:relative}
       <h2 class="h2">Три шага — и завод ваш</h2>
       <p class="lead">Не разовый монтаж, а настроенная система, которую вы забираете себе.</p>
     </div>
-    <div class="steps" data-reveal>
+    <div class="steps" data-reveal data-stagger>
       <div class="step"><div class="step__line"></div><div class="step__n">01</div><h3 class="h3">Разбираем нишу</h3><p>Собираю дизайн-систему под вас: визуал, цвет, шрифты, маскот и голос. Узнаваемо и системно.</p></div>
       <div class="step"><div class="step__line"></div><div class="step__n">02</div><h3 class="h3">Настраиваю движок</h3><p>Шаблоны сцен, обученная база промптов и сценарных формул. Машина готова печатать ролики.</p></div>
       <div class="step"><div class="step__line"></div><div class="step__n">03</div><h3 class="h3">Первый месяц — вместе</h3><p>Помогаю контролировать процесс создания роликов. Вы или ваш сотрудник убеждаетесь в простоте и дальше продолжаете самостоятельно.</p></div>
@@ -571,7 +609,7 @@ section{position:relative}
       <h2 class="h2">Сценарии, которые продают</h2>
       <p class="lead">Если вы пишете ролики сами и без опыта — они «просто рассказывают». Завод пишет их как продавец: с крючком, удержанием и целью.</p>
     </div>
-    <div class="feats" data-reveal>
+    <div class="feats" data-reveal data-stagger>
       <div class="feat">
         <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10M18 20V4M6 20v-4"/></svg></div>
         <h3 class="h3">Обученная база, а не сырой ИИ</h3>
@@ -604,11 +642,18 @@ section{position:relative}
   <div class="wrap">
     <div class="scale" data-reveal>
       <div class="scale__glow"></div>
-      <div class="scale__grid">
-      <div class="scale__body">
       <span class="eyebrow">Масштаб без потолка</span>
       <h2 class="h2" style="margin:.4em 0 .35em;max-width:22ch">Захватывайте зарубежный рынок</h2>
-      <p class="lead">Настроенный завод не привязан ни к теме, ни к языку, ни к стране. Новый рынок запускаете за день и работаете на нескольких регионах одновременно — без языкового барьера и без новой команды. Ограничений ноль.</p>
+      <p class="lead">Настроенный завод не привязан ни к теме, ни к языку, ни к стране. Один ролик уходит во все соцсети и на любой язык — параллельно, без новой команды. Покрутите матрицу мышкой.</p>
+
+      <div class="m3-cvt">
+        <div class="m3-cvt__side"><span class="m3-cvt__tile"></span><div><b>1 ролик</b><span>как обычно</span></div></div>
+        <div class="m3-cvt__mid">→ <span class="m3-cvt__free">бесплатно</span> превращается в →</div>
+        <div class="m3-cvt__side"><span class="m3-cvt__n" data-count="15">15</span><div><b>публикаций</b><span>5 соцсетей × 3 языка</span></div></div>
+      </div>
+      <div class="m3-stage" id="m3stage"><div class="m3-cube" id="m3cube"></div><div class="m3-drag">тяни, чтобы покрутить</div></div>
+      <div class="m3-legend" id="m3legend"></div>
+
       <div class="scale__hint">👆 нажмите язык — пример ниже переведётся</div>
       <div class="scale__markets" role="group" aria-label="Выберите язык">
         <button type="button" class="scale__m is-active" data-lang="Русский">🇷🇺 Русский</button>
@@ -627,9 +672,6 @@ section{position:relative}
         </div>
       </div>
       <p class="scale__emp">Вести завод может ваш сотрудник — это пара кликов в день. Замена целой команде и сокращение ФОТ.</p>
-      </div>
-      <div class="scale__media"><div class="phone"><video id="scaleVideo" src="media/options.mp4" poster="media/options.jpg" muted loop playsinline preload="auto"></video></div></div>
-      </div>
     </div>
   </div>
 </section>
@@ -669,11 +711,11 @@ section{position:relative}
       <span class="eyebrow">Цифры</span>
       <h2 class="h2">Что даёт такой контент</h2>
     </div>
-    <div class="metrics" data-reveal>
-      <div class="metric metric--hot"><div class="k">120<small>K</small></div><div class="cap">просмотров у ролика в TikTok</div></div>
-      <div class="metric"><div class="k">15 564</div><div class="cap">просмотра в Instagram — один ролик, холодный старт</div></div>
-      <div class="metric"><div class="k">47<small>%</small></div><div class="cap">досмотр рилса (норма 30%)</div></div>
-      <div class="metric"><div class="k">40<small>+</small></div><div class="cap">комментариев на интерактивном формате</div></div>
+    <div class="metrics" data-reveal data-stagger>
+      <div class="metric metric--hot"><div class="k" data-count="120" data-suffix="K">120<small>K</small></div><div class="cap">просмотров у ролика в TikTok</div></div>
+      <div class="metric"><div class="k" data-count="15564" data-space="1">15 564</div><div class="cap">просмотра в Instagram — один ролик, холодный старт</div></div>
+      <div class="metric"><div class="k" data-count="47" data-suffix="%">47<small>%</small></div><div class="cap">досмотр рилса (норма 30%)</div></div>
+      <div class="metric"><div class="k" data-count="40" data-suffix="+">40<small>+</small></div><div class="cap">комментариев на интерактивном формате</div></div>
     </div>
     <p class="metrics__note">Ваши цифры зависят от ниши, оффера и регулярности. Но механики, которые дают такой досмотр, зашиты в каждый ролик.</p>
   </div>
@@ -739,11 +781,11 @@ section{position:relative}
       <p class="lead">Средние цены по Москве против завода. Тот же вертикальный ролик — а разница в десятки раз.</p>
     </div>
     <div class="cmp" data-reveal>
-      <div class="cmp__bars">
-        <div class="cmp__bar"><div class="name">Агентство<small>SMM-пакет, Reels</small></div><div class="cmp__track"><div class="cmp__fill cmp__fill--grey" style="width:100%"></div></div><div class="val">4 000 ₽</div></div>
-        <div class="cmp__bar"><div class="name">Фрилансер<small>монтажёр / reels-мейкер</small></div><div class="cmp__track"><div class="cmp__fill cmp__fill--grey" style="width:37%"></div></div><div class="val">1 500 ₽</div></div>
-        <div class="cmp__bar cmp__bar--mine"><div class="name">Делаем за вас<small>Контент-Завод</small></div><div class="cmp__track"><div class="cmp__fill cmp__fill--lime" style="width:13%"></div></div><div class="val">500 ₽</div></div>
-        <div class="cmp__bar cmp__bar--mine"><div class="name">Ваш завод<small>после запуска, только расход на ИИ</small></div><div class="cmp__track"><div class="cmp__fill cmp__fill--aur" style="width:4%"></div></div><div class="val">~150 ₽</div></div>
+      <div class="cmp__bars" data-reveal data-stagger>
+        <div class="cmp__bar"><div class="name">Агентство<small>SMM-пакет, Reels</small></div><div class="cmp__track"><div class="cmp__fill cmp__fill--grey" style="width:0" data-w="100%"></div></div><div class="val">4 000 ₽</div></div>
+        <div class="cmp__bar"><div class="name">Фрилансер<small>монтажёр / reels-мейкер</small></div><div class="cmp__track"><div class="cmp__fill cmp__fill--grey" style="width:0" data-w="37%"></div></div><div class="val">1 500 ₽</div></div>
+        <div class="cmp__bar cmp__bar--mine"><div class="name">Делаем за вас<small>Контент-Завод</small></div><div class="cmp__track"><div class="cmp__fill cmp__fill--lime" style="width:0" data-w="13%"></div></div><div class="val">500 ₽</div></div>
+        <div class="cmp__bar cmp__bar--mine"><div class="name">Ваш завод<small>после запуска, только расход на ИИ</small></div><div class="cmp__track"><div class="cmp__fill cmp__fill--aur" style="width:0" data-w="4%"></div></div><div class="val">~150 ₽</div></div>
       </div>
       <div class="cmp__save">
         <div class="cmp__save-card"><div class="cmp__save-lbl">Экономия</div><div class="k">−115 000 ₽</div><div class="c">в месяц против агентства при 30 роликах</div></div>
@@ -856,15 +898,29 @@ section{position:relative}
 
   /* THEME: светлая тема принудительно (стамп в inline-скрипте наверху) */
 
-  /* REVEAL */
+  /* REVEAL + STAGGER + COUNT-UP + BARS */
   var rm=matchMedia('(prefers-reduced-motion:reduce)').matches;
-  if(!rm && 'IntersectionObserver' in window){
-    var io=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}});},{threshold:.12});
+  function growBars(el){if(el.querySelectorAll)[].forEach.call(el.querySelectorAll('.cmp__fill[data-w]'),function(f){f.style.width=f.getAttribute('data-w');});}
+  function fmtN(n,sp){n=Math.round(n);return sp?n.toLocaleString('ru-RU'):(''+n);}
+  function countUp(el){
+    var target=+el.getAttribute('data-count'),suf=el.getAttribute('data-suffix')||'',sp=el.getAttribute('data-space');
+    function set(v){el.innerHTML=fmtN(v,sp)+(suf?'<small>'+suf+'</small>':'');}
+    if(rm){set(target);return;}
+    var dur=1000,t0=null;
+    function step(ts){if(t0===null)t0=ts;var p=Math.min(1,(ts-t0)/dur),e=1-Math.pow(1-p,3);set(target*e);if(p<1)requestAnimationFrame(step);else set(target);}
+    requestAnimationFrame(step);
+  }
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){var el=en.target;
+      if(!rm && el.hasAttribute('data-stagger')){[].forEach.call(el.children,function(c,i){c.style.transitionDelay=(i*70)+'ms';});}
+      el.classList.add('in');growBars(el);io.unobserve(el);}});},{threshold:.12});
     document.querySelectorAll('[data-reveal]').forEach(function(el){io.observe(el);});
-  }else{document.querySelectorAll('[data-reveal]').forEach(function(el){el.classList.add('in');});}
+    var cio=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){countUp(en.target);cio.unobserve(en.target);}});},{threshold:.6});
+    document.querySelectorAll('[data-count]').forEach(function(el){cio.observe(el);});
+  }else{document.querySelectorAll('[data-reveal]').forEach(function(el){el.classList.add('in');growBars(el);});document.querySelectorAll('[data-count]').forEach(countUp);}
 
   /* HERO + SCALE autoplay (muted) */
-  if(!rm){['heroVideo','scaleVideo'].forEach(function(id){var el=document.getElementById(id);if(el){var p=el.play();if(p&&p.catch)p.catch(function(){});}});}
+  if(!rm){var _hv=document.getElementById('heroVideo');if(_hv){var _p=_hv.play();if(_p&&_p.catch)_p.catch(function(){});}}
 
   /* PORTFOLIO: overlay starts playback; then native controls manage pause/seek */
   var reels=[].slice.call(document.querySelectorAll('[data-reel]'));
@@ -918,6 +974,38 @@ section{position:relative}
       if(hookEl){hookEl.style.opacity='0';setTimeout(function(){hookEl.textContent=L.hook;hookEl.setAttribute('dir',L.dir);hookEl.style.textAlign=(L.dir==='rtl'?'right':'left');hookEl.style.opacity='1';},180);}
     });
   });
+
+  /* 3D SCALE MATRIX */
+  var m3stage=document.getElementById('m3stage'), m3cube=document.getElementById('m3cube');
+  if(m3stage && m3cube){
+    var M3NETS=[['Reels','#FF5E63','#C24BE8'],['Shorts','#FF9A3D','#FF4FA0'],['TikTok','#6E7BFF','#C24BE8'],['Клипы','#FF9A3D','#FF5E63'],['Threads','#8A63FF','#FF4FA0']];
+    var M3C=5,M3L=3,SRCX=2,SRCZ=2;
+    var s=Math.max(.6,Math.min(1,(window.innerWidth-40)/560));
+    var tw=54*s,th=96*s,gx=68*s,gz=124*s,ox=(M3C-1)*gx/2,oz=(M3L-1)*gz/2;
+    for(var z=0;z<M3L;z++)for(var x=0;x<M3C;x++){
+      var t=document.createElement('div');var n=M3NETS[x];var isSrc=(x===SRCX&&z===SRCZ);
+      t.className=isSrc?'m3-tile m3-tile--src':'m3-tile';
+      t.style.width=tw+'px';t.style.height=th+'px';t.style.marginLeft=(-tw/2)+'px';t.style.marginTop=(-th/2)+'px';
+      t.style.background=isSrc?'linear-gradient(150deg,var(--a2),var(--a4))':('linear-gradient(150deg,'+n[1]+','+n[2]+')');
+      t.style.transform='translate3d('+(x*gx-ox)+'px,0,'+(z*gz-oz)+'px)'+(isSrc?' scale(1.12)':'');
+      t.style.opacity=isSrc?1:(z===M3L-1?1:(z===M3L-2?.94:.86));
+      t.innerHTML=(isSrc?'<span class="m3-badge">1</span>':'')+'<span class="pl"></span>';
+      m3cube.appendChild(t);
+    }
+    var m3lg=document.getElementById('m3legend');
+    if(m3lg){M3NETS.forEach(function(n){var e=document.createElement('span');e.className='l';e.innerHTML='<i style="background:linear-gradient(150deg,'+n[1]+','+n[2]+')"></i>'+n[0];m3lg.appendChild(e);});
+      var sp=document.createElement('span');sp.className='sep';m3lg.appendChild(sp);
+      var la=document.createElement('span');la.className='lang';la.textContent='3 языка: RU · EN · ES · и любой другой';m3lg.appendChild(la);}
+    var mry=-26,mrx=-14,mauto=true,mdrag=false,mlx=0,mly=0,mres;
+    function m3r(){m3cube.style.transform='rotateX('+mrx+'deg) rotateY('+mry+'deg)';}
+    m3r();
+    m3stage.addEventListener('pointerdown',function(e){mdrag=true;mauto=false;mlx=e.clientX;mly=e.clientY;clearTimeout(mres);try{m3stage.setPointerCapture(e.pointerId);}catch(_){}});
+    m3stage.addEventListener('pointermove',function(e){if(!mdrag)return;mry+=(e.clientX-mlx)*0.45;mrx-=(e.clientY-mly)*0.3;mrx=Math.max(-82,Math.min(82,mrx));mlx=e.clientX;mly=e.clientY;m3r();});
+    function m3end(){mdrag=false;mres=setTimeout(function(){mauto=true;},1600);}
+    m3stage.addEventListener('pointerup',m3end);m3stage.addEventListener('pointercancel',m3end);m3stage.addEventListener('pointerleave',function(){if(mdrag)m3end();});
+    function m3loop(){if(mauto && !rm){mry+=0.16;m3r();}requestAnimationFrame(m3loop);}
+    m3loop();
+  }
 })();
 </script>
 </body>
