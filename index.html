@@ -145,7 +145,7 @@ section{position:relative}
 .mini-aurora{position:relative;overflow:hidden;padding:22px;color:#fff;min-height:150px;display:flex;flex-direction:column;justify-content:flex-end;border:none}
 .mini-aurora::before{content:"";position:absolute;inset:0;background:linear-gradient(150deg,var(--a1),var(--a2) 45%,var(--a3) 78%,var(--a4));z-index:0}
 .mini-aurora>*{position:relative;z-index:1}
-.mini-aurora .k{font-family:"Handjet",monospace;font-weight:700;font-size:3.4rem;line-height:.9;letter-spacing:.02em}
+.mini-aurora .k{font-family:"Handjet",monospace;font-weight:700;font-size:clamp(1.5rem,3.4vw,1.95rem);line-height:1.08;letter-spacing:.02em}
 .mini-aurora .cap{font-size:.86rem;opacity:.92;margin-top:6px;font-weight:500}
 .mini-frost{padding:20px;display:flex;flex-direction:column;gap:8px;justify-content:center;
   background:var(--frost);border:1px solid var(--frost-brd);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
@@ -433,25 +433,23 @@ section{position:relative}
   <div class="wrap">
     <div class="hero__grid">
       <div>
-        <span class="eyebrow">производство коротких видео</span>
+        <span class="eyebrow">сотни видео в пару кнопок</span>
         <h1 class="h1 hero__h1">Рилсы под ключ<br>для <span class="grad-text">любой ниши</span></h1>
-        <p class="lead">Собираю вам машину, которая печатает фирменные вертикальные ролики: сценарий, озвучка, монтаж и дизайн — на потоке. Справа и ниже — по одному ролику из разных ниш. Все собраны на этом заводе.</p>
+        <p class="lead">Представьте, у вас есть программа, которая в пару кликов собирает для вас фирменные ролики каждый день в автоматическом режиме: сценарий, озвучка, монтаж и дизайн — на потоке и всё в вашей визуальной стилистике.</p>
         <div class="hero__cta">
-          <a class="btn btn--primary" href="https://t.me/akookoo">Хочу такой же завод
+          <a class="btn btn--primary" href="https://t.me/akookoo">Получить
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </a>
           <a class="btn btn--ghost" href="#portfolio">Смотреть примеры</a>
         </div>
-        <p class="hero__note"><b>4 ниши:</b> таро · сказки · финансы (EN) · ИИ — один конвейер</p>
       </div>
 
       <div class="bento">
         <div class="phone card">
           <video id="heroVideo" src="media/ai.mp4" poster="media/ai.jpg" muted loop playsinline preload="auto"></video>
-          <span class="phone__tag">в работе</span>
         </div>
         <div class="card mini-aurora">
-          <div class="k">90<small style="font-size:.4em;font-weight:600">+</small></div>
+          <div class="k">90, 270, 900</div>
           <div class="cap">роликов в месяц<br>на потоке</div>
         </div>
         <div class="card mini-frost">
@@ -468,7 +466,7 @@ section{position:relative}
 <section class="block" id="portfolio">
   <div class="wrap">
     <div class="block__head" data-reveal>
-      <span class="eyebrow">Портфолио</span>
+      <span class="eyebrow">Примеры</span>
       <h2 class="h2">Одна машина — разные ниши</h2>
       <p class="lead">Разный стиль, разный голос, разный ритм — но всё с одного конвейера. Нажмите на ролик, чтобы включить звук.</p>
     </div>
