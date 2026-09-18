@@ -95,8 +95,8 @@ body.in-album #view{display:block}
 .v-head .v-meta{margin:20px 0 0;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;gap:22px;flex-wrap:wrap}
 .v-head p{color:var(--ink-2);max-width:56ch;font-size:clamp(1rem,1.3vw,1.12rem);margin:22px 0 0}
 .gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(12px,1.5vw,20px);padding-bottom:24px}
-.gallery figure{margin:0;position:relative;overflow:hidden;background:var(--surface);cursor:zoom-in}
-.gallery img{width:100%;height:100%;object-fit:cover;aspect-ratio:4/5;transition:transform 1s var(--ease)}
+.gallery figure{margin:0;position:relative;overflow:hidden;background:var(--surface);cursor:zoom-in;aspect-ratio:var(--ar,3/4)}
+.gallery img{width:100%;height:100%;object-fit:cover;transition:transform 1s var(--ease)}
 .gallery figure:hover img{transform:scale(1.04)}
 .gallery figcaption{position:absolute;top:12px;left:12px;font-family:var(--mono);font-size:.64rem;letter-spacing:.1em;color:#fff;mix-blend-mode:difference;opacity:.85}
 .v-cta{border-top:1px solid var(--line);margin-top:14px;padding:clamp(40px,7vh,72px) 0 clamp(56px,9vh,96px);text-align:center}
@@ -171,7 +171,7 @@ body.in-album #view{display:block}
 
   <div class="wrap" id="projects">
     <div class="sec-head">
-      <h2>Избранные проекты</h2>
+      <h2>Галерея проектов</h2>
       <span class="mono" id="pCount"></span>
     </div>
     <div class="projects" id="projectsGrid"></div>
@@ -179,7 +179,7 @@ body.in-album #view{display:block}
 
   <div class="wrap">
     <footer class="foot">
-      <div class="foot__l">Plotnikov</div>
+      <div class="foot__l">Plotnikov Roman</div>
       <div class="foot__meta">Интерьерная фотография · <span id="year"></span></div>
       <a class="link-underline" href="https://t.me/akookoo" target="_blank" rel="noopener">Telegram</a>
     </footer>
@@ -222,14 +222,21 @@ body.in-album #view{display:block}
 <script>
 (function(){
   var ALBUMS=[
-    {
-      slug:'level-amurskaya', idx:'01',
-      title:'Квартира в Level Амурская',
-      meta:[],
-      desc:'',
+    { slug:'level-amurskaya', idx:'01', title:'Квартира в Level Амурская', ratio:'3/4', meta:[], desc:'',
       cover:'img/foto-01.jpg',
-      photos:['img/foto-01.jpg','img/foto-02.jpg','img/foto-03.jpg','img/foto-04.jpg','img/foto-05.jpg','img/foto-06.jpg','img/foto-07.jpg','img/foto-08.jpg','img/foto-09.jpg']
-    }
+      photos:['img/foto-01.jpg','img/foto-02.jpg','img/foto-03.jpg','img/foto-04.jpg','img/foto-05.jpg','img/foto-06.jpg','img/foto-07.jpg','img/foto-08.jpg','img/foto-09.jpg'] },
+    { slug:'project-2', idx:'02', title:'Проект 02', ratio:'3/4', meta:[], desc:'',
+      cover:'img/p1-01.jpg',
+      photos:['img/p1-01.jpg','img/p1-02.jpg','img/p1-03.jpg','img/p1-04.jpg'] },
+    { slug:'project-3', idx:'03', title:'Проект 03', ratio:'3/2', meta:[], desc:'',
+      cover:'img/p2-01.jpg',
+      photos:['img/p2-01.jpg','img/p2-02.jpg','img/p2-03.jpg','img/p2-04.jpg'] },
+    { slug:'zagorodnyy-dom', idx:'04', title:'Загородный дом в Подмосковье', ratio:'4/5', meta:[], desc:'',
+      cover:'img/p3-01.jpg',
+      photos:['img/p3-01.jpg','img/p3-02.jpg','img/p3-03.jpg','img/p3-04.jpg','img/p3-05.jpg','img/p3-06.jpg','img/p3-07.jpg','img/p3-08.jpg'] },
+    { slug:'les-art-resort', idx:'05', title:'Les Art Resort', ratio:'3/2', meta:[], desc:'',
+      cover:'img/les-05.jpg',
+      photos:['img/les-01.jpg','img/les-02.jpg','img/les-03.jpg','img/les-04.jpg','img/les-05.jpg','img/les-06.jpg','img/les-07.jpg','img/les-08.jpg','img/les-09.jpg','img/les-10.jpg','img/les-11.jpg','img/les-12.jpg'] }
   ];
 
   var grid=document.getElementById('projectsGrid'), gallery=document.getElementById('gallery');
@@ -245,16 +252,13 @@ body.in-album #view{display:block}
       ((a.meta&&a.meta.length)?'<div class="pcard__sub">'+a.meta.join(' · ')+'</div>':'')+'</div></div>';
     grid.appendChild(b);
   });
-  var soon=document.createElement('div'); soon.className='pcard pcard--soon'; soon.setAttribute('data-r','');
-  soon.innerHTML='<div class="pcard__ph"><span class="ph-txt">Новые проекты — скоро</span></div>'+
-    '<div class="pcard__meta"><div class="pcard__idx">02</div><div><h3 class="pcard__title" style="color:var(--muted)">В работе</h3><div class="pcard__sub">Скоро</div></div></div>';
-  grid.appendChild(soon);
 
   /* ROUTER */
   var rm=matchMedia('(prefers-reduced-motion:reduce)').matches, cur=null;
   function bySlug(s){for(var i=0;i<ALBUMS.length;i++)if(ALBUMS[i].slug===s)return ALBUMS[i];return null;}
   function openAlbum(a){
     cur=a;
+    gallery.style.setProperty('--ar',a.ratio||'3/4');
     document.getElementById('vIdx').textContent='Проект '+a.idx;
     document.getElementById('vTitle').textContent=a.title;
     var vm=document.getElementById('vMeta');
