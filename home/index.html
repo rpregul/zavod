@@ -94,9 +94,9 @@ body.in-album #view{display:block}
 .v-head h1{font-family:var(--serif);font-size:clamp(2rem,4.4vw,3.4rem);font-weight:500;line-height:1.05;max-width:16ch}
 .v-head .v-meta{margin:20px 0 0;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;gap:22px;flex-wrap:wrap}
 .v-head p{color:var(--ink-2);max-width:56ch;font-size:clamp(1rem,1.3vw,1.12rem);margin:22px 0 0}
-.gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(12px,1.5vw,20px);padding-bottom:24px}
-.gallery figure{margin:0;position:relative;overflow:hidden;background:var(--surface);cursor:zoom-in;aspect-ratio:var(--ar,3/4)}
-.gallery img{width:100%;height:100%;object-fit:cover;transition:transform 1s var(--ease)}
+.gallery{column-count:2;column-gap:clamp(12px,1.5vw,20px);padding-bottom:24px}
+.gallery figure{break-inside:avoid;margin:0 0 clamp(12px,1.5vw,20px);position:relative;overflow:hidden;background:var(--surface);cursor:zoom-in}
+.gallery img{width:100%;height:auto;display:block;transition:transform 1s var(--ease)}
 .gallery figure:hover img{transform:scale(1.04)}
 .gallery figcaption{position:absolute;top:12px;left:12px;font-family:var(--mono);font-size:.64rem;letter-spacing:.1em;color:#fff;mix-blend-mode:difference;opacity:.85}
 .v-cta{border-top:1px solid var(--line);margin-top:14px;padding:clamp(40px,7vh,72px) 0 clamp(56px,9vh,96px);text-align:center}
@@ -124,7 +124,7 @@ body.in-album #view{display:block}
   .hero{grid-template-columns:1fr;gap:34px;align-items:start;padding-top:18px}
   .hero__fig{max-width:460px}
   .projects{grid-template-columns:1fr;gap:34px}
-  .gallery{grid-template-columns:1fr;gap:12px}
+  .gallery{column-count:1}
   .mast__nav{gap:18px}
 }
 @media (max-width:520px){
@@ -164,7 +164,7 @@ body.in-album #view{display:block}
       </div>
       <figure class="hero__fig" data-load="3" style="margin:0">
         <img src="img/foto-01.jpg" alt="Интерьер — кабинет-ниша у окна">
-        <figcaption class="hero__cap">01 — Level Амурская</figcaption>
+        <figcaption class="hero__cap">02 — Level Амурская</figcaption>
       </figure>
     </section>
   </div>
@@ -222,21 +222,18 @@ body.in-album #view{display:block}
 <script>
 (function(){
   var ALBUMS=[
-    { slug:'level-amurskaya', idx:'01', title:'Квартира в Level Амурская', ratio:'3/4', meta:[], desc:'',
+    { slug:'zagorodnyy-dom', idx:'01', title:'Загородный дом в Подмосковье', meta:[], desc:'',
+      cover:'img/p3-05.jpg',
+      photos:['img/p3-01.jpg','img/p3-02.jpg','img/p3-03.jpg','img/p3-04.jpg','img/p3-05.jpg','img/p3-06.jpg','img/p3-07.jpg','img/p3-08.jpg'] },
+    { slug:'level-amurskaya', idx:'02', title:'Квартира в Level Амурская', meta:[], desc:'',
       cover:'img/foto-01.jpg',
       photos:['img/foto-01.jpg','img/foto-02.jpg','img/foto-03.jpg','img/foto-04.jpg','img/foto-05.jpg','img/foto-06.jpg','img/foto-07.jpg','img/foto-08.jpg','img/foto-09.jpg'] },
-    { slug:'project-2', idx:'02', title:'Проект 02', ratio:'3/4', meta:[], desc:'',
+    { slug:'metropoliya-ugreshskaya', idx:'03', title:'Квартира в ЖК Метрополия на Угрешской', meta:[], desc:'',
       cover:'img/p1-01.jpg',
-      photos:['img/p1-01.jpg','img/p1-02.jpg','img/p1-03.jpg','img/p1-04.jpg'] },
-    { slug:'project-3', idx:'03', title:'Проект 03', ratio:'3/2', meta:[], desc:'',
-      cover:'img/p2-01.jpg',
-      photos:['img/p2-01.jpg','img/p2-02.jpg','img/p2-03.jpg','img/p2-04.jpg'] },
-    { slug:'zagorodnyy-dom', idx:'04', title:'Загородный дом в Подмосковье', ratio:'4/5', meta:[], desc:'',
-      cover:'img/p3-01.jpg',
-      photos:['img/p3-01.jpg','img/p3-02.jpg','img/p3-03.jpg','img/p3-04.jpg','img/p3-05.jpg','img/p3-06.jpg','img/p3-07.jpg','img/p3-08.jpg'] },
-    { slug:'les-art-resort', idx:'05', title:'Les Art Resort', ratio:'3/2', meta:[], desc:'',
-      cover:'img/les-05.jpg',
-      photos:['img/les-01.jpg','img/les-02.jpg','img/les-03.jpg','img/les-04.jpg','img/les-05.jpg','img/les-06.jpg','img/les-07.jpg','img/les-08.jpg','img/les-09.jpg','img/les-10.jpg','img/les-11.jpg','img/les-12.jpg'] }
+      photos:['img/p1-01.jpg','img/p1-02.jpg','img/p1-03.jpg','img/p1-04.jpg','img/p2-01.jpg','img/p2-02.jpg','img/p2-03.jpg','img/p2-04.jpg'] },
+    { slug:'les-art-resort', idx:'04', title:'LES Art Resort', meta:[], desc:'',
+      cover:'img/les-12.jpg',
+      photos:['img/les-01.jpg','img/les-03.jpg','img/les-04.jpg','img/les-06.jpg','img/les-07.jpg','img/les-08.jpg','img/les-09.jpg','img/les-10.jpg','img/les-12.jpg'] }
   ];
 
   var grid=document.getElementById('projectsGrid'), gallery=document.getElementById('gallery');
@@ -258,7 +255,6 @@ body.in-album #view{display:block}
   function bySlug(s){for(var i=0;i<ALBUMS.length;i++)if(ALBUMS[i].slug===s)return ALBUMS[i];return null;}
   function openAlbum(a){
     cur=a;
-    gallery.style.setProperty('--ar',a.ratio||'3/4');
     document.getElementById('vIdx').textContent='Проект '+a.idx;
     document.getElementById('vTitle').textContent=a.title;
     var vm=document.getElementById('vMeta');
