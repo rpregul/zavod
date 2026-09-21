@@ -33,8 +33,8 @@ a{color:inherit;text-decoration:none}
 .mast__tag{font-weight:400;font-size:.72rem;letter-spacing:.02em;text-transform:none;color:var(--muted);padding-bottom:3px}
 
 /* projects */
-.projects{padding:clamp(18px,2.6vw,34px) 0 8px}
-.proj{margin-bottom:clamp(26px,3.4vw,52px)}
+.projects{padding:clamp(34px,4.6vw,64px) 0 8px}
+.proj{margin-bottom:clamp(44px,5.4vw,88px)}
 .proj__row{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap)}
 .proj figure{margin:0;position:relative;overflow:hidden;background:var(--surface);cursor:pointer;border:1px solid var(--line);aspect-ratio:3/4;transition:transform .55s var(--ease),box-shadow .55s var(--ease);transform-origin:center;will-change:transform}
 .proj figure:hover{transform:scale(1.035);z-index:3;box-shadow:0 18px 40px rgba(0,0,0,.16)}
@@ -46,7 +46,7 @@ a{color:inherit;text-decoration:none}
 .proj__cap .loc{color:var(--ink)}
 
 /* footer */
-.foot{border-top:1px solid var(--line);margin-top:14px;padding:26px 2px 40px;display:flex;flex-wrap:wrap;gap:14px 26px;align-items:center;justify-content:space-between}
+.foot{margin-top:34px;padding:8px 2px 40px;display:flex;flex-wrap:wrap;gap:14px 26px;align-items:center;justify-content:space-between}
 .foot__l{font-weight:400;letter-spacing:0;text-transform:none;font-size:.98rem}
 .foot__meta{font-weight:500;font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
 .link-underline{font-weight:600;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);position:relative;padding-bottom:4px}
@@ -104,11 +104,11 @@ a{color:inherit;text-decoration:none}
   function ph(i){return 'img/ph-'+String((i%9)+1).padStart(2,'0')+'.jpg';}
   /* Проекты стрита (4 фото + подпись). Реальные фото взяты со старого сайта; COCOS-кампании пока плейсхолдеры. */
   var PROJECTS=[
-    {cap:['Кампейн для бренда','COCOS MOSCOW','Домбай'], photos:[ph(0),ph(1),ph(2),ph(3)]},
+    {cap:['Кампейн для бренда','COCOS MOSCOW','Домбай'], photos:['img/dombay-1.jpg','img/dombay-2.jpg','img/dombay-3.jpg','img/dombay-4.jpg']},
     {cap:['Контент для бренда шуб'], photos:['img/shub-content-1.jpg','img/shub-content-2.jpg','img/shub-content-3.jpg','img/shub-content-4.jpg']},
-    {cap:['Кампейн для бренда','COCOS MOSCOW','Териберка, Кольский п-ов'], photos:[ph(4),ph(5),ph(6),ph(7)]},
-    {cap:['Уличная съёмка пуховиков для маркетплейсов'], photos:[ph(8),ph(0),ph(1),ph(2)]},
-    {cap:['Кампейн для бренда','Калининград'], photos:[ph(6),ph(3),ph(8),ph(5)]},
+    {cap:['Кампейн для бренда','COCOS MOSCOW','Териберка, Кольский п-ов'], photos:['img/teriberka-1.jpg','img/teriberka-2.jpg','img/teriberka-3.jpg','img/teriberka-4.jpg']},
+    {cap:['Уличная съёмка пуховиков для маркетплейсов'], photos:['img/puhoviki-1.jpg','img/puhoviki-2.jpg','img/puhoviki-3.jpg','img/puhoviki-4.jpg']},
+    {cap:['Кампейн для бренда','Калининград'], photos:['img/kaliningrad-1.jpg','img/kaliningrad-2.jpg','img/kaliningrad-3.jpg','img/kaliningrad-4.jpg']},
     {cap:['Уличная съёмка для бренда шуб'], photos:['img/shub-street-1.jpg','img/shub-street-2.jpg','img/shub-street-3.jpg','img/shub-street-4.jpg']}
   ];
 
