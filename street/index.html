@@ -11,14 +11,11 @@
 <meta property="og:title" content="Plotnikov Roman — стритстайл">
 <meta property="og:description" content="Стритстайл-фотография: кампейны для брендов и уличные съёмки.">
 <meta property="og:url" content="https://plotnikovprod.ru/street/">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap">
 <style>
 :root{
-  --bg:#F5F5F4; --surface:#E9E9E7; --ink:#151513; --ink-2:#5a5a56; --muted:#98978f;
-  --line:rgba(15,15,13,.9);              /* тонкая чёрная рамка */
-  --sans:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --bg:#ffffff; --surface:#efefef; --ink:#000000; --ink-2:#000000; --muted:#9a9a9a;
+  --line:rgba(0,0,0,.9);                 /* тонкая чёрная рамка */
+  --sans:Helvetica,Arial,sans-serif;     /* шрифт со старого сайта */
   --ease:cubic-bezier(.22,.61,.36,1);
   --edge:clamp(10px,1.4vw,18px);         /* тонкий отступ от краёв страницы */
   --gap:clamp(8px,1vw,14px);
@@ -32,9 +29,8 @@ a{color:inherit;text-decoration:none}
 
 /* masthead — NO menu */
 .mast{padding:22px 2px 16px;display:flex;align-items:flex-end;justify-content:space-between;gap:14px}
-.mast__brand{font-weight:800;font-size:clamp(1.2rem,2.4vw,1.7rem);letter-spacing:.16em;text-transform:uppercase;line-height:1}
-.mast__tag{font-weight:500;font-size:.66rem;letter-spacing:.28em;text-transform:uppercase;color:var(--ink-2);padding-bottom:3px}
-.rule{height:1px;background:var(--line);border:0;margin:0 2px;opacity:.9}
+.mast__brand{font-weight:400;font-size:clamp(1.35rem,2.4vw,1.7rem);letter-spacing:0;text-transform:none;line-height:1}
+.mast__tag{font-weight:400;font-size:.72rem;letter-spacing:.02em;text-transform:none;color:var(--muted);padding-bottom:3px}
 
 /* projects */
 .projects{padding:clamp(18px,2.6vw,34px) 0 8px}
@@ -45,13 +41,13 @@ a{color:inherit;text-decoration:none}
 .proj img{width:100%;height:100%;object-fit:cover}
 .proj .ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
 .proj .ph span{font-weight:500;font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
-.proj__cap{margin-top:13px;padding:0 2px;font-weight:500;font-size:clamp(.72rem,1vw,.84rem);letter-spacing:.13em;text-transform:uppercase;color:var(--ink)}
-.proj__cap .sep{color:var(--muted);margin:0 .55em;font-weight:400}
-.proj__cap .loc{color:var(--ink-2)}
+.proj__cap{margin-top:14px;padding:0 2px;font-weight:300;font-size:clamp(.82rem,1.05vw,.95rem);letter-spacing:.01em;text-transform:uppercase;color:var(--ink)}
+.proj__cap .sep{color:var(--ink);opacity:.4;margin:0 .5em;font-weight:300}
+.proj__cap .loc{color:var(--ink)}
 
 /* footer */
 .foot{border-top:1px solid var(--line);margin-top:14px;padding:26px 2px 40px;display:flex;flex-wrap:wrap;gap:14px 26px;align-items:center;justify-content:space-between}
-.foot__l{font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:.82rem}
+.foot__l{font-weight:400;letter-spacing:0;text-transform:none;font-size:.98rem}
 .foot__meta{font-weight:500;font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
 .link-underline{font-weight:600;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);position:relative;padding-bottom:4px}
 .link-underline::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--ink);transform:scaleX(1);transform-origin:right;transition:transform .4s var(--ease)}
@@ -82,7 +78,6 @@ a{color:inherit;text-decoration:none}
   <div class="mast__brand">Plotnikov Roman</div>
   <span class="mast__tag">Стритстайл · Street style</span>
 </header>
-<hr class="rule">
 
 <div class="projects" id="projects"></div>
 
