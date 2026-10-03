@@ -1,5 +1,7 @@
 # Подключение общей базы (Supabase)
 
+**Статус: подключено.** Проект `neuro-zaryadka` (регион eu-central-1), `schema.sql` применена, URL и anon-ключ прописаны в `neuro/js/config.js`. Шаги ниже нужны, только если базу придётся пересоздать.
+
 1. Создать бесплатный проект на supabase.com.
 2. В проекте открыть **SQL Editor**, вставить содержимое `schema.sql`, нажать **Run**.
 3. В **Project Settings → API** скопировать `Project URL` и `anon public` ключ.
