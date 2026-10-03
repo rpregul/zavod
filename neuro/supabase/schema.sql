@@ -25,6 +25,8 @@ create index if not exists nz_results_user_idx on nz_results (user_key, ts);
 
 alter table nz_users   enable row level security;
 alter table nz_results enable row level security;
+-- второй слой защиты: у браузерных ролей вообще нет прав на таблицы (функции ниже работают от имени владельца)
+revoke all on table nz_users, nz_results from anon, authenticated;
 
 -- проверка PIN с защитой от подбора: 10 ошибок = блокировка на 10 минут
 create or replace function nz_check(p_key text, p_hash text) returns text
