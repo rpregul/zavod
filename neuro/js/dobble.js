@@ -28,56 +28,19 @@ export const CARDS = buildCards();
 
 export const commonSymbol = (a, b) => CARDS[a].find((s) => CARDS[b].includes(s));
 
-// Фиксированная раскладка символов на карточке (как на настоящей карточке):
-// разные размеры и повороты, без пересечений. Детерминирована по номеру карточки.
+// Фиксированная раскладка символов на карточке, как на настоящей: один символ в центре
+// и семь по кольцу вокруг него, размеры почти одинаковые. Позиция 0 = центр.
+// Небольшой разброс размера, угла и поворота даёт «живой» вид; детерминировано по номеру карточки.
 export function layoutCard(cardIdx) {
   const rnd = mulberry32(cardIdx * 2654435761 + 977);
-  const base = [0.36, 0.315, 0.285, 0.255, 0.235, 0.212, 0.195, 0.18];
-  let scale = 1;
-  for (let attempt = 0; attempt < 400; attempt++) {
-    const radii = shuffle(base, rnd).map((r) => r * scale * (0.93 + rnd() * 0.14));
-    const it = radii.map((r) => {
-      const a = rnd() * Math.PI * 2;
-      const d = Math.sqrt(rnd()) * (0.9 - r);
-      return { r, x: Math.cos(a) * d, y: Math.sin(a) * d };
-    });
-    for (let k = 0; k < 500; k++) {
-      let moved = 0;
-      for (let i = 0; i < it.length; i++) {
-        for (let j = i + 1; j < it.length; j++) {
-          const dx = it[j].x - it[i].x, dy = it[j].y - it[i].y;
-          const d = Math.hypot(dx, dy) || 1e-6;
-          const min = it[i].r + it[j].r + 0.014;
-          if (d < min) {
-            const push = (min - d) / 2, ux = dx / d, uy = dy / d;
-            it[i].x -= ux * push; it[i].y -= uy * push;
-            it[j].x += ux * push; it[j].y += uy * push;
-            moved += push;
-          }
-        }
-      }
-      for (const p of it) {
-        const d = Math.hypot(p.x, p.y), lim = 0.95 - p.r;
-        if (d > lim) { p.x *= lim / d; p.y *= lim / d; moved += d - lim; }
-      }
-      if (moved < 1e-6) break;
-    }
-    let ok = true;
-    for (let i = 0; i < it.length && ok; i++) {
-      if (Math.hypot(it[i].x, it[i].y) + it[i].r > 0.965) ok = false;
-      for (let j = i + 1; j < it.length && ok; j++) {
-        if (Math.hypot(it[i].x - it[j].x, it[i].y - it[j].y) < it[i].r + it[j].r + 0.006) ok = false;
-      }
-    }
-    if (ok) return it.map((p) => ({ ...p, rot: rnd() * 360 }));
-    scale *= 0.985;
+  const phase = rnd() * Math.PI * 2;
+  const out = [{ r: 0.31 * (0.96 + rnd() * 0.08), x: 0, y: 0, rot: rnd() * 360 }];
+  for (let i = 0; i < 7; i++) {
+    const a = phase + (i / 7) * Math.PI * 2 + (rnd() - 0.5) * 0.05;
+    const d = 0.67 + (rnd() - 0.5) * 0.03;
+    out.push({ r: 0.255 * (0.95 + rnd() * 0.1), x: Math.cos(a) * d, y: Math.sin(a) * d, rot: rnd() * 360 });
   }
-  // запасной вариант: кольцо из 7 символов и один в центре
-  return Array.from({ length: 8 }, (_, i) => {
-    if (i === 7) return { r: 0.22, x: 0, y: 0, rot: 0 };
-    const a = (i / 7) * Math.PI * 2;
-    return { r: 0.2, x: Math.cos(a) * 0.62, y: Math.sin(a) * 0.62, rot: rnd() * 360 };
-  });
+  return out;
 }
 
 const layoutCache = new Map();
@@ -88,8 +51,9 @@ const getLayout = (idx) => {
 
 export function cardHtml(cardIdx, { rotate = 0 } = {}) {
   const lay = getLayout(cardIdx);
+  const order = shuffle([0, 1, 2, 3, 4, 5, 6, 7], mulberry32(cardIdx * 40503 + 7));
   const syms = CARDS[cardIdx].map((symIdx, i) => {
-    const p = lay[i];
+    const p = lay[order[i]];
     const k = (2 * p.r) / 92;
     return `<g class="sym" data-s="${symIdx}" transform="translate(${p.x.toFixed(4)} ${p.y.toFixed(4)}) rotate(${p.rot.toFixed(1)}) scale(${k.toFixed(5)}) translate(-50 -50)"><use href="#sy-${symIdx}"/><circle cx="50" cy="50" r="50" fill="transparent"/></g>`;
   }).join('');
