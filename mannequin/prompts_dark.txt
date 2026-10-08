@@ -1,0 +1,7 @@
+front_base_dark.png (style reference image attached):
+Use the attached image only as a STYLE reference: dark graphite anatomical figure with a faceless smooth head, visible muscle fibres and striations, soft studio gradient background. Create a NEW image: an athletic male anatomical figure, dark charcoal/graphite body with a subtle satin sheen, a faceless smooth egg-shaped head, and every muscle drawn as detailed anatomical muscle fibres with fine striations and tendons (pecs, deltoids, biceps, triceps, forearms, abs, obliques, quads, hamstrings, calves). Standing straight, front view, arms hanging slightly away from the body, palms facing the thighs, feet shoulder-width apart, perfectly symmetrical, centered, full body from head to feet. Soft studio lighting with a plain dark gray gradient background and a soft floor. Do NOT include any text, logo, caption or watermark, and do not copy the pose of the reference. Vertical 2:3.
+
+front_chest_dark.png (input: front_base_dark.png):
+Using this exact image, keep the body, pose, framing, lighting, muscle fibre detail and background completely unchanged. Only make the chest muscles (pectoralis major) glow in saturated electric blue, with the muscle fibres still visible inside the glow and a soft blue halo around it, like an anatomical highlight. Nothing else changes. No text.
+
+Model: gemini-nano-banana-2.1 (Vertex AI), responseModalities [IMAGE], imageSize 2K, aspectRatio 2:3
