@@ -1,0 +1,7 @@
+front_base.png:
+Photorealistic 3D render of a muscular male anatomical mannequin, smooth matte light-gray surface, faceless smooth egg-shaped head, athletic bodybuilder physique with clearly defined but smooth muscles (pecs, abs, quads, delts). Standing straight, arms hanging slightly away from the body, palms facing the thighs, feet shoulder-width apart. Wearing plain black athletic shorts. Full body from head to feet, front view, perfectly symmetrical, centered. Soft studio lighting, plain dark gray gradient background. Vertical 2:3. No text, no watermark.
+
+front_chest.png (input: front_base.png):
+Using this exact image, keep the body, pose, framing, lighting and background completely unchanged. Only make the chest muscles (pectoralis major) glow in saturated electric blue, like an anatomical highlight over the skin. Nothing else changes.
+
+Model: gemini-nano-banana-2.1 (Vertex AI), responseModalities [IMAGE], imageSize 2K, aspectRatio 2:3
