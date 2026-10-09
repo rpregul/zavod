@@ -1,5 +1,5 @@
 // Сначала сеть, при её отсутствии кэш: после деплоя всегда свежая версия, а без интернета приложение всё равно открывается.
-const CACHE = 'nz-v1';
+const CACHE = 'nz-v2';
 
 self.addEventListener('install', (e) => { self.skipWaiting(); });
 
@@ -20,7 +20,8 @@ self.addEventListener('fetch', (e) => {
   if (!sameOrigin && !isFont) return; // запросы к облаку не трогаем
   e.respondWith((async () => {
     try {
-      const res = await fetch(req);
+      // no-cache: всегда сверяемся с сервером (GitHub Pages держит файлы в HTTP-кэше до 10 минут)
+      const res = await fetch(req, sameOrigin ? { cache: 'no-cache' } : undefined);
       if (res.ok) { const c = await caches.open(CACHE); c.put(req, res.clone()); }
       return res;
     } catch {

@@ -562,11 +562,15 @@ function boot() {
   initFx();
   initRipple();
   store.load();
-  let lastCount = store.results.length;
+  // перерисовываем главную, если изменилось содержимое результатов (в т.ч. дата у существующих), а не только их число
+  const sig = () => store.results.map((r) => `${r.id}${r.day}${r.score}`).join('|');
+  let lastSig = sig();
   store.on(() => {
     paintSync();
-    if (screen === 'home' && store.results.length !== lastCount) { lastCount = store.results.length; renderHome({ quiet: true }); }
-    lastCount = store.results.length;
+    const now = sig();
+    const changed = now !== lastSig;
+    lastSig = now;
+    if (screen === 'home' && changed) renderHome({ quiet: true });
   });
   if (store.session) { renderHome(); store.sync(); } else renderLogin();
   document.addEventListener('visibilitychange', () => {
