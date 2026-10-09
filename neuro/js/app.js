@@ -176,7 +176,9 @@ function renderLogin() {
 }
 
 // ---------------------------------------------------------------- главная (дашборд)
-let chartEx = (() => { try { return sessionStorage.getItem('nz.chartEx') || 'sch_f'; } catch { return 'sch_f'; } })();
+const CHART_TABS = ['all', ...ORDER];
+let chartEx = (() => { try { const v = sessionStorage.getItem('nz.chartEx'); return CHART_TABS.includes(v) ? v : 'all'; } catch { return 'all'; } })();
+const TAB_LABEL = { all: 'Общий', sch_f: 'Шульте', sch_r: 'Шульте ↕', dob: 'Dobble', mem: 'Память' };
 
 function renderHome({ quiet = false } = {}) {
   if (!store.session) return renderLogin();
@@ -238,9 +240,10 @@ function renderHome({ quiet = false } = {}) {
     <section class="sec" style="--i:3">
       <h3 class="sec__t">Мой прогресс</h3>
       <div class="progress glass">
-        <div class="seg" role="tablist">${ORDER.map((id) => `<button class="seg__b${id === chartEx ? ' on' : ''}" data-chart="${id}" role="tab">${EX[id].title.replace('Шульте вверх ногами', 'Шульте ↕').replace('Запоминание слов', 'Память')}</button>`).join('')}</div>
+        <div class="seg" role="tablist">${CHART_TABS.map((id) => `<button class="seg__b${id === chartEx ? ' on' : ''}" data-chart="${id}" role="tab">${TAB_LABEL[id]}</button>`).join('')}</div>
         <div class="kpis" data-kpis></div>
         <div class="chart" data-chart-host></div>
+        <div data-breakdown></div>
       </div>
     </section>
 
@@ -286,17 +289,48 @@ function renderHome({ quiet = false } = {}) {
 
 function paintChart(node) {
   const res = store.results;
+  const kpis = node.querySelector('[data-kpis]');
+  const bd = node.querySelector('[data-breakdown]');
+  const trendHtml = (tr, unit = '') => (tr === null ? '<b>—</b><small>тренд появится через неделю</small>' : `<b class="${tr >= 0 ? 'up' : 'down'}">${tr >= 0 ? '↑' : '↓'} ${Math.abs(tr).toFixed(1)}${unit}</b><small>к прошлой неделе</small>`);
+
+  if (chartEx === 'all') {
+    const series = S.overallSeries(res);
+    const pts = series.slice(-30);
+    const now = series.length ? series[series.length - 1].y : null;
+    const top = series.length ? Math.max(...series.map((p) => p.y)) : null;
+    const cur = S.seriesAvg(series, 0, 7), prev = S.seriesAvg(series, 7, 14);
+    kpis.innerHTML = `
+      <div><b>${now ?? '—'}</b><small>сейчас</small></div>
+      <div><b>${top ?? '—'}</b><small>рекорд</small></div>
+      <div><b>${cur === null ? '—' : cur.toFixed(0)}</b><small>среднее за 7 дн.</small></div>
+      <div>${trendHtml(cur !== null && prev !== null ? cur - prev : null)}</div>`;
+    lineChart(node.querySelector('[data-chart-host]'), pts, { color: '#ff9a3d', color2: '#b24bf3', unit: 'баллов' });
+    bd.innerHTML = series.length ? `<div class="breakdown">
+      <h4>Из чего складывается</h4>
+      ${S.overallShare(res).map((r) => {
+        const e = EX[r.ex];
+        return `<div class="bd-row" style="--c1:${e.c1};--c2:${e.c2}">
+          ${gi(e.icon, e.color, 'xs')}
+          <span class="bd-row__m"><small>${e.title}</small><span class="bd-bar"><i style="--w:${Math.min(100, r.pct)}%"></i></span></span>
+          <b>${r.score === null ? '—' : r.pct}</b>
+        </div>`;
+      }).join('')}
+      <p class="chart-note">Общий балл — среднее по четырём упражнениям. 100 баллов = целевой уровень: ${S.EXS.map((x) => `${EX[x].title.replace('Шульте вверх ногами', 'Шульте ↕').replace('Запоминание слов', 'слова')} ${S.TARGETS[x]}`).join(', ')}.</p>
+    </div>` : '';
+    return;
+  }
+
+  bd.innerHTML = '';
   const e = EX[chartEx];
   const pts = S.dayBest(res, chartEx).slice(-30);
   const b = S.best(res, chartEx);
   const avg = S.avgWindow(res, chartEx, 0, 7);
   const tr = S.trend(res, chartEx);
   const total = S.byEx(res, chartEx).length;
-  const trHtml = tr === null ? '<b>—</b><small>тренд появится через неделю</small>' : `<b class="${tr >= 0 ? 'up' : 'down'}">${tr >= 0 ? '↑' : '↓'} ${Math.abs(tr).toFixed(1)}</b><small>к прошлой неделе</small>`;
-  node.querySelector('[data-kpis]').innerHTML = `
+  kpis.innerHTML = `
     <div><b>${b ?? '—'}</b><small>рекорд</small></div>
     <div><b>${avg === null ? '—' : avg.toFixed(1)}</b><small>среднее за 7 дн.</small></div>
-    <div>${trHtml}</div>
+    <div>${trendHtml(tr)}</div>
     <div><b>${total}</b><small>попыток</small></div>`;
   lineChart(node.querySelector('[data-chart-host]'), pts, { color: e.c1, color2: e.c2, unit: e.unit });
 }
