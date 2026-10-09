@@ -155,9 +155,12 @@ export const store = {
       }
       const pulled = await rpc('nz_pull', { p_key: key, p_hash: hash });
       if (pulled.status !== 'ok') { this.status = 'authfail'; return; }
-      const have = new Set(this.results.map((r) => r.id));
+      // облако главнее: новые записи добавляем, а у уже синхронизированных подтягиваем правки (например, перенос даты)
+      const byId = new Map(this.results.map((r) => [r.id, r]));
       for (const row of pulled.rows || []) {
-        if (!have.has(row.id)) this.results.push({ ...row, s: 1 });
+        const mine = byId.get(row.id);
+        if (!mine) this.results.push({ ...row, s: 1 });
+        else if (mine.s) Object.assign(mine, { ex: row.ex, score: row.score, day: row.day, ts: row.ts, meta: row.meta });
       }
       this.results.sort((a, b) => a.ts - b.ts);
       this.persist();
