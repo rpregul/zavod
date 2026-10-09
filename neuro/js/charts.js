@@ -88,7 +88,7 @@ export function lineChart(host, points, { color = '#ff7a45', color2 = '#ff4fa0',
     cross.setAttribute('x2', xy[bi][0]);
     cross.setAttribute('opacity', '1');
     tip.hidden = false;
-    tip.innerHTML = `<b>${p.y}</b> ${unit}<span>${fmtShort(p.day)}${p.n > 1 ? ` · попыток: ${p.n}` : ''}</span>`;
+    tip.innerHTML = `<b>${p.y}</b> ${unit}<span>${fmtShort(p.day)}${p.note ? ` · ${p.note}` : p.n > 1 ? ` · попыток: ${p.n}` : ''}</span>`;
     const tx = (xy[bi][0] / W) * r.width;
     tip.style.left = `${Math.min(r.width - 60, Math.max(60, tx))}px`;
   };

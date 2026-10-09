@@ -202,6 +202,16 @@ small{font-size:.78rem;color:var(--muted);font-weight:600}
 .chart__tip{position:absolute;top:-6px;z-index:2;transform:translateX(-50%);pointer-events:none;background:#1f1b3a;color:#fff;border-radius:12px;padding:.35em .75em;font-size:.82rem;font-weight:600;white-space:nowrap;display:flex;flex-direction:column;align-items:center;line-height:1.2;box-shadow:0 8px 18px -6px rgba(31,27,58,.5)}
 .chart__tip[hidden]{display:none}
 .chart__tip b{font-size:1.05rem}.chart__tip span{opacity:.7;font-size:.72rem}
+.breakdown{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);display:grid;gap:12px}
+.breakdown h4{margin:0;font-size:.82rem;font-weight:800;color:var(--ink2);letter-spacing:.02em}
+.bd-row{display:grid;grid-template-columns:auto 1fr 44px;gap:12px;align-items:center}
+.bd-row b{font-size:1.15rem;font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+.bd-row__m{display:flex;flex-direction:column;gap:5px;min-width:0}
+.bd-row__m small{font-size:.76rem;line-height:1.1}
+.bd-bar{display:block;height:9px;border-radius:99px;background:rgba(120,100,180,.12);overflow:hidden}
+.bd-bar i{display:block;height:100%;width:var(--w);border-radius:inherit;background:linear-gradient(90deg,var(--c1),var(--c2));animation:grow 1s var(--ease) .2s both}
+@keyframes grow{from{width:0}}
+.chart-note{font-size:.72rem;line-height:1.35;color:var(--muted);font-weight:500;margin:2px 0 0}
 .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:190px;text-align:center;color:var(--ink2)}
 .empty span{font-size:.88rem;color:var(--muted);font-weight:500;max-width:26ch}
 .empty__art{font-size:2.6rem;animation:float 4s ease-in-out infinite}

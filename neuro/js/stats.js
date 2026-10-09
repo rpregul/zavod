@@ -92,3 +92,37 @@ export function weekStrip(results) {
     return { label, day, n: days.get(day)?.size || 0, today: day === today, future: day > today };
   });
 }
+
+// ---- Общий итог ----
+// У упражнений разные единицы (числа, пары, слова), поэтому каждое переводим в % от целевого уровня
+// и усредняем. 100 баллов = цель по каждому упражнению. Цели можно подкрутить здесь.
+export const TARGETS = { sch_f: 40, sch_r: 30, dob: 20, mem: 24 };
+export const pct = (ex, score) => Math.round((score / TARGETS[ex]) * 100);
+
+// По дням: берём лучший результат дня; если упражнение в этот день не делали, остаётся его последнее известное значение.
+export function overallSeries(results) {
+  const per = Object.fromEntries(EXS.map((ex) => [ex, new Map(dayBest(results, ex).map((d) => [d.day, d.y]))]));
+  const days = [...new Set(EXS.flatMap((ex) => [...per[ex].keys()]))].sort();
+  const last = {};
+  return days.map((day) => {
+    let done = 0;
+    for (const ex of EXS) if (per[ex].has(day)) { last[ex] = per[ex].get(day); done++; }
+    const vals = EXS.filter((ex) => last[ex] !== undefined).map((ex) => pct(ex, last[ex]));
+    return { day, y: Math.round(vals.reduce((a, b) => a + b, 0) / vals.length), n: 1, note: `упражнений в этот день: ${done} из 4` };
+  });
+}
+
+// вклад каждого упражнения: последнее известное лучшее за день
+export function overallShare(results) {
+  return EXS.map((ex) => {
+    const d = dayBest(results, ex);
+    const lastDay = d[d.length - 1];
+    return { ex, score: lastDay ? lastDay.y : null, pct: lastDay ? pct(ex, lastDay.y) : 0 };
+  });
+}
+
+export function seriesAvg(series, fromAgo, toAgo) {
+  const today = dayStr();
+  const v = series.filter((p) => { const ago = diffDays(today, p.day); return ago >= fromAgo && ago < toAgo; });
+  return v.length ? v.reduce((a, b) => a + b.y, 0) / v.length : null;
+}
