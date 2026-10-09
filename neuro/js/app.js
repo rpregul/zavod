@@ -294,29 +294,50 @@ function paintChart(node) {
   const trendHtml = (tr, unit = '') => (tr === null ? '<b>—</b><small>тренд появится через неделю</small>' : `<b class="${tr >= 0 ? 'up' : 'down'}">${tr >= 0 ? '↑' : '↓'} ${Math.abs(tr).toFixed(1)}${unit}</b><small>к прошлой неделе</small>`);
 
   if (chartEx === 'all') {
-    const series = S.overallSeries(res);
-    const pts = series.slice(-30);
-    const now = series.length ? series[series.length - 1].y : null;
-    const top = series.length ? Math.max(...series.map((p) => p.y)) : null;
-    const cur = S.seriesAvg(series, 0, 7), prev = S.seriesAvg(series, 7, 14);
+    const o = S.overall(res);
+    if (!o) {
+      kpis.innerHTML = '';
+      node.querySelector('[data-chart-host]').innerHTML = `<div class="empty"><div class="empty__art">🧩</div><b>Общий итог появится после первой полной зарядки</b><span>Сделай все 4 упражнения в один день. Этот день станет стартом: 100%.</span></div>`;
+      bd.innerHTML = '';
+      return;
+    }
+    const g = o.now.growth;
+    const gs = `${g >= 0 ? '+' : '−'}${Math.abs(g)}%`;
     kpis.innerHTML = `
-      <div><b>${now ?? '—'}</b><small>сейчас</small></div>
-      <div><b>${top ?? '—'}</b><small>рекорд</small></div>
-      <div><b>${cur === null ? '—' : cur.toFixed(0)}</b><small>среднее за 7 дн.</small></div>
-      <div>${trendHtml(cur !== null && prev !== null ? cur - prev : null)}</div>`;
-    lineChart(node.querySelector('[data-chart-host]'), pts, { color: '#ff9a3d', color2: '#b24bf3', unit: 'баллов' });
-    bd.innerHTML = series.length ? `<div class="breakdown">
-      <h4>Из чего складывается</h4>
-      ${S.overallShare(res).map((r) => {
-        const e = EX[r.ex];
-        return `<div class="bd-row" style="--c1:${e.c1};--c2:${e.c2}">
-          ${gi(e.icon, e.color, 'xs')}
-          <span class="bd-row__m"><small>${e.title}</small><span class="bd-bar"><i style="--w:${Math.min(100, r.pct)}%"></i></span></span>
-          <b>${r.score === null ? '—' : r.pct}</b>
-        </div>`;
-      }).join('')}
-      <p class="chart-note">Общий балл — среднее по четырём упражнениям. 100 баллов = целевой уровень: ${S.EXS.map((x) => `${EX[x].title.replace('Шульте вверх ногами', 'Шульте ↕').replace('Запоминание слов', 'слова')} ${S.TARGETS[x]}`).join(', ')}.</p>
-    </div>` : '';
+      <div><b>${o.now.y}</b><small>баллов сейчас</small></div>
+      <div><b class="${g >= 0 ? 'up' : 'down'}">${gs}</b><small>к старту (${o.base})</small></div>
+      <div><b>${o.top}</b><small>рекорд</small></div>
+      <div><b>${o.series.length}</b><small>${plural(o.series.length, 'полный замер', 'полных замера', 'полных замеров')}</small></div>`;
+    lineChart(node.querySelector('[data-chart-host]'), o.series.slice(-30), {
+      color: '#ff9a3d', color2: '#b24bf3', unit: 'баллов',
+      lines: [
+        { y: o.goalY, label: `цель ${S.GOAL_PCT}%`, color: '#16a773' },
+        { y: o.base, label: 'старт 100%', color: '#8e89a8', below: true },
+      ],
+    });
+    const left = o.goalY - o.now.y;
+    const when = o.daysLeft > 0 ? `${o.daysLeft} ${plural(o.daysLeft, 'день', 'дня', 'дней')} до ${fmtShort(o.goalDay)}` : o.daysLeft === 0 ? 'срок сегодня' : `срок был ${fmtShort(o.goalDay)}`;
+    const rows = S.EXS.map((ex) => {
+      const e = EX[ex];
+      const was = o.baseParts[ex], cur = o.now.parts[ex];
+      const gr = was ? Math.round((cur / was - 1) * 100) : 0;
+      return `<div class="bd-row">
+        ${gi(e.icon, e.color, 'xs')}
+        <span class="bd-row__m"><b>${e.title}</b><small>было ${was}</small></span>
+        <span class="bd-row__v"><b>${cur}</b><i class="gchip ${gr > 0 ? 'up' : gr < 0 ? 'down' : ''}">${gr > 0 ? '+' : gr < 0 ? '−' : ''}${Math.abs(gr)}%</i></span>
+      </div>`;
+    }).join('');
+    bd.innerHTML = `
+      <div class="goal${o.reached ? ' goal--done' : ''}">
+        <div class="goal__top"><b>${o.reached ? '🎉 Цель достигнута' : `Цель: ${S.GOAL_PCT}% за месяц`}</b><span>${o.reached ? `${o.now.y} из ${o.goalY} баллов` : `ещё ${left} ${plural(left, 'балл', 'балла', 'баллов')} · ${when}`}</span></div>
+        <div class="goal__bar"><i style="--w:${Math.round(o.progress * 100)}%"></i></div>
+        <div class="goal__ends"><small>100% · ${o.base}</small><small>${S.GOAL_PCT}% · ${o.goalY}</small></div>
+      </div>
+      <div class="breakdown">
+        <h4>Из чего складывается</h4>
+        ${rows}
+        <p class="chart-note">Общий балл = сумма лучших результатов дня по четырём упражнениям. Считаются только дни, когда сделаны все четыре. Старт (100%): ${fmtShort(o.baseDay)}.</p>
+      </div>`;
     return;
   }
 
