@@ -1,4 +1,4 @@
-import { addDays, dayStr, diffDays } from './util.js';
+import { addDays, dayStr, diffDays, parseDay } from './util.js';
 
 export const EXS = ['sch_f', 'sch_r', 'dob', 'mem'];
 
@@ -94,35 +94,43 @@ export function weekStrip(results) {
 }
 
 // ---- Общий итог ----
-// У упражнений разные единицы (числа, пары, слова), поэтому каждое переводим в % от целевого уровня
-// и усредняем. 100 баллов = цель по каждому упражнению. Цели можно подкрутить здесь.
-export const TARGETS = { sch_f: 40, sch_r: 30, dob: 20, mem: 24 };
-export const pct = (ex, score) => Math.round((score / TARGETS[ex]) * 100);
+// Общий балл дня = сумма лучших результатов дня по четырём упражнениям.
+// Считаются только дни, когда сделаны все четыре (полный замер). Первый такой день = старт, 100%.
+export const GOAL_PCT = 120;     // цель: 120% от старта
+export const GOAL_MONTHS = 1;    // за месяц
 
-// По дням: берём лучший результат дня; если упражнение в этот день не делали, остаётся его последнее известное значение.
-export function overallSeries(results) {
+function addMonths(dayS, n) {
+  const d = parseDay(dayS);
+  const want = d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + n);
+  const dim = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(want, dim));
+  return dayStr(d);
+}
+
+export function overall(results) {
   const per = Object.fromEntries(EXS.map((ex) => [ex, new Map(dayBest(results, ex).map((d) => [d.day, d.y]))]));
-  const days = [...new Set(EXS.flatMap((ex) => [...per[ex].keys()]))].sort();
-  const last = {};
-  return days.map((day) => {
-    let done = 0;
-    for (const ex of EXS) if (per[ex].has(day)) { last[ex] = per[ex].get(day); done++; }
-    const vals = EXS.filter((ex) => last[ex] !== undefined).map((ex) => pct(ex, last[ex]));
-    return { day, y: Math.round(vals.reduce((a, b) => a + b, 0) / vals.length), n: 1, note: `упражнений в этот день: ${done} из 4` };
-  });
-}
-
-// вклад каждого упражнения: последнее известное лучшее за день
-export function overallShare(results) {
-  return EXS.map((ex) => {
-    const d = dayBest(results, ex);
-    const lastDay = d[d.length - 1];
-    return { ex, score: lastDay ? lastDay.y : null, pct: lastDay ? pct(ex, lastDay.y) : 0 };
-  });
-}
-
-export function seriesAvg(series, fromAgo, toAgo) {
-  const today = dayStr();
-  const v = series.filter((p) => { const ago = diffDays(today, p.day); return ago >= fromAgo && ago < toAgo; });
-  return v.length ? v.reduce((a, b) => a + b.y, 0) / v.length : null;
+  const days = [...per[EXS[0]].keys()].filter((day) => EXS.every((ex) => per[ex].has(day))).sort();
+  if (!days.length) return null;
+  const series = days.map((day) => ({
+    day, n: 1,
+    y: EXS.reduce((sum, ex) => sum + per[ex].get(day), 0),
+    parts: Object.fromEntries(EXS.map((ex) => [ex, per[ex].get(day)])),
+  }));
+  const base = series[0].y;
+  for (const p of series) {
+    p.growth = base ? Math.round((p.y / base - 1) * 100) : 0;
+    p.note = `${p.growth >= 0 ? '+' : '−'}${Math.abs(p.growth)}% к старту`;
+  }
+  const goalY = Math.ceil((base * GOAL_PCT) / 100);
+  const now = series[series.length - 1];
+  const goalDay = addMonths(series[0].day, GOAL_MONTHS);
+  return {
+    series, base, baseDay: series[0].day, baseParts: series[0].parts,
+    now, top: Math.max(...series.map((p) => p.y)),
+    goalY, goalDay, daysLeft: diffDays(goalDay, dayStr()),
+    reached: now.y >= goalY,
+    progress: goalY > base ? Math.max(0, Math.min(1, (now.y - base) / (goalY - base))) : 1,
+  };
 }

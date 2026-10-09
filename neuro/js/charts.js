@@ -5,7 +5,7 @@ const NS = 'http://www.w3.org/2000/svg';
 
 // Линейный график с градиентной заливкой, анимацией «рисования» и подсказкой по касанию.
 // points: [{day:'YYYY-MM-DD', y:number, n:number}]
-export function lineChart(host, points, { color = '#ff7a45', color2 = '#ff4fa0', unit = '' } = {}) {
+export function lineChart(host, points, { color = '#ff7a45', color2 = '#ff4fa0', unit = '', lines = [] } = {}) {
   host.innerHTML = '';
   if (!points.length) {
     host.innerHTML = `<div class="empty"><div class="empty__art">📈</div><b>Пока нет данных</b><span>Сделай первую зарядку: график появится здесь</span></div>`;
@@ -17,7 +17,8 @@ export function lineChart(host, points, { color = '#ff7a45', color2 = '#ff4fa0',
   const m = { l: 34, r: 14, t: 16, b: 26 };
   const iw = W - m.l - m.r, ih = H - m.t - m.b;
   const ys = points.map((p) => p.y);
-  const yMin = Math.min(...ys), yMax = Math.max(...ys);
+  const allY = ys.concat(lines.map((l) => l.y));
+  const yMin = Math.min(...allY), yMax = Math.max(...allY);
   // «красивые» целые деления оси: шаг 1/2/5/10…, 3-5 делений
   const rawRange = Math.max(yMax - yMin, 1);
   const niceStep = [1, 2, 5, 10, 20, 50].find((st) => rawRange * 1.25 / st <= 4) || 100;
@@ -49,6 +50,10 @@ export function lineChart(host, points, { color = '#ff7a45', color2 = '#ff4fa0',
     const y = yOf(v);
     grid += `<line x1="${m.l}" x2="${W - m.r}" y1="${y}" y2="${y}" class="grid"/><text x="${m.l - 8}" y="${y + 4}" class="axis" text-anchor="end">${Math.round(v)}</text>`;
   }
+  const refs = lines.map((l) => {
+    const y = yOf(l.y);
+    return `<line x1="${m.l}" x2="${W - m.r}" y1="${y}" y2="${y}" class="ref" style="--rc:${l.color}"/><text x="${W - m.r}" y="${l.below ? y + 12 : y - 5}" text-anchor="end" class="ref-t" style="--rc:${l.color}">${l.label}</text>`;
+  }).join('');
   const labelIdx = points.length <= 3 ? points.map((_, i) => i) : [0, Math.floor((points.length - 1) / 2), points.length - 1];
   const xl = [...new Set(labelIdx)].map((i) => {
     const anchor = i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle';
@@ -67,6 +72,7 @@ export function lineChart(host, points, { color = '#ff7a45', color2 = '#ff4fa0',
         <linearGradient id="${id}s" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${color}"/><stop offset="1" stop-color="${color2}"/></linearGradient>
       </defs>
       ${grid}
+      ${refs}
       <path d="${area}" fill="url(#${id}f)" class="area"/>
       <path d="${d}" fill="none" stroke="url(#${id}s)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" class="line" pathLength="1"/>
       ${dots}
