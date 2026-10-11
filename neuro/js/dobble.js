@@ -116,11 +116,13 @@ export function runDobble(ctx, { step = '' } = {}) {
       await sleep(140);
       if (ctx.aborted) return;
       // общая карта «забирается»: ложится на твою, из колоды открывается новая
-      const dy = mineEl.getBoundingClientRect().top - centerEl.getBoundingClientRect().top;
+      // общая карта «забирается» на место твоей: считаем сдвиг по обеим осям (на компьютере карты лежат рядом)
+      const to = mineEl.getBoundingClientRect(), from = centerEl.getBoundingClientRect();
+      const dx = to.left - from.left, dy = to.top - from.top;
       const moving = centerEl;
       moving.style.zIndex = '5';
       await moving.animate(
-        [{ transform: 'translateY(0) scale(1)' }, { transform: `translateY(${dy}px) scale(1.02)` }, { transform: `translateY(${dy}px) scale(1)` }],
+        [{ transform: 'translate(0,0) scale(1)' }, { transform: `translate(${dx}px,${dy}px) scale(1.02)` }, { transform: `translate(${dx}px,${dy}px) scale(1)` }],
         { duration: 260, easing: 'cubic-bezier(.3,.9,.3,1)', fill: 'forwards' },
       ).finished.catch(() => {});
       if (ctx.aborted) return;
