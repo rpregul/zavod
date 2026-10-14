@@ -1,6 +1,6 @@
 import { store, cloudOn } from './store.js';
 import * as S from './stats.js';
-import { el, esc, plural, dayStr, fmtLong, fmtShort, weekdayName, sleep } from './util.js';
+import { el, esc, plural, dayStr, fmtLong, fmtShort, weekdayName, sleep, logicalDay } from './util.js';
 import { glyph, gi } from './icons.js';
 import { initFx, initRipple, confetti, haptic, sfx, countUp, toast } from './fx.js';
 import { lineChart, heatmap, ringSvg } from './charts.js';
@@ -67,7 +67,7 @@ const greeting = () => {
 const fmtTime = (ts) => {
   const d = new Date(ts);
   const t = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-  return dayStr(d) === dayStr() ? `сегодня, ${t}` : `${fmtShort(dayStr(d))}, ${t}`;
+  return logicalDay(ts) === dayStr() ? `сегодня, ${t}` : `${fmtShort(logicalDay(ts))}, ${t}`;
 };
 const sign = (n) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
 
