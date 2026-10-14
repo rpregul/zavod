@@ -1,4 +1,4 @@
-import { addDays, dayStr, fmtShort, parseDay } from './util.js';
+import { addDays, dayStr, fmtShort, logicalNow, parseDay } from './util.js';
 
 let gid = 0;
 const NS = 'http://www.w3.org/2000/svg';
@@ -108,7 +108,7 @@ export function lineChart(host, points, { color = '#ff7a45', color2 = '#ff4fa0',
 // Календарь-«тепловая карта» за 12 недель (колонки = недели, строки = пн..вс)
 export function heatmap(host, daysMap, weeks = 12) {
   const today = dayStr();
-  const dow = (new Date().getDay() + 6) % 7;
+  const dow = (logicalNow().getDay() + 6) % 7;
   const start = addDays(today, -dow - (weeks - 1) * 7);
   let cols = '';
   for (let w = 0; w < weeks; w++) {

@@ -1,4 +1,4 @@
-import { addDays, dayStr, diffDays, parseDay } from './util.js';
+import { addDays, dayStr, diffDays, logicalNow, parseDay } from './util.js';
 
 export const EXS = ['sch_f', 'sch_r', 'dob', 'mem'];
 
@@ -83,7 +83,7 @@ export function trend(results, ex) {
 export function weekStrip(results) {
   const days = daysMap(results);
   const today = dayStr();
-  const d = new Date();
+  const d = logicalNow();
   const dow = (d.getDay() + 6) % 7; // пн = 0
   const monday = addDays(today, -dow);
   const names = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];

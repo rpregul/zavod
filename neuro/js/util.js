@@ -33,8 +33,14 @@ export function shuffle(arr, rnd = Math.random) {
 
 export const pad2 = (n) => String(n).padStart(2, '0');
 
-// Локальная дата YYYY-MM-DD (не UTC, иначе утренние результаты уедут на вчера)
-export function dayStr(d = new Date()) {
+// Зарядка перед сном (после полуночи) относится к ещё не закончившемуся дню:
+// с 00:00 до 3:59 «сегодня» всё ещё предыдущая дата.
+export const DAY_START_HOUR = 4;
+export const logicalNow = () => new Date(Date.now() - DAY_START_HOUR * 3600000);
+export const logicalDay = (ts = Date.now()) => dayStr(new Date(ts - DAY_START_HOUR * 3600000));
+
+// Локальная дата YYYY-MM-DD (не UTC, иначе утренние результаты уедут на вчера). Без аргумента: «логический» сегодня.
+export function dayStr(d = logicalNow()) {
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 }
 export function parseDay(s) {
@@ -55,8 +61,8 @@ export const fmtShort = (s) => {
 };
 const MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
 const WEEKDAYS = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'];
-export const fmtLong = (d = new Date()) => `${d.getDate()} ${MONTHS[d.getMonth()]}`;
-export const weekdayName = (d = new Date()) => WEEKDAYS[d.getDay()];
+export const fmtLong = (d = logicalNow()) => `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+export const weekdayName = (d = logicalNow()) => WEEKDAYS[d.getDay()];
 
 export function uid() {
   if (crypto?.randomUUID) return crypto.randomUUID();
