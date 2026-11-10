@@ -8,3 +8,11 @@ export const CLOUD = {
 };
 
 export const APP_VERSION = '1.0.0';
+
+// Enable only after merchant configuration and end-to-end payment verification.
+export const BILLING = {
+  enabled: false,
+  endpoint: CLOUD.url + '/functions/v1/neuro-billing',
+  consentVersion: '299-monthly-v1',
+};
+
