@@ -27,7 +27,7 @@ export const EX = {
     run: (ctx, o) => runSchulte(ctx, { ...o, reverse: true }),
   },
   dob: {
-    id: 'dob', title: 'Dobble', sub: 'найди пару', icon: 'cards', color: 'violet', unit: 'пар', c1: '#8b5cf6', c2: '#4f7cff',
+    id: 'dob', title: 'Совпадения', sub: 'найди пару', icon: 'cards', color: 'violet', unit: 'пар', c1: '#8b5cf6', c2: '#4f7cff',
     lead: 'Скорость зрительного поиска и переключения',
     rules: ['На двух картах всегда есть ровно один одинаковый рисунок', 'Найди его и нажми. Общая карта ляжет на твою, откроется следующая', 'За минуту набери как можно больше пар. Ошибка = короткая пауза'],
     run: (ctx, o) => runDobble(ctx, o),
@@ -185,7 +185,7 @@ function renderLogin() {
 // ---------------------------------------------------------------- главная (дашборд)
 const CHART_TABS = ['all', ...ORDER];
 let chartEx = (() => { try { const v = sessionStorage.getItem('nz.chartEx'); return CHART_TABS.includes(v) ? v : 'all'; } catch { return 'all'; } })();
-const TAB_LABEL = { all: 'Общий', sch_f: 'Шульте', sch_r: 'Шульте ↕', dob: 'Dobble', mem: 'Память' };
+const TAB_LABEL = { all: 'Общий', sch_f: 'Шульте', sch_r: 'Шульте ↕', dob: 'Совпадения', mem: 'Память' };
 
 function renderHome({ quiet = false } = {}) {
   if (!store.session) return renderLogin();
