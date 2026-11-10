@@ -15,7 +15,7 @@ import { openSubscription, requireSubscription } from './subscription.js';
 export const EX = {
   sch_f: {
     id: 'sch_f', title: 'Шульте', sub: 'от 1 до 25', icon: 'grid', color: 'orange', unit: 'чисел', c1: '#ff9a3d', c2: '#ff5e63',
-    lead: 'Периферическое зрение и скорость чтения',
+    lead: 'Поиск чисел и зрительное внимание',
     rules: ['Смотри только на подсвеченный центр таблицы', 'Находи числа по порядку: 1, 2, 3 … 25', 'Глаза не двигай. Таблица закончилась? Выдадим новую'],
     run: (ctx, o) => runSchulte(ctx, { ...o, reverse: false }),
   },
@@ -96,7 +96,8 @@ function renderLogin() {
           <div class="login__err" role="alert">${msg}</div>
           <button class="btn btn--primary btn--lg btn--block" type="submit">Дальше ${glyph.arrow}</button>
           <p class="login__note">${BILLING.enabled ? 'Запомни логин и PIN: они нужны для входа с другого устройства. Для покупки потребуется почта.' : 'Без паролей и почты: только имя и 4 цифры. Те же имя и PIN на другом телефоне покажут твою историю.'}</p>
-        </form>`;
+        </form>
+        ${BILLING.enabled ? '<p class="login__note">Эксперт проекта — Евгения Киргизова, преподаватель нейробиологии.<br>Продавец — Суханова Ольга Леонидовна.<br><a href="offer.html">Условия подписки</a> · <a href="privacy.html">Персональные данные</a> · <a href="mailto:plotnikov.csh@gmail.com">Поддержка</a></p>' : ''}`;
       const input = node.querySelector('#nm');
       node.querySelector('form').addEventListener('submit', (e) => {
         e.preventDefault();
