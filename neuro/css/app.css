@@ -488,3 +488,10 @@ small{font-size:.78rem;color:var(--muted);font-weight:600}
   .dob{--cd:min(86vw,380px,calc((100dvh - 250px) / 2))}
   .login__hero h1{font-size:2.1rem}
 }
+
+/* Subscription controls use the existing sheet and button styles. */
+.subscription-price { font-size: 20px; margin: 20px 0; }
+.subscription-price b { font-size: 36px; }
+.subscription-consent { display: flex; align-items: flex-start; gap: 12px; margin: 20px 0; font-size: 13px; line-height: 1.6; }
+.subscription-consent input { width: 20px; height: 20px; flex: 0 0 auto; margin-top: 3px; accent-color: #b24bf3; }
+.subscription-consent a { text-decoration: underline; }
