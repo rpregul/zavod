@@ -2,6 +2,8 @@
 
 Source: rpregul/zavod, neuro/. Frontend changes remain disabled until launch checks pass.
 
+2026-11-10 rollout: subscription UI enabled on main; real charges still require NZ_PAYMENTS_ENABLED=true and verified live merchant credentials. Frontend versioned module imports avoid mixing old cached modules. Browser QA could not reach the direct Supabase hostname; a fixed-destination API proxy is deployed at neuro-api-rpreguls-projects.vercel.app. It stores no application records and forwards only whitelisted client actions with their own session authorization; internal worker/webhook/diagnostic routes remain direct. Source is in neuro/api-proxy. The proxy is currently on the Vercel project/plan available in the connected account; confirm appropriate commercial hosting/plan as part of final launch arrangements.
+
 ## Prepared infrastructure
 
 - Additive schema: billing.sql. Existing profiles and results retained.

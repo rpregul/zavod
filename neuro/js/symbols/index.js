@@ -1,7 +1,7 @@
-import A from './partA.js?v=1.1.0';
-import B from './partB.js?v=1.1.0';
-import C from './partC.js?v=1.1.0';
-import D from './partD.js?v=1.1.0';
+import A from './partA.js?v=1.1.1';
+import B from './partB.js?v=1.1.1';
+import C from './partC.js?v=1.1.1';
+import D from './partD.js?v=1.1.1';
 
 export const SYMBOLS = [...A, ...B, ...C, ...D];
 

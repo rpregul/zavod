@@ -1,16 +1,16 @@
-import { store, cloudOn } from './store.js?v=1.1.0';
-import * as S from './stats.js?v=1.1.0';
-import { el, esc, plural, dayStr, fmtLong, fmtShort, weekdayName, sleep, logicalDay } from './util.js?v=1.1.0';
-import { glyph, gi } from './icons.js?v=1.1.0';
-import { initFx, initRipple, confetti, haptic, sfx, countUp, toast } from './fx.js?v=1.1.0';
-import { lineChart, heatmap, ringSvg } from './charts.js?v=1.1.0';
-import { makeCtx, sheet, confirmSheet } from './ui.js?v=1.1.0';
-import { runSchulte } from './schulte.js?v=1.1.0';
-import { runDobble } from './dobble.js?v=1.1.0';
-import { runMemory } from './memory.js?v=1.1.0';
-import { BILLING } from './config.js?v=1.1.0';
-import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.1.0';
-import { recommendations, exerciseReport } from './recommendations.js?v=1.1.0';
+import { store, cloudOn } from './store.js?v=1.1.1';
+import * as S from './stats.js?v=1.1.1';
+import { el, esc, plural, dayStr, fmtLong, fmtShort, weekdayName, sleep, logicalDay } from './util.js?v=1.1.1';
+import { glyph, gi } from './icons.js?v=1.1.1';
+import { initFx, initRipple, confetti, haptic, sfx, countUp, toast } from './fx.js?v=1.1.1';
+import { lineChart, heatmap, ringSvg } from './charts.js?v=1.1.1';
+import { makeCtx, sheet, confirmSheet } from './ui.js?v=1.1.1';
+import { runSchulte } from './schulte.js?v=1.1.1';
+import { runDobble } from './dobble.js?v=1.1.1';
+import { runMemory } from './memory.js?v=1.1.1';
+import { BILLING } from './config.js?v=1.1.1';
+import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.1.1';
+import { recommendations, exerciseReport } from './recommendations.js?v=1.1.1';
 
 // ---------------------------------------------------------------- упражнения
 export const EX = {

@@ -1,4 +1,4 @@
-import { addDays, dayStr, diffDays, logicalNow, parseDay } from './util.js?v=1.1.0';
+import { addDays, dayStr, diffDays, logicalNow, parseDay } from './util.js?v=1.1.1';
 
 export const EXS = ['sch_f', 'sch_r', 'dob', 'mem'];
 

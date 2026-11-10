@@ -1,6 +1,6 @@
-import { BILLING } from './config.js?v=1.1.0';
-import { sheet, confirmSheet } from './ui.js?v=1.1.0';
-import { esc } from './util.js?v=1.1.0';
+import { BILLING } from './config.js?v=1.1.1';
+import { sheet, confirmSheet } from './ui.js?v=1.1.1';
+import { esc } from './util.js?v=1.1.1';
 
 export const PLANS = {
   individual: { title: 'Для себя', price: 299, detail: 'Один профиль' },

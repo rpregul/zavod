@@ -1,5 +1,5 @@
-import { store } from './store.js?v=1.1.0';
-import { el } from './util.js?v=1.1.0';
+import { store } from './store.js?v=1.1.1';
+import { el } from './util.js?v=1.1.1';
 
 // ---------- вибрация и звук ----------
 export function haptic(pattern = 12) {

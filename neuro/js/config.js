@@ -7,12 +7,12 @@ export const CLOUD = {
   key: globalThis.NZ_CLOUD?.key || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF1Y3d5a3dsaGlwam5iZWxqdXZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwNDYxNTMsImV4cCI6MjEwNjYyMjE1M30.GHdPr9oHVvXuHbBIJQudKnF_li05PcBWCGo5N3lp8sw',
 };
 
-export const APP_VERSION = '1.1.0';
+export const APP_VERSION = '1.1.1';
 
 // Enable only after merchant configuration and end-to-end payment verification.
 export const BILLING = {
   enabled: true,
-  endpoint: CLOUD.url + '/functions/v1/neuro-billing',
+  endpoint: 'https://neuro-api-rpreguls-projects.vercel.app/neuro',
   consentVersion: 'monthly-plans-v2',
 };
 

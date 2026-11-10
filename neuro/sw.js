@@ -1,5 +1,5 @@
 // Сначала сеть, при её отсутствии кэш: после деплоя всегда свежая версия, а без интернета приложение всё равно открывается.
-const CACHE = 'nz-v3-subscriptions';
+const CACHE = 'nz-v4-api-proxy';
 
 self.addEventListener('install', (e) => { self.skipWaiting(); });
 
