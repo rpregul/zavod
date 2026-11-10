@@ -8,12 +8,15 @@ import { makeCtx, sheet, confirmSheet } from './ui.js';
 import { runSchulte } from './schulte.js';
 import { runDobble } from './dobble.js';
 import { runMemory } from './memory.js';
+import { BILLING } from './config.js';
+import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js';
+import { recommendations, exerciseReport } from './recommendations.js';
 
 // ---------------------------------------------------------------- упражнения
 export const EX = {
   sch_f: {
     id: 'sch_f', title: 'Шульте', sub: 'от 1 до 25', icon: 'grid', color: 'orange', unit: 'чисел', c1: '#ff9a3d', c2: '#ff5e63',
-    lead: 'Периферическое зрение и скорость чтения',
+    lead: 'Поиск чисел и зрительное внимание',
     rules: ['Смотри только на подсвеченный центр таблицы', 'Находи числа по порядку: 1, 2, 3 … 25', 'Глаза не двигай. Таблица закончилась? Выдадим новую'],
     run: (ctx, o) => runSchulte(ctx, { ...o, reverse: false }),
   },
@@ -37,6 +40,8 @@ export const EX = {
   },
 };
 const ORDER = ['sch_f', 'sch_r', 'dob', 'mem'];
+// Future exercises are paid-only unless explicitly added to this trial whitelist.
+const TRIAL_ORDER = ['sch_f', 'sch_r', 'dob', 'mem'];
 
 // ---------------------------------------------------------------- каркас экранов
 const app = document.getElementById('app');
@@ -88,12 +93,14 @@ function renderLogin() {
           <p>Утро без рилсов. Четыре упражнения на 5 минут, и день начат осознанно.</p>
         </div>
         <form class="login__card glass" autocomplete="off">
-          <label for="nm">Как тебя зовут?</label>
-          <input id="nm" class="input" type="text" maxlength="30" placeholder="Например, Рома" autocomplete="given-name" autocapitalize="words" enterkeyhint="next" value="${esc(name)}">
+          ${BILLING.enabled ? '<p class="login__note"><b>Первая полная тренировка — бесплатно.</b><br>Четыре упражнения, твой первый результат.</p>' : ''}
+          <label for="nm">${BILLING.enabled ? 'Твой уникальный логин' : 'Как тебя зовут?'}</label>
+          <input id="nm" class="input" type="text" maxlength="30" placeholder="${BILLING.enabled ? 'Например, Рома_123' : 'Например, Рома'}" autocomplete="username" autocapitalize="none" enterkeyhint="next" value="${esc(name)}">
           <div class="login__err" role="alert">${msg}</div>
           <button class="btn btn--primary btn--lg btn--block" type="submit">Дальше ${glyph.arrow}</button>
-          <p class="login__note">Без паролей и почты: только имя и 4 цифры. Те же имя и PIN на другом телефоне покажут твою историю.</p>
-        </form>`;
+          <p class="login__note">${BILLING.enabled ? 'Запомни логин и PIN: они нужны для входа с другого устройства. Для покупки потребуется почта.' : 'Без паролей и почты: только имя и 4 цифры. Те же имя и PIN на другом телефоне покажут твою историю.'}</p>
+        </form>
+        ${BILLING.enabled ? '<p class="login__note">Эксперт проекта — Евгения Киргизова, преподаватель нейробиологии.<br>Продавец — Суханова Ольга Леонидовна.<br><a href="offer.html">Условия подписки</a> · <a href="privacy.html">Персональные данные</a> · <a href="mailto:plotnikov.csh@gmail.com">Поддержка</a></p>' : ''}`;
       const input = node.querySelector('#nm');
       node.querySelector('form').addEventListener('submit', (e) => {
         e.preventDefault();
@@ -145,6 +152,7 @@ function renderLogin() {
   function done(isNew) {
     haptic([12, 30, 12]);
     renderHome();
+    if (BILLING.enabled) { store.refreshAccess().catch(() => {}); acceptFamilyInvite(store); }
     toast(isNew ? `Добро пожаловать, ${esc(store.session.name)}! 🎉` : `С возвращением, ${esc(store.session.name)}!`);
   }
 
@@ -183,6 +191,7 @@ const TAB_LABEL = { all: 'Общий', sch_f: 'Шульте', sch_r: 'Шульт
 function renderHome({ quiet = false } = {}) {
   if (!store.session) return renderLogin();
   const res = store.results;
+  const premium = !BILLING.enabled || !!store.access?.active;
   const done = S.doneToday(res);
   const streak = S.streak(res);
   const full = S.fullDays(res);
@@ -262,19 +271,41 @@ function renderHome({ quiet = false } = {}) {
     <footer class="foot">Нейро-зарядка · данные ${cloudOn() ? 'синхронизируются между устройствами' : 'хранятся на этом устройстве'}</footer>`;
 
   mount(node, 'home', { quiet });
+  if (!premium) {
+    const completed = store.access?.trial?.completed;
+    node.querySelector('.hero__txt h2').textContent = completed ? 'Продолжим тренировки?' : store.access?.trial?.started ? 'Продолжи первую тренировку' : 'Первая тренировка бесплатно';
+    node.querySelector('.hero__txt p').textContent = completed ? 'Твоя точка отсчёта сохранена' : 'Все четыре упражнения, без оплаты';
+    node.querySelector('.hero__cta span').textContent = completed ? 'Выбрать подписку' : 'Попробовать бесплатно';
+    node.querySelector('.chips-row').hidden = true;
+    node.querySelectorAll('.tile__best,.tile__badge,.tile__new').forEach(x => { x.textContent = 'В первой тренировке'; });
+    node.querySelectorAll('.home__col')[1].innerHTML = `<section class="sec"><div class="progress glass subscription-locked"><h3>Твой следующий шаг</h3><p>Персональные подсказки, история и динамика результатов доступны по подписке.</p>${completed ? '<button class="btn btn--primary btn--block" data-act="subscribe">Продолжить с подпиской</button>' : '<p class="login__note">Сначала пройди бесплатную тренировку — она станет твоей точкой отсчёта.</p>'}</div></section>`;
+    if (completed) {
+      const offer = el('section', 'sec home-offer', offerMarkup({ completed: true }));
+      node.querySelector('header').after(offer);
+      node.querySelectorAll('.home__col')[1].hidden = true;
+      node.querySelector('.home__cols').classList.add('home__cols--single');
+      node.querySelectorAll('.tile__best,.tile__badge,.tile__new').forEach(x => { x.textContent = 'По подписке'; });
+    }
+  } else {
+    paintChart(node);
+    heatmap(node.querySelector('[data-heat]'), S.daysMap(res));
+    paintHistory(node);
+    const tips = recommendations(res);
+    const section = el('section', 'sec');
+    section.innerHTML = `<h3 class="sec__t">Твои подсказки</h3>${tips.map(tip => `<div class="progress glass coaching-card"><h4>${esc(tip.title)}</h4><p>${esc(tip.text)}</p></div>`).join('')}`;
+    node.querySelectorAll('.home__col')[1].prepend(section);
+  }
   node.querySelectorAll('.ring__arc').forEach((a) => {
     void a.getBoundingClientRect();
     requestAnimationFrame(() => { a.style.strokeDashoffset = a.style.getPropertyValue('--to'); });
   });
-  paintChart(node);
-  heatmap(node.querySelector('[data-heat]'), S.daysMap(res));
-  paintHistory(node);
   paintInstallHint(node);
   paintSync();
 
   node.addEventListener('click', async (e) => {
-    const t = e.target.closest('[data-ex],[data-act],[data-chart]');
+    const t = e.target.closest('[data-ex],[data-act],[data-chart],[data-plan]');
     if (!t) return;
+    if (t.dataset.plan) return openSubscription(store, { plan: t.dataset.plan });
     if (t.dataset.ex) return runSingle(t.dataset.ex);
     if (t.dataset.chart) {
       chartEx = t.dataset.chart;
@@ -284,6 +315,7 @@ function renderHome({ quiet = false } = {}) {
     }
     if (t.dataset.act === 'session') return runSession();
     if (t.dataset.act === 'settings') return openSettings();
+    if (t.dataset.act === 'subscribe') return openSubscription(store);
   });
 }
 
@@ -401,6 +433,7 @@ function openSettings() {
       <label class="set"><span>${gi('eye', 'teal', 'xs')}Точка-ориентир в центре таблицы</span><input type="checkbox" data-pref="dot" ${p.dot ? 'checked' : ''}><i class="sw"></i></label>
     </div>
     <div class="sheet__actions sheet__actions--col">
+      ${BILLING.enabled ? '<button class="btn btn--primary" data-set="subscription">Моя подписка</button>' : ''}
       <button class="btn btn--glass" data-set="export">${glyph.download}<span>Скачать мои результаты</span></button>
       <button class="btn btn--glass" data-set="logout">${glyph.logout}<span>Выйти из профиля</span></button>
     </div>`);
@@ -414,7 +447,10 @@ function openSettings() {
   s.node.addEventListener('click', async (e) => {
     const b = e.target.closest('[data-set]');
     if (!b) return;
-    if (b.dataset.set === 'export') {
+    if (b.dataset.set === 'subscription') {
+      s.close();
+      return openSubscription(store);
+    } else if (b.dataset.set === 'export') {
       const url = URL.createObjectURL(new Blob([store.exportJson()], { type: 'application/json' }));
       const a = el('a');
       a.href = url;
@@ -458,7 +494,7 @@ function introScreen(id, { guided, idx }) {
   });
 }
 
-function resultScreen(id, rec, res, { guided, idx, isLast }) {
+function resultScreen(id, rec, res, { guided, idx, isLast, trial = false }) {
   return new Promise((resolve) => {
     const e = EX[id];
     const all = store.results;
@@ -474,6 +510,7 @@ function resultScreen(id, rec, res, { guided, idx, isLast }) {
       chip = d > 0 ? `<span class="delta delta--up">↑ ${sign(d)} к прошлой попытке</span>` : d < 0 ? `<span class="delta delta--down">↓ ${sign(d)} к прошлой попытке</span>` : '<span class="delta">Как в прошлый раз</span>';
     }
     const next = guided && !isLast ? EX[ORDER[idx + 1]] : null;
+    const report = exerciseReport(id, rec, store.results);
     const node = el('div', 'result');
     node.innerHTML = `
       <div class="result__top">${gi(e.icon, e.color, 'lg')}<h2>${e.title}</h2></div>
@@ -485,10 +522,11 @@ function resultScreen(id, rec, res, { guided, idx, isLast }) {
       </div>
       <div class="xstats">${(res.extra || []).map((x) => `<div class="xstat glass"><b>${x.value}</b><small>${x.label}</small></div>`).join('')}</div>
       ${res.detail ? `<div class="detail glass">${res.detail}</div>` : ''}
+      ${report ? `<div class="detail glass coaching-card"><h3>${esc(report.label)}</h3><p>${esc(report.text)}</p>${!trial ? `<p><b>Как тренироваться:</b> ${esc(report.tip)}</p><p class="login__note">${esc(report.routine)}</p>` : '<p class="login__note">Подсказки по дальнейшим занятиям откроются с подпиской.</p>'}</div>` : ''}
       <div class="result__actions">
         ${guided ? `<button class="btn btn--primary btn--lg btn--block btn--shine" data-r="next"><span>${next ? `Дальше: ${next.title}` : 'Завершить зарядку'}</span>${glyph.arrow}</button>` : ''}
         <div class="row2">
-          <button class="btn btn--glass" data-r="again">Ещё раз</button>
+          ${trial ? '' : '<button class="btn btn--glass" data-r="again">Ещё раз</button>'}
           ${guided ? '' : '<button class="btn btn--glass" data-r="home">На главную</button>'}
         </div>
       </div>`;
@@ -506,7 +544,7 @@ function resultScreen(id, rec, res, { guided, idx, isLast }) {
 }
 
 // возвращает {rec, action} либо null, если вышли
-async function playOne(id, { guided = false, idx = 0 } = {}) {
+async function playOne(id, { guided = false, idx = 0, trial = null } = {}) {
   for (;;) {
     const go = await introScreen(id, { guided, idx });
     if (go === 'back') return null;
@@ -522,8 +560,14 @@ async function playOne(id, { guided = false, idx = 0 } = {}) {
       const res = await EX[id].run(ctx, { step: guided ? `${idx + 1} / 4` : '' });
       await keepAwake(false);
       if (!res) return null;
-      const rec = store.add(id, res.score, res.meta);
-      const action = await resultScreen(id, rec, res, { guided, idx, isLast: idx === ORDER.length - 1 });
+      const rec = store.add(id, res.score, { ...res.meta, ...(trial ? { trial_id: trial.trial_id } : {}) });
+      if (trial) {
+        for (;;) {
+          try { await store.billing('trial-result', { trial_id: trial.trial_id, row: rec }); rec.s = 1; store.persist(); break; }
+          catch { if (!await confirmSheet({ title: 'Сохраним результат?', text: 'Сервер временно недоступен. Результат сохранён на этом устройстве; попробуем отправить ещё раз.', ok: 'Повторить', cancel: 'Позже' })) return null; }
+        }
+      }
+      const action = await resultScreen(id, rec, res, { guided, idx, isLast: idx === ORDER.length - 1, trial: !!trial });
       if (action === 'again') continue;
       return { rec, action };
     }
@@ -531,24 +575,44 @@ async function playOne(id, { guided = false, idx = 0 } = {}) {
 }
 
 async function runSingle(id) {
+  if (BILLING.enabled) {
+    try { if (!(await store.refreshAccess()).active) return TRIAL_ORDER.includes(id) ? runSession() : openSubscription(store); }
+    catch { return openSubscription(store); }
+  }
+  if (!await requireSubscription(store)) return;
   const r = await playOne(id);
   renderHome();
   if (r && r.action === 'home') return;
 }
 
 async function runSession() {
-  const startIdx = 0;
-  const recs = [];
-  for (let i = startIdx; i < ORDER.length; i++) {
-    const r = await playOne(ORDER[i], { guided: true, idx: i });
+  let trial = null;
+  if (BILLING.enabled) {
+    try {
+      await store.sync();
+      const access = await store.refreshAccess();
+      if (!access.active) {
+        if (access.trial?.completed) return openSubscription(store);
+        trial = await store.billing('trial-start');
+        if (trial.paid) trial = null;
+      }
+    } catch { return openSubscription(store); }
+  }
+  const order = trial ? TRIAL_ORDER : ORDER;
+  const startIdx = trial?.next_index || 0;
+  const recs = trial ? store.results.filter(r => r.meta?.trial_id === trial.trial_id).sort((a, b) => order.indexOf(a.ex) - order.indexOf(b.ex)) : [];
+  for (let i = startIdx; i < order.length; i++) {
+    const r = await playOne(order[i], { guided: true, idx: i, trial });
     if (!r) { renderHome(); return; }
     recs.push(r.rec);
   }
-  await summaryScreen(recs);
+  if (BILLING.enabled) await store.refreshAccess().catch(() => {});
+  const plan = await summaryScreen(recs, { trial: !!trial });
   renderHome();
+  if (plan) await openSubscription(store, { plan });
 }
 
-function summaryScreen(recs) {
+function summaryScreen(recs, { trial = false } = {}) {
   return new Promise((resolve) => {
     const records = recs.filter((r) => {
       const pb = S.bestBefore(store.results, r.ex, r.ts);
@@ -571,10 +635,11 @@ function summaryScreen(recs) {
         return `<div class="sum-row" style="--i:${i}">${gi(e.icon, e.color, 'sm')}<span class="sum-row__t"><b>${e.title}</b><small>${d === null ? 'первая попытка' : d === 0 ? 'как в прошлый раз' : `${sign(d)} к прошлой`}</small></span><span class="sum-row__v">${rec ? '<i class="star">★</i>' : ''}<b>${r.score}</b></span></div>`;
       }).join('')}</div>
       <div class="summary__streak glass">${gi('flame', 'orange', 'sm')}<span><b>${streak} ${plural(streak, 'день', 'дня', 'дней')} подряд</b><small>Приходи завтра утром, не сбрасывай серию</small></span></div>
-      <button class="btn btn--primary btn--lg btn--block btn--shine" data-r="home">К моему дашборду ${glyph.arrow}</button>`;
+      ${trial ? offerMarkup({ completed: true }) + '<button class="link" data-r="home">Позже</button>' : `<button class="btn btn--primary btn--lg btn--block btn--shine" data-r="home">К моему дашборду ${glyph.arrow}</button>`}`;
     mount(node, 'summary');
     setTimeout(() => { confetti({ count: 180 }); setTimeout(() => confetti({ count: 120, x: innerWidth * 0.2 }), 250); setTimeout(() => confetti({ count: 120, x: innerWidth * 0.8 }), 450); sfx('done'); haptic([20, 40, 20, 40, 40]); }, 300);
     node.querySelector('[data-r]').addEventListener('click', () => resolve());
+    node.querySelectorAll('[data-plan]').forEach(button => { button.onclick = () => resolve(button.dataset.plan); });
   });
 }
 
@@ -584,7 +649,7 @@ function boot() {
   initRipple();
   store.load();
   // перерисовываем главную, если изменилось содержимое результатов (в т.ч. дата у существующих), а не только их число
-  const sig = () => store.results.map((r) => `${r.id}${r.day}${r.score}`).join('|');
+  const sig = () => store.results.map((r) => `${r.id}${r.day}${r.score}`).join('|') + JSON.stringify(store.access);
   let lastSig = sig();
   store.on(() => {
     paintSync();
@@ -594,6 +659,7 @@ function boot() {
     if (screen === 'home' && changed) renderHome({ quiet: true });
   });
   if (store.session) { renderHome(); store.sync(); } else renderLogin();
+  if (BILLING.enabled) acceptFamilyInvite(store);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && store.session) {
       store.sync();
@@ -605,7 +671,12 @@ function boot() {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
   // для отладки и тестов
-  window.__nz = { store, S, EX };
+  if (!BILLING.enabled) window.__nz = { store, S, EX };
+  if (BILLING.enabled && store.session && new URLSearchParams(location.search).get('payment') === 'return') {
+    history.replaceState(null, '', location.pathname);
+    finishPaymentReturn(store);
+  }
 }
 
 boot();
+

@@ -1,0 +1,14 @@
+:root { color-scheme: light; font: 16px/1.65 system-ui, sans-serif; color: #29243d; background: #fff8f2; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+main { max-width: 800px; margin: 32px auto; padding: 32px; background: white; border-radius: 24px; }
+a { color: #7442b1; text-underline-offset: 3px; }
+h1 { font-size: clamp(26px, 5vw, 36px); line-height: 1.2; margin: 24px 0 12px; }
+h2 { font-size: 21px; line-height: 1.35; margin: 30px 0 10px; }
+p, ul { margin: 12px 0; }
+li { margin-bottom: 8px; }
+.meta { color: #685d77; font-size: 14px; }
+.notice { border-left: 4px solid #b97727; padding: 12px 16px; background: #fff4da; border-radius: 8px; }
+.price { padding: 16px 20px; border-radius: 16px; background: #f5edff; font-size: 20px; }
+footer { border-top: 1px solid #e9e2ed; margin-top: 32px; padding-top: 20px; font-size: 14px; }
+@media(max-width:600px) { main { margin: 0; padding: 24px 20px 40px; border-radius: 0; } }

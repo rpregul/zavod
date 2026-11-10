@@ -1,5 +1,5 @@
 // Сначала сеть, при её отсутствии кэш: после деплоя всегда свежая версия, а без интернета приложение всё равно открывается.
-const CACHE = 'nz-v2';
+const CACHE = 'nz-v3-subscriptions';
 
 self.addEventListener('install', (e) => { self.skipWaiting(); });
 
@@ -32,3 +32,4 @@ self.addEventListener('fetch', (e) => {
     }
   })());
 });
+

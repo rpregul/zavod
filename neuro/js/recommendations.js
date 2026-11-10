@@ -1,0 +1,57 @@
+// Exercise coaching based only on the user's own training history, not clinical norms.
+const TIPS = {
+  sch_f: ['Шульте', 'Держи ориентир в центре. Ищи числа последовательно, не возвращаясь к уже найденным.'],
+  sch_r: ['Обратный Шульте', 'Перед стартом проговори обратный порядок. Сначала сохраняй точность, затем ускоряй поиск.'],
+  dob: ['Поиск пары', 'Сравнивай сами рисунки, а не их размер и положение. Найди совпадение и только потом нажимай.'],
+  mem: ['Запоминание слов', 'Свяжи слова в одну цепочку ярких образов. При воспроизведении проверь точность самих слов и окончаний.'],
+};
+export function recommendations(results) {
+  const per = Object.entries(TIPS).map(([id, [title, tip]]) => {
+    const rows = results.filter(r => r.ex === id).sort((a, b) => a.ts - b.ts);
+    const days = [...new Set(rows.map(r => r.day))].sort();
+    const scores = days.map(day => Math.max(...rows.filter(r => r.day === day).map(r => r.score)));
+    const start = scores.slice(0, 3).reduce((s, x) => s + x, 0) / Math.min(3, scores.length || 1);
+    const recent = scores.slice(-3).reduce((s, x) => s + x, 0) / Math.min(3, scores.length || 1);
+    return { id, title, tip, days: days.length, change: days.length >= 6 && start > 0 ? (recent - start) / start : null };
+  });
+  const comparable = per.filter(x => x.change !== null).sort((a, b) => a.change - b.change);
+  const focus = comparable.find(x => x.change < 0) || per.sort((a, b) => a.days - b.days)[0];
+  return [
+    { title: `Фокус: ${focus.title}`, text: focus.change !== null && focus.change < 0
+      ? `Средний результат последних трёх дней ниже первых трёх на ${Math.round(-focus.change * 100)}%. ${focus.tip}` : focus.tip },
+    { title: comparable.length ? 'Сравнивай себя с собой' : 'Собери личную точку отсчёта',
+      text: comparable.length ? 'Сравнивай несколько тренировочных дней: отдельный результат может колебаться. График показывает выполнение упражнений, а не оценку здоровья.'
+        : 'Занимайся в похожих условиях. После шести тренировочных дней появится сравнение первых и последних трёх дней.' },
+  ];
+}
+
+export const EXPERT_CUTOFFS = { sch_f: null, sch_r: null, dob: null, mem: null };
+const REPORTS = {
+  sch_f: { skill: 'Зрительный поиск и удержание последовательности',
+    low: 'В этой попытке поиск чисел занимал больше времени. На результат могли повлиять непривычная таблица, отвлечения или выбранный темп.',
+    normal: 'Ты находил числа в устойчивом темпе. Здесь важны зрительный поиск и удержание последовательности — те же процессы участвуют в поиске нужной информации.', tip: TIPS.sch_f[1] },
+  sch_r: { skill: 'Внимание при непривычном правиле',
+    low: 'Обратный порядок и перевёрнутые числа могли требовать дополнительных усилий. Это показывает трудность этой попытки, а не причину проблем в повседневной жизни.',
+    normal: 'Ты справлялся с непривычным порядком чисел. Задание требует удерживать правило и контролировать привычный ответ.', tip: TIPS.sch_r[1] },
+  dob: { skill: 'Зрительное различение и поиск совпадений',
+    low: 'Поиск общего рисунка в этой попытке шёл медленнее. Возможно, отвлекали различия размера и положения символов или поспешные нажатия.',
+    normal: 'Ты находил совпадения в устойчивом темпе. В этом задании нужно замечать нужную деталь среди похожих изображений.', tip: TIPS.dob[1] },
+  mem: { skill: 'Запоминание и точное воспроизведение слов',
+    low: 'В этой попытке удалось точно воспроизвести меньше слов. Причиной могли быть неподходящая стратегия запоминания, отвлечения или ошибки в записи.',
+    normal: 'Тебе удавалось запоминать и точно воспроизводить слова. Задание задействует словесную память и выбранную тобой стратегию связывания информации.', tip: TIPS.mem[1] },
+};
+export function exerciseReport(id, record, results) {
+  const copy = REPORTS[id];
+  if (!copy) return null;
+  const cutoff = EXPERT_CUTOFFS[id];
+  const previous = results.filter(r => r.ex === id && r.ts < record.ts).sort((a, b) => b.ts - a.ts).slice(0, 5).map(r => r.score).sort((a, b) => a - b);
+  const base = previous.length >= 3 ? previous[Math.floor(previous.length / 2)] : null;
+  const low = Number.isFinite(cutoff) ? record.score < cutoff : base !== null && record.score < base * 0.8;
+  return { title: copy.skill,
+    label: Number.isFinite(cutoff) ? (low ? 'Низкий результат упражнения' : 'Обычный результат упражнения')
+      : base === null ? 'Твоя точка отсчёта' : low ? 'Ниже твоего обычного результата' : 'В твоём обычном диапазоне или выше',
+    text: base === null && !Number.isFinite(cutoff) ? 'По первой попытке нельзя определить уровень способности. Этот результат станет началом твоей личной истории.' : low ? copy.low : copy.normal,
+    tip: copy.tip,
+    routine: 'Сделай одну полную тренировку в день. Через 14 дней сравни результаты первых и последних занятий.',
+  };
+}

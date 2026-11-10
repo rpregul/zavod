@@ -488,3 +488,33 @@ small{font-size:.78rem;color:var(--muted);font-weight:600}
   .dob{--cd:min(86vw,380px,calc((100dvh - 250px) / 2))}
   .login__hero h1{font-size:2.1rem}
 }
+
+/* Subscription controls use the existing sheet and button styles. */
+.subscription-price { font-size: 20px; margin: 20px 0; }
+.subscription-price b { font-size: 36px; }
+.subscription-consent { display: flex; align-items: flex-start; gap: 12px; margin: 20px 0; font-size: 13px; line-height: 1.6; }
+.subscription-consent input { width: 20px; height: 20px; flex: 0 0 auto; margin-top: 3px; accent-color: #b24bf3; }
+.subscription-consent a { text-decoration: underline; }
+.subscription-offer { margin: 24px 0 10px; text-align: left; }
+.home-offer { max-width: 760px; margin: 0 auto 28px; }
+.home__cols.home__cols--single { grid-template-columns: minmax(0,1fr); max-width: 600px; margin-inline: auto; }
+.subscription-offer h2 { font-size: clamp(23px, 5vw, 30px); line-height: 1.2; margin-bottom: 12px; }
+.subscription-offer > p { line-height: 1.55; }
+.subscription-benefits { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0; }
+.subscription-benefits span { border-radius: 14px; padding: 7px 11px; background: rgba(139,92,246,.08); font-size: 12px; }
+.subscription-plans { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.subscription-plan { color: inherit; font: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; text-align: left; padding: 18px; gap: 10px; border: 1px solid rgba(139,92,246,.18); border-radius: 24px; }
+.subscription-plan--primary { border: 2px solid #ff9a3d; background: linear-gradient(145deg,rgba(255,154,61,.12),rgba(255,79,160,.05)); }
+.subscription-plan__price { font-size: clamp(25px,5vw,34px); line-height: 1.15; font-weight: 800; white-space: nowrap; }
+.subscription-plan__price small { font-size: 12px; font-weight: 500; }
+.subscription-plan > span:not(.subscription-plan__price), .subscription-plan > small { font-size: 12px; line-height: 1.5; }
+.subscription-plan > strong { align-self: stretch; text-align: center; margin-top: auto; border-radius: 15px; padding: 10px; background: linear-gradient(120deg,#ff9a3d,#ff5e63); color: white; font-size: 13px; }
+.subscription-plan:focus-visible { outline: 3px solid #8b5cf6; outline-offset: 3px; }
+.subscription-locked { padding: 24px; }
+.subscription-locked p { margin: 14px 0; line-height: 1.5; }
+.coaching-card { padding: 20px; margin-top: 12px; }
+.coaching-card h3, .coaching-card h4 { margin: 0 0 10px; font-size: 16px; }
+.coaching-card p { margin: 8px 0; line-height: 1.55; font-size: 14px; }
+.family-member { display: flex; gap: 12px; justify-content: space-between; align-items: center; padding: 10px 0; }
+[hidden] { display: none !important; }
+@media(max-width:359px) { .subscription-plans { grid-template-columns: 1fr; } }

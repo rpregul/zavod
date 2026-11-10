@@ -1,4 +1,5 @@
-import { CLOUD } from './config.js';
+import { CLOUD, BILLING } from './config.js';
+import { billingRequest } from './billing-api.js';
 import { dayStr, uid } from './util.js';
 
 const LS = {
@@ -60,6 +61,33 @@ export const store = {
   results: [],
   prefs: { ...DEFAULT_PREFS, ...(LS.get('nz.prefs') || {}) },
   status: 'idle', // idle | syncing | ok | offline | authfail
+  access: null,
+
+  async refreshAccess() {
+    if (!BILLING.enabled || !this.session) return null;
+    this.access = await this.billing('status');
+    this.emit();
+    return this.access;
+  },
+
+  async billing(action, data = {}) {
+    if (!this.session) throw new Error('unauthorized');
+    if (!this.session.token) {
+      const result = await billingRequest('login', { name: this.session.name, hash: this.session.hash });
+      if (!result.token) throw new Error('unauthorized');
+      this.session.token = result.token;
+      LS.set('nz.session', this.session);
+    }
+    try {
+      return await billingRequest(action, data, this.session.token);
+    } catch (error) {
+      if (error.status === 401) {
+        delete this.session.token;
+        LS.set('nz.session', this.session);
+      }
+      throw error;
+    }
+  },
 
   on(fn) { listeners.add(fn); return () => listeners.delete(fn); },
   emit() { listeners.forEach((f) => f()); },
@@ -82,6 +110,19 @@ export const store = {
     const cleanName = name.trim().replace(/\s+/g, ' ');
     if (!key || key.length > 40) return { status: 'invalid' };
     const hash = await sha256(`${key}:${pin}:nz1`);
+    if (BILLING.enabled) {
+      try {
+        const result = await billingRequest('login', { name: cleanName, hash, create });
+        if (result.token) {
+          this.session = { key, name: result.name || cleanName, token: result.token };
+          LS.set('nz.session', this.session);
+          this.load();
+          this.emit();
+          this.sync();
+        }
+        return result;
+      } catch { return { status: 'offline' }; }
+    }
     const users = LS.get('nz.users', {});
     let status;
     let displayName = users[key]?.name || cleanName;
@@ -117,7 +158,9 @@ export const store = {
   },
 
   logout() {
+    if (BILLING.enabled && this.session?.token) billingRequest('logout', {}, this.session.token).catch(() => {});
     this.session = null;
+    this.access = null;
     this.results = [];
     this.status = 'idle';
     LS.del('nz.session');
@@ -136,6 +179,38 @@ export const store = {
   async sync() {
     if (!cloudOn() || !this.session || this._syncing) return;
     this._syncing = true;
+    if (BILLING.enabled) {
+      try {
+        this.status = 'syncing';
+        this.emit();
+        for (const row of this.results.filter(r => !r.s && r.meta?.trial_id)) {
+          await this.billing('trial-result', { trial_id: row.meta.trial_id, row });
+          row.s = 1;
+        }
+        const subscription = await this.billing('status');
+        this.access = subscription;
+        const unsynced = this.results.filter(r => !r.s);
+        if (subscription.active) {
+          for (let i = 0; i < unsynced.length; i += 200) {
+            const chunk = unsynced.slice(i, i + 200);
+            await this.billing('push', { rows: chunk.map(({ s, ...row }) => row) });
+            chunk.forEach(r => { r.s = 1; });
+          }
+        }
+        const pulled = await this.billing('pull');
+        const byId = new Map(this.results.map(r => [r.id, r]));
+        for (const row of pulled.rows) {
+          const mine = byId.get(row.id);
+          if (!mine) this.results.push({ ...row, s: 1 });
+          else if (mine.s) Object.assign(mine, row);
+        }
+        this.results.sort((a, b) => a.ts - b.ts);
+        this.persist();
+        this.status = 'ok';
+      } catch (error) { this.status = error.message === 'unauthorized' ? 'authfail' : 'offline'; }
+      finally { this._syncing = false; this.emit(); }
+      return;
+    }
     const { key, hash } = this.session;
     try {
       this.status = 'syncing';
@@ -177,3 +252,4 @@ export const store = {
     return JSON.stringify({ name: this.session?.name, exported: new Date().toISOString(), results: this.results.map(({ s, ...r }) => r) }, null, 2);
   },
 };
+
