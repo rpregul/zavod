@@ -282,7 +282,7 @@ begin
     if entitled then raise exception 'already_active'; end if;
     chosen_plan:=coalesce(p_data->>'plan','individual');
     if chosen_plan not in ('individual','family') then raise exception 'invalid_plan'; end if;
-    if not coalesce(p_data->>'consent_version'='monthly-plans-v2' or (chosen_plan='individual' and p_data->>'consent_version'='299-monthly-v1'),false) then raise exception 'consent_required'; end if;
+    if not coalesce(p_data->>'consent_version' in ('monthly-plans-v2','monthly-plans-v3-once') or (chosen_plan='individual' and p_data->>'consent_version'='299-monthly-v1'),false) then raise exception 'consent_required'; end if;
     if length(p_data->>'email')>254 or coalesce(p_data->>'email','') !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$' then raise exception 'invalid_email'; end if;
     select * into pay from public.nz_payments where user_key=uk and state in ('creating','pending','review') limit 1;
     if found then
