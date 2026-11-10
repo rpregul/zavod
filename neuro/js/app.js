@@ -279,6 +279,13 @@ function renderHome({ quiet = false } = {}) {
     node.querySelector('.chips-row').hidden = true;
     node.querySelectorAll('.tile__best,.tile__badge,.tile__new').forEach(x => { x.textContent = 'В первой тренировке'; });
     node.querySelectorAll('.home__col')[1].innerHTML = `<section class="sec"><div class="progress glass subscription-locked"><h3>Твой следующий шаг</h3><p>Персональные подсказки, история и динамика результатов доступны по подписке.</p>${completed ? '<button class="btn btn--primary btn--block" data-act="subscribe">Продолжить с подпиской</button>' : '<p class="login__note">Сначала пройди бесплатную тренировку — она станет твоей точкой отсчёта.</p>'}</div></section>`;
+    if (completed) {
+      const offer = el('section', 'sec home-offer', offerMarkup({ completed: true }));
+      node.querySelector('header').after(offer);
+      node.querySelectorAll('.home__col')[1].hidden = true;
+      node.querySelector('.home__cols').classList.add('home__cols--single');
+      node.querySelectorAll('.tile__best,.tile__badge,.tile__new').forEach(x => { x.textContent = 'По подписке'; });
+    }
   } else {
     paintChart(node);
     heatmap(node.querySelector('[data-heat]'), S.daysMap(res));
@@ -296,8 +303,9 @@ function renderHome({ quiet = false } = {}) {
   paintSync();
 
   node.addEventListener('click', async (e) => {
-    const t = e.target.closest('[data-ex],[data-act],[data-chart]');
+    const t = e.target.closest('[data-ex],[data-act],[data-chart],[data-plan]');
     if (!t) return;
+    if (t.dataset.plan) return openSubscription(store, { plan: t.dataset.plan });
     if (t.dataset.ex) return runSingle(t.dataset.ex);
     if (t.dataset.chart) {
       chartEx = t.dataset.chart;
@@ -568,7 +576,7 @@ async function playOne(id, { guided = false, idx = 0, trial = null } = {}) {
 
 async function runSingle(id) {
   if (BILLING.enabled) {
-    try { if (!(await store.refreshAccess()).active) return runSession(); }
+    try { if (!(await store.refreshAccess()).active) return TRIAL_ORDER.includes(id) ? runSession() : openSubscription(store); }
     catch { return openSubscription(store); }
   }
   if (!await requireSubscription(store)) return;
