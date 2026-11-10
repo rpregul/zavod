@@ -518,3 +518,9 @@ small{font-size:.78rem;color:var(--muted);font-weight:600}
 .family-member { display: flex; gap: 12px; justify-content: space-between; align-items: center; padding: 10px 0; }
 [hidden] { display: none !important; }
 @media(max-width:359px) { .subscription-plans { grid-template-columns: 1fr; } }
+
+/* Short exercise purpose below the instructions. */
+.intro__benefit{font-size:.9rem;line-height:1.55;color:var(--ink2);overflow-wrap:anywhere}
+.intro__benefit p{margin:0 0 10px}
+.intro__benefit b{color:var(--ink);font-weight:700}
+.intro__benefit small{display:block;font-size:.78rem;line-height:1.5}

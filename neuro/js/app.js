@@ -1,40 +1,48 @@
-import { store, cloudOn } from './store.js?v=1.1.1';
-import * as S from './stats.js?v=1.1.1';
-import { el, esc, plural, dayStr, fmtLong, fmtShort, weekdayName, sleep, logicalDay } from './util.js?v=1.1.1';
-import { glyph, gi } from './icons.js?v=1.1.1';
-import { initFx, initRipple, confetti, haptic, sfx, countUp, toast } from './fx.js?v=1.1.1';
-import { lineChart, heatmap, ringSvg } from './charts.js?v=1.1.1';
-import { makeCtx, sheet, confirmSheet } from './ui.js?v=1.1.1';
-import { runSchulte } from './schulte.js?v=1.1.1';
-import { runDobble } from './dobble.js?v=1.1.1';
-import { runMemory } from './memory.js?v=1.1.1';
-import { BILLING } from './config.js?v=1.1.1';
-import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.1.3';
-import { recommendations, exerciseReport } from './recommendations.js?v=1.1.1';
+import { store, cloudOn } from './store.js?v=1.1.2';
+import * as S from './stats.js?v=1.1.2';
+import { el, esc, plural, dayStr, fmtLong, fmtShort, weekdayName, sleep, logicalDay } from './util.js?v=1.1.2';
+import { glyph, gi } from './icons.js?v=1.1.2';
+import { initFx, initRipple, confetti, haptic, sfx, countUp, toast } from './fx.js?v=1.1.2';
+import { lineChart, heatmap, ringSvg } from './charts.js?v=1.1.2';
+import { makeCtx, sheet, confirmSheet } from './ui.js?v=1.1.2';
+import { runSchulte } from './schulte.js?v=1.1.2';
+import { runDobble } from './dobble.js?v=1.1.2';
+import { runMemory } from './memory.js?v=1.1.2';
+import { BILLING } from './config.js?v=1.1.2';
+import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.1.2';
+import { recommendations, exerciseReport } from './recommendations.js?v=1.1.2';
 
 // ---------------------------------------------------------------- упражнения
 export const EX = {
   sch_f: {
     id: 'sch_f', title: 'Шульте', sub: 'от 1 до 25', icon: 'grid', color: 'orange', unit: 'чисел', c1: '#ff9a3d', c2: '#ff5e63',
     lead: 'Поиск чисел и зрительное внимание',
+    skill: 'Зрительный поиск: находить нужное число среди отвлекающих и удерживать порядок действий.',
+    everyday: 'Тот же навык нужен, чтобы искать строку в таблице, пункт в списке или нужную кнопку. Ориентир в игре — находить быстрее, сохраняя точность.',
     rules: ['Смотри только на подсвеченный центр таблицы', 'Находи числа по порядку: 1, 2, 3 … 25', 'Глаза не двигай. Таблица закончилась? Выдадим новую'],
     run: (ctx, o) => runSchulte(ctx, { ...o, reverse: false }),
   },
   sch_r: {
     id: 'sch_r', title: 'Шульте вверх ногами', sub: 'от 25 до 1', icon: 'gridRev', color: 'pink', unit: 'чисел', c1: '#ff4fa0', c2: '#b24bf3',
     lead: 'Гибкость внимания и обратный счёт',
+    skill: 'Поиск непривычных символов и следование обратному порядку: действовать по правилу, а не по привычке.',
+    everyday: 'Это полезная практика для задач с необычным форматом или новым порядком действий. Ориентир — уверенно выполнять непривычное задание без пропусков.',
     rules: ['Таблица перевёрнута, цифры вверх ногами', 'Ищи числа в обратном порядке: 25, 24, 23 … 1', 'Смотри в центр, не двигай глазами'],
     run: (ctx, o) => runSchulte(ctx, { ...o, reverse: true }),
   },
   dob: {
     id: 'dob', title: 'Совпадения', sub: 'найди пару', icon: 'cards', color: 'violet', unit: 'пар', c1: '#8b5cf6', c2: '#4f7cff',
     lead: 'Скорость зрительного поиска и переключения',
+    skill: 'Сравнение двух наборов, поиск общего символа и отсев лишних деталей.',
+    everyday: 'Такой поиск нужен при сверке документов, изображений и товаров. Ориентир — быстрее замечать совпадения, не жертвуя точностью.',
     rules: ['На двух картах всегда есть ровно один одинаковый рисунок', 'Найди его и нажми. Общая карта ляжет на твою, откроется следующая', 'За минуту набери как можно больше пар. Ошибка = короткая пауза'],
     run: (ctx, o) => runDobble(ctx, o),
   },
   mem: {
     id: 'mem', title: 'Запоминание слов', sub: '30 слов, цепочка', icon: 'words', color: 'teal', unit: 'слов из 30', c1: '#22c5a5', c2: '#4f7cff',
     lead: 'Рабочая память и точность',
+    skill: 'Запоминание и воспроизведение слов с помощью цепочки образов и ассоциаций.',
+    everyday: 'Этот приём можно применять к списку покупок, тезисам выступления или новым терминам. Ориентир — вспомнить больше нужного без подсказки; переноси сам приём в повседневные задачи.',
     rules: ['Минуту смотри на 3 столбика по 10 слов', 'В голове строй цепочку образов: слово за словом', 'Потом минуту записывай слова в точности, с окончаниями'],
     run: (ctx, o) => runMemory(ctx, o),
   },
@@ -93,25 +101,26 @@ function renderLogin() {
           <p>Утро без рилсов. Четыре упражнения на 5 минут, и день начат осознанно.</p>
         </div>
         <form class="login__card glass" autocomplete="off">
-          <label for="nm">${BILLING.enabled ? 'Ваш уникальный логин' : 'Как вас зовут?'}</label>
-          <input id="nm" class="input" type="text" maxlength="30" placeholder="${BILLING.enabled ? 'Например, Алексей_123' : 'Например, Алексей'}" autocomplete="username" autocapitalize="none" enterkeyhint="next" value="${esc(name)}">
+          ${BILLING.enabled ? '<p class="login__note"><b>Первая полная тренировка — бесплатно.</b><br>Четыре упражнения, твой первый результат.</p>' : ''}
+          <label for="nm">${BILLING.enabled ? 'Твой уникальный логин' : 'Как тебя зовут?'}</label>
+          <input id="nm" class="input" type="text" maxlength="30" placeholder="${BILLING.enabled ? 'Например, Рома_123' : 'Например, Рома'}" autocomplete="username" autocapitalize="none" enterkeyhint="next" value="${esc(name)}">
           <div class="login__err" role="alert">${msg}</div>
           <button class="btn btn--primary btn--lg btn--block" type="submit">Дальше ${glyph.arrow}</button>
-          <p class="login__note">${BILLING.enabled ? 'Сохраните логин и PIN: они понадобятся для входа с другого устройства.' : 'Без паролей и почты: только имя и 4 цифры. Те же имя и PIN на другом телефоне покажут твою историю.'}</p>
+          <p class="login__note">${BILLING.enabled ? 'Запомни логин и PIN: они нужны для входа с другого устройства. Для покупки потребуется почта.' : 'Без паролей и почты: только имя и 4 цифры. Те же имя и PIN на другом телефоне покажут твою историю.'}</p>
         </form>
-        ${BILLING.enabled ? '<p class="login__note"><a href="offer.html">Условия подписки</a> · <a href="privacy.html">Персональные данные</a> · <a href="mailto:plotnikov.csh@gmail.com">Поддержка</a></p>' : ''}`;
+        ${BILLING.enabled ? '<p class="login__note">Эксперт проекта — Евгения Киргизова, преподаватель нейробиологии.<br>Продавец — Суханова Ольга Леонидовна.<br><a href="offer.html">Условия подписки</a> · <a href="privacy.html">Персональные данные</a> · <a href="mailto:plotnikov.csh@gmail.com">Поддержка</a></p>' : ''}`;
       const input = node.querySelector('#nm');
       node.querySelector('form').addEventListener('submit', (e) => {
         e.preventDefault();
         const v = input.value.trim();
-        if (!v) { msg = 'Напишите имя'; draw(); return; }
+        if (!v) { msg = 'Напиши имя'; draw(); return; }
         name = v; pin = ''; first = ''; msg = ''; step = 'pin'; draw();
       });
       setTimeout(() => input.focus({ preventScroll: true }), 350);
       return;
     }
-    const title = step === 'pin' ? `Здравствуйте, ${esc(name)}!` : 'Профиля с таким именем ещё нет';
-    const sub = step === 'pin' ? 'Введите свой PIN из 4 цифр' : `Повторите PIN, и мы создадим профиль «${esc(name)}»`;
+    const title = step === 'pin' ? `Привет, ${esc(name)}!` : 'Профиля с таким именем ещё нет';
+    const sub = step === 'pin' ? 'Введи свой PIN из 4 цифр' : `Повтори PIN, и мы создадим профиль «${esc(name)}»`;
     node.innerHTML = `
       <div class="login__hero login__hero--sm">
         <div class="login__logo">${gi('user', 'violet', 'xl')}</div>
@@ -122,7 +131,7 @@ function renderLogin() {
         ${dots()}
         <div class="login__err" role="alert">${msg}</div>
         ${keypad()}
-        <button class="link" data-act="other">${step === 'pin' ? 'Войти под другим именем' : 'Изменить имя'}</button>
+        <button class="link" data-act="other">${step === 'pin' ? 'Это не я, другое имя' : 'Ошибся в имени'}</button>
       </div>`;
   }
 
@@ -133,7 +142,7 @@ function renderLogin() {
         const r = await store.login(name, pin);
         if (r.status === 'ok') return done();
         if (r.status === 'no_user') { first = pin; pin = ''; step = 'confirm'; msg = ''; return draw(); }
-        fail({ bad_pin: 'Неверный PIN. Попробуйте ещё раз', locked: 'Слишком много попыток. Подождите 10 минут', offline: 'Нет связи, а этого имени ещё нет на этом телефоне', invalid: 'Что-то не так с именем' }[r.status] || 'Не получилось войти');
+        fail({ bad_pin: 'Неверный PIN. Попробуй ещё раз', locked: 'Слишком много попыток. Подожди 10 минут', offline: 'Нет связи, а этого имени ещё нет на этом телефоне', invalid: 'Что-то не так с именем' }[r.status] || 'Не получилось войти');
       } else {
         if (pin !== first) { first = ''; pin = ''; step = 'pin'; msg = 'PIN не совпал. Введи его заново'; return draw(); }
         const r = await store.login(name, pin, { create: true });
@@ -482,6 +491,7 @@ function introScreen(id, { guided, idx }) {
         <p class="intro__lead">${e.lead}</p>
       </div>
       <ol class="rules glass">${e.rules.map((r, i) => `<li style="--i:${i}"><b>${i + 1}</b><span>${r}</span></li>`).join('')}</ol>
+      <div class="intro__benefit"><p><b>Что тренирует.</b> ${esc(e.skill)}</p><p><b>В жизни.</b> ${esc(e.everyday)}</p><small>Прогресс в игре не гарантирует такого же улучшения в повседневной жизни.</small></div>
       <div class="intro__time">${glyph.clock}<span>${id === 'mem' ? '1 минута запоминаем + 1 минута пишем' : '1 минута'}</span></div>
       <button class="btn btn--primary btn--lg btn--block btn--shine" data-r="go">${glyph.play}<span>Поехали</span></button>`;
     mount(node, 'intro');
