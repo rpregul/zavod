@@ -54,7 +54,7 @@ export function createHandler({ env, fetch: request = globalThis.fetch, crypto =
       amount: { value: Number(claimed.amount).toFixed(2), currency: 'RUB' }, capture: true,
       description: claimed.plan === 'family' ? 'Нейро-зарядка: семья до 4 человек, 1 месяц' : 'Нейро-зарядка: 1 человек, 1 месяц', metadata: { order_id: claimed.id },
       ...(claimed.kind === 'checkout'
-        ? { save_payment_method: true, payment_method_data: { type: 'bank_card' }, confirmation: { type: 'redirect', return_url: RETURN_URL } }
+        ? { confirmation: { type: 'redirect', return_url: RETURN_URL } }
         : { payment_method_id: claimed.payment_method_id }),
     };
     // On a timeout, keep the order and reuse its UUID. Never generate another charge blindly.

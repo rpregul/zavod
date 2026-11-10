@@ -1,6 +1,6 @@
-import { BILLING } from './config.js?v=1.1.1';
-import { sheet, confirmSheet } from './ui.js?v=1.1.1';
-import { esc } from './util.js?v=1.1.1';
+import { BILLING } from './config.js?v=1.1.2';
+import { sheet, confirmSheet } from './ui.js?v=1.1.2';
+import { esc } from './util.js?v=1.1.2';
 
 export const PLANS = {
   individual: { title: 'Для себя', price: 299, detail: 'Один профиль' },
@@ -22,7 +22,7 @@ export function offerMarkup({ completed = false } = {}) {
     <div class="subscription-plans">${Object.entries(PLANS).map(([id, plan]) => `<button class="subscription-plan glass${id === 'individual' ? ' subscription-plan--primary' : ''}" data-plan="${id}">
       <b>${plan.title}</b><span class="subscription-plan__price">${plan.price} <small>₽/месяц</small></span><span>${plan.detail}</span>
       ${id === 'family' ? '<small>Около 150 ₽ на человека, если вас четверо</small>' : ''}<strong>Выбрать</strong></button>`).join('')}</div>
-    <p class="login__note">Ежемесячное автопродление. Отключение — в настройках подписки.</p>
+    <p class="login__note">Разовая оплата за один месяц. Для следующего месяца нужно оформить оплату заново.</p>
   </div>`;
 }
 
@@ -69,9 +69,9 @@ export async function openSubscription(store, { plan: selected = null } = {}) {
         <p class="subscription-price"><b>${chosen.price} ₽</b> / месяц</p><p class="sheet__text">${chosen.detail}</p>
         ${sub.ready ? `<form data-checkout><label for="billing-email">Почта для чека и связи</label>
           <input class="input" id="billing-email" type="email" required maxlength="254" autocomplete="email" value="${esc(sub.email || '')}" placeholder="you@example.ru">
-          <label class="subscription-consent"><input type="checkbox" required name="consent"><span>Принимаю <a href="offer.html" target="_blank" rel="noopener">оферту</a> и соглашаюсь на списание ${chosen.price} ₽ сейчас, затем каждый месяц до отключения автопродления. Ознакомлен с <a href="privacy.html" target="_blank" rel="noopener">политикой обработки данных</a>.</span></label>
+          <label class="subscription-consent"><input type="checkbox" required name="consent"><span>Принимаю <a href="offer.html" target="_blank" rel="noopener">условия</a> и соглашаюсь на разовое списание ${chosen.price} ₽ за один месяц доступа. Автоматических списаний не будет. Ознакомлен с <a href="privacy.html" target="_blank" rel="noopener">политикой обработки данных</a>.</span></label>
           <button class="btn btn--primary btn--lg btn--block" type="submit">Оплатить ${chosen.price} ₽</button>
-          <p class="login__note">Следующее списание — через месяц. Отключение автопродления доступно в настройках подписки.</p></form>` : '<p class="sheet__text">Оплата готовится к запуску.</p>'}
+          <p class="login__note">Оплата покрывает один месяц доступа. Чтобы продолжить пользоваться тренажёром, позже оформи новую оплату.</p></form>` : '<p class="sheet__text">Оплата готовится к запуску.</p>'}
         <p class="login__err" role="alert" data-error></p><button class="link" data-close>Закрыть</button>`;
       bindClose();
       s.node.querySelector('[data-back]').onclick = () => { selected = null; draw(); };

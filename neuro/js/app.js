@@ -9,7 +9,7 @@ import { runSchulte } from './schulte.js?v=1.1.1';
 import { runDobble } from './dobble.js?v=1.1.1';
 import { runMemory } from './memory.js?v=1.1.1';
 import { BILLING } from './config.js?v=1.1.1';
-import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.1.1';
+import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.1.2';
 import { recommendations, exerciseReport } from './recommendations.js?v=1.1.1';
 
 // ---------------------------------------------------------------- упражнения
