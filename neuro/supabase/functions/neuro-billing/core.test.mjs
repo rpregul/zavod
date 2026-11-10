@@ -38,7 +38,7 @@ test('webhook verifies with provider; never trusts forged success payload', asyn
   assert.equal(calls.at(-1).body.p_data.payment.status, 'pending');
 });
 test('checkout fixes server-side amount and uses order UUID as idempotency key', async () => {
-  const order = { id: '11111111-1111-4111-8111-111111111111', kind: 'checkout' };
+  const order = { id: '11111111-1111-4111-8111-111111111111', kind: 'checkout', amount: 299, plan: 'individual' };
   let providerCall;
   const handler = make(async (url, options) => {
     if (url.includes('api.yookassa.ru')) {
@@ -60,6 +60,17 @@ test('untrusted origin cannot initiate checkout', async () => {
   request.headers.set('Origin', 'https://evil.invalid');
   assert.equal((await handler(request)).status, 403);
 });
+test('family checkout uses 599 from reserved order, not client-provided amount', async () => {
+  let sent;
+  const handler = make(async (url, options) => {
+    if (url.includes('api.yookassa.ru')) { sent = JSON.parse(options.body); return ok({ id: 'family-payment', status: 'pending' }); }
+    const action = JSON.parse(options.body).p_action;
+    return ok(['checkout','claim'].includes(action) ? { id: '11111111-1111-4111-8111-111111111111', kind: 'checkout', plan: 'family', amount: 599 } : { ok: true });
+  });
+  await handler(req('checkout', { consent: true, plan: 'family', amount: '1.00' }, 'a'.repeat(64)));
+  assert.deepEqual(sent.amount, { value: '599.00', currency: 'RUB' });
+  assert.match(sent.description, /4 человек/);
+});
 test('test-key mode is available without enabling live payments', async () => {
   const handler = make(() => { throw new Error('No provider call needed'); }, { YOOKASSA_SECRET_KEY: 'test_example', NZ_PAYMENTS_ENABLED: undefined });
   const health = await (await handler(new Request('https://db.invalid/functions/v1/neuro-billing'))).json();
@@ -67,7 +78,7 @@ test('test-key mode is available without enabling live payments', async () => {
   assert.equal(health.test_mode, true);
 });
 test('test creation refuses merchant that provider identifies as live', async () => {
-  const order = { id: '11111111-1111-4111-8111-111111111111', kind: 'checkout' };
+  const order = { id: '11111111-1111-4111-8111-111111111111', kind: 'checkout', amount: 299, plan: 'individual' };
   let paymentPosts = 0;
   const handler = make(async (url, options) => {
     if (url.endsWith('/me')) return ok({ test: false });
