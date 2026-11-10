@@ -9,7 +9,7 @@ import { runSchulte } from './schulte.js?v=1.1.1';
 import { runDobble } from './dobble.js?v=1.1.1';
 import { runMemory } from './memory.js?v=1.1.1';
 import { BILLING } from './config.js?v=1.1.1';
-import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.1.2';
+import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.1.3';
 import { recommendations, exerciseReport } from './recommendations.js?v=1.1.1';
 
 // ---------------------------------------------------------------- упражнения
@@ -93,26 +93,25 @@ function renderLogin() {
           <p>Утро без рилсов. Четыре упражнения на 5 минут, и день начат осознанно.</p>
         </div>
         <form class="login__card glass" autocomplete="off">
-          ${BILLING.enabled ? '<p class="login__note"><b>Первая полная тренировка — бесплатно.</b><br>Четыре упражнения, твой первый результат.</p>' : ''}
-          <label for="nm">${BILLING.enabled ? 'Твой уникальный логин' : 'Как тебя зовут?'}</label>
-          <input id="nm" class="input" type="text" maxlength="30" placeholder="${BILLING.enabled ? 'Например, Рома_123' : 'Например, Рома'}" autocomplete="username" autocapitalize="none" enterkeyhint="next" value="${esc(name)}">
+          <label for="nm">${BILLING.enabled ? 'Ваш уникальный логин' : 'Как вас зовут?'}</label>
+          <input id="nm" class="input" type="text" maxlength="30" placeholder="${BILLING.enabled ? 'Например, Алексей_123' : 'Например, Алексей'}" autocomplete="username" autocapitalize="none" enterkeyhint="next" value="${esc(name)}">
           <div class="login__err" role="alert">${msg}</div>
           <button class="btn btn--primary btn--lg btn--block" type="submit">Дальше ${glyph.arrow}</button>
-          <p class="login__note">${BILLING.enabled ? 'Запомни логин и PIN: они нужны для входа с другого устройства. Для покупки потребуется почта.' : 'Без паролей и почты: только имя и 4 цифры. Те же имя и PIN на другом телефоне покажут твою историю.'}</p>
+          <p class="login__note">${BILLING.enabled ? 'Сохраните логин и PIN: они понадобятся для входа с другого устройства.' : 'Без паролей и почты: только имя и 4 цифры. Те же имя и PIN на другом телефоне покажут твою историю.'}</p>
         </form>
-        ${BILLING.enabled ? '<p class="login__note">Эксперт проекта — Евгения Киргизова, преподаватель нейробиологии.<br>Продавец — Суханова Ольга Леонидовна.<br><a href="offer.html">Условия подписки</a> · <a href="privacy.html">Персональные данные</a> · <a href="mailto:plotnikov.csh@gmail.com">Поддержка</a></p>' : ''}`;
+        ${BILLING.enabled ? '<p class="login__note"><a href="offer.html">Условия подписки</a> · <a href="privacy.html">Персональные данные</a> · <a href="mailto:plotnikov.csh@gmail.com">Поддержка</a></p>' : ''}`;
       const input = node.querySelector('#nm');
       node.querySelector('form').addEventListener('submit', (e) => {
         e.preventDefault();
         const v = input.value.trim();
-        if (!v) { msg = 'Напиши имя'; draw(); return; }
+        if (!v) { msg = 'Напишите имя'; draw(); return; }
         name = v; pin = ''; first = ''; msg = ''; step = 'pin'; draw();
       });
       setTimeout(() => input.focus({ preventScroll: true }), 350);
       return;
     }
-    const title = step === 'pin' ? `Привет, ${esc(name)}!` : 'Профиля с таким именем ещё нет';
-    const sub = step === 'pin' ? 'Введи свой PIN из 4 цифр' : `Повтори PIN, и мы создадим профиль «${esc(name)}»`;
+    const title = step === 'pin' ? `Здравствуйте, ${esc(name)}!` : 'Профиля с таким именем ещё нет';
+    const sub = step === 'pin' ? 'Введите свой PIN из 4 цифр' : `Повторите PIN, и мы создадим профиль «${esc(name)}»`;
     node.innerHTML = `
       <div class="login__hero login__hero--sm">
         <div class="login__logo">${gi('user', 'violet', 'xl')}</div>
@@ -123,7 +122,7 @@ function renderLogin() {
         ${dots()}
         <div class="login__err" role="alert">${msg}</div>
         ${keypad()}
-        <button class="link" data-act="other">${step === 'pin' ? 'Это не я, другое имя' : 'Ошибся в имени'}</button>
+        <button class="link" data-act="other">${step === 'pin' ? 'Войти под другим именем' : 'Изменить имя'}</button>
       </div>`;
   }
 
@@ -134,7 +133,7 @@ function renderLogin() {
         const r = await store.login(name, pin);
         if (r.status === 'ok') return done();
         if (r.status === 'no_user') { first = pin; pin = ''; step = 'confirm'; msg = ''; return draw(); }
-        fail({ bad_pin: 'Неверный PIN. Попробуй ещё раз', locked: 'Слишком много попыток. Подожди 10 минут', offline: 'Нет связи, а этого имени ещё нет на этом телефоне', invalid: 'Что-то не так с именем' }[r.status] || 'Не получилось войти');
+        fail({ bad_pin: 'Неверный PIN. Попробуйте ещё раз', locked: 'Слишком много попыток. Подождите 10 минут', offline: 'Нет связи, а этого имени ещё нет на этом телефоне', invalid: 'Что-то не так с именем' }[r.status] || 'Не получилось войти');
       } else {
         if (pin !== first) { first = ''; pin = ''; step = 'pin'; msg = 'PIN не совпал. Введи его заново'; return draw(); }
         const r = await store.login(name, pin, { create: true });
