@@ -1,3 +1,4 @@
+import { trackAction, flushAnalytics } from './analytics.js?v=1.1.7';
 import { BILLING } from './config.js?v=1.1.2';
 import { sheet, confirmSheet } from './ui.js?v=1.1.2';
 import { esc } from './util.js?v=1.1.2';
@@ -27,6 +28,7 @@ export function offerMarkup({ completed = false } = {}) {
 }
 
 export async function openSubscription(store, { plan: selected = null } = {}) {
+  trackAction('subscription_open');
   const s = sheet('<h3 class="sheet__title">Подписка</h3><p class="sheet__text" role="status">Проверяем подписку…</p>');
   const errorText = text => { const node = s.node.querySelector('[data-error]'); if (node) node.textContent = text; };
   const refresh = async () => { await store.refreshAccess(); await draw(); };
@@ -73,17 +75,19 @@ export async function openSubscription(store, { plan: selected = null } = {}) {
           <button class="btn btn--primary btn--lg btn--block" type="submit">Оплатить ${chosen.price} ₽</button>
           <p class="login__note">Оплата покрывает один месяц доступа. Чтобы продолжить пользоваться тренажёром, позже оформи новую оплату.</p></form>` : '<p class="sheet__text">Оплата готовится к запуску.</p>'}
         <p class="login__err" role="alert" data-error></p><button class="link" data-close>Закрыть</button>`;
+      trackAction(sub.ready ? 'checkout_form_' + selected : 'payments_unavailable');
       bindClose();
       s.node.querySelector('[data-back]').onclick = () => { selected = null; draw(); };
       s.node.querySelector('[data-checkout]')?.addEventListener('submit', async event => {
         event.preventDefault(); const form = event.target; if (!form.reportValidity()) return;
         const button = form.querySelector('button'); button.disabled = true; button.textContent = 'Открываем оплату…';
+        trackAction('checkout_submit_' + selected);
         try {
           const result = await store.billing('checkout', { email: form.querySelector('input[type=email]').value,
             consent: form.elements.consent.checked, consent_version: BILLING.consentVersion, plan: selected });
-          if (result.confirmation_url) location.assign(result.confirmation_url);
-          else errorText('Платёж обрабатывается. Доступ появится после подтверждения оплаты.');
-        } catch (error) { errorText(message(error)); }
+          if (result.confirmation_url) { trackAction('checkout_redirect'); await flushAnalytics(); location.assign(result.confirmation_url); }
+          else { trackAction('checkout_processing'); errorText('Платёж обрабатывается. Доступ появится после подтверждения оплаты.'); }
+        } catch (error) { trackAction('checkout_error'); errorText(message(error)); }
         finally { button.disabled = false; button.textContent = `Оплатить ${chosen.price} ₽`; }
       });
     } catch (error) {
@@ -128,13 +132,15 @@ export async function requireSubscription(store) {
 }
 
 export async function finishPaymentReturn(store) {
+  trackAction('payment_return');
   const s = sheet('<h3 class="sheet__title">Возвращаемся к тренировкам</h3><p class="sheet__text" role="status">Проверяем подписку…</p>');
   for (let attempt = 0; attempt < 12 && store.session; attempt++) {
     try {
-      if ((await store.refreshAccess()).active) { s.close(); await store.sync(); return; }
+      if ((await store.refreshAccess()).active) { trackAction('access_confirmed'); s.close(); await store.sync(); return; }
     } catch { /* A notification or network response may still be in flight. */ }
     await new Promise(resolve => setTimeout(resolve, 1500));
   }
+  trackAction('payment_pending');
   s.node.innerHTML = '<h3 class="sheet__title">Платёж обрабатывается</h3><p class="sheet__text">Доступ откроется после подтверждения оплаты. Подписка проверяется автоматически при открытии сайта.</p><button class="btn btn--primary btn--block">На главную</button>';
   s.node.querySelector('button').onclick = s.close;
 }
@@ -158,3 +164,4 @@ export async function acceptFamilyInvite(store) {
     result.node.querySelector('button').onclick = result.close;
   }
 }
+

@@ -525,7 +525,6 @@ small{font-size:.78rem;color:var(--muted);font-weight:600}
 .intro__benefit b{color:var(--ink);font-weight:700}
 .intro__benefit small{display:block;font-size:.78rem;line-height:1.5}
 
-
 /* Long owner reports have their own viewport, without glass compositing. */
 .analytics-launch{display:flex;width:100%;margin-top:24px;clear:both;min-height:48px}
 .analytics-overlay{position:fixed;inset:0;z-index:100;display:flex;justify-content:center;align-items:center;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));background:rgba(31,27,58,.4);height:100%;height:100dvh}

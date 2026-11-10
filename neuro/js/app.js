@@ -1,4 +1,4 @@
-import { initAnalytics, openFunnel } from './analytics.js?v=1.1.6';
+import { initAnalytics, openFunnel, trackScreen, trackExercise } from './analytics.js?v=1.1.7';
 import { store, cloudOn } from './store.js?v=1.1.2';
 import * as S from './stats.js?v=1.1.2';
 import { el, esc, plural, dayStr, fmtLong, fmtShort, weekdayName, sleep, logicalDay } from './util.js?v=1.1.2';
@@ -10,7 +10,7 @@ import { runSchulte } from './schulte.js?v=1.1.2';
 import { runDobble } from './dobble.js?v=1.1.2';
 import { runMemory } from './memory.js?v=1.1.2';
 import { BILLING } from './config.js?v=1.1.2';
-import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.1.2';
+import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.1.7';
 import { recommendations, exerciseReport } from './recommendations.js?v=1.1.2';
 
 // ---------------------------------------------------------------- упражнения
@@ -59,6 +59,7 @@ let wake = null;
 
 function mount(node, name, { quiet = false } = {}) {
   screen = name;
+  trackScreen(name);
   app.innerHTML = '';
   node.classList.add('screen');
   if (!quiet) node.classList.add('enter');
@@ -558,6 +559,7 @@ function resultScreen(id, rec, res, { guided, idx, isLast, trial = false }) {
 // возвращает {rec, action} либо null, если вышли
 async function playOne(id, { guided = false, idx = 0, trial = null } = {}) {
   for (;;) {
+    trackExercise('intro', id);
     const go = await introScreen(id, { guided, idx });
     if (go === 'back') return null;
     for (;;) {
@@ -569,8 +571,11 @@ async function playOne(id, { guided = false, idx = 0, trial = null } = {}) {
         if (await confirmSheet({ title: 'Выйти из упражнения?', text: 'Результат этой попытки не сохранится.', ok: 'Выйти', cancel: 'Продолжить', danger: true })) ctx.abort();
       };
       await keepAwake(true);
+      const exerciseStart = performance.now();
+      trackExercise('start', id);
       const res = await EX[id].run(ctx, { step: guided ? `${idx + 1} / 4` : '' });
       await keepAwake(false);
+      trackExercise(res ? 'complete' : 'quit', id, performance.now() - exerciseStart);
       if (!res) return null;
       const rec = store.add(id, res.score, { ...res.meta, ...(trial ? { trial_id: trial.trial_id } : {}) });
       if (trial) {
@@ -692,6 +697,5 @@ function boot() {
 }
 
 boot();
-
 
 
