@@ -1,6 +1,6 @@
 const ORIGIN = 'https://plotnikovprod.ru';
 const RETURN_URL = ORIGIN + '/neuro/?payment=return';
-export const CONSENT_VERSION = '299-monthly-v1';
+export const CONSENT_VERSION = 'monthly-plans-v2';
 
 export function createHandler({ env, fetch: request = globalThis.fetch, crypto = globalThis.crypto }) {
   const url = env('SUPABASE_URL');
@@ -51,8 +51,8 @@ export function createHandler({ env, fetch: request = globalThis.fetch, crypto =
     const claimed = await rpc('claim', { order_id: order.id });
     if (claimed.skip) return { processing: true };
     const body = {
-      amount: { value: '299.00', currency: 'RUB' }, capture: true,
-      description: 'Нейро-зарядка: доступ на 1 месяц', metadata: { order_id: claimed.id },
+      amount: { value: Number(claimed.amount).toFixed(2), currency: 'RUB' }, capture: true,
+      description: claimed.plan === 'family' ? 'Нейро-зарядка: семья до 4 человек, 1 месяц' : 'Нейро-зарядка: 1 человек, 1 месяц', metadata: { order_id: claimed.id },
       ...(claimed.kind === 'checkout'
         ? { save_payment_method: true, payment_method_data: { type: 'bank_card' }, confirmation: { type: 'redirect', return_url: RETURN_URL } }
         : { payment_method_id: claimed.payment_method_id }),
@@ -101,7 +101,7 @@ export function createHandler({ env, fetch: request = globalThis.fetch, crypto =
         const order = await rpc('payment', { order_id: orderId });
         // Recover an authoritative payment even if the original creation response was lost.
         if (!order.provider_id) {
-          if (payment.amount?.currency !== 'RUB' || Number(payment.amount?.value) !== 299) return reply({ error: 'payment_mismatch' }, 400);
+          if (payment.amount?.currency !== 'RUB' || Number(payment.amount?.value) !== Number(order.amount)) return reply({ error: 'payment_mismatch' }, 400);
           await rpc('attach', { order_id: orderId, provider_id: payment.id, confirmation_url: payment.confirmation?.confirmation_url || null });
         }
         await rpc('settle', { order_id: orderId, payment, source: 'webhook' });
@@ -121,7 +121,7 @@ export function createHandler({ env, fetch: request = globalThis.fetch, crypto =
               method: 'POST', headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json',
                 'Idempotency-Key': 'nz-' + await hash(reminder.user_key + ':' + reminder.paid_until) },
               body: JSON.stringify({ from, to: [reminder.email], subject: 'Нейро-зарядка: предстоящее продление',
-                text: 'Не ранее чем через 24 часа продлим вашу подписку на Нейро-зарядку за 299 ₽ на месяц. Отключить автопродление можно в настройках: https://plotnikovprod.ru/neuro/ . После отключения доступ останется до конца оплаченного срока.' }),
+                text: `Не ранее чем через 24 часа продлим вашу подписку на Нейро-зарядку за ${reminder.amount} ₽ на месяц. Отключить автопродление можно в настройках: https://plotnikovprod.ru/neuro/ . После отключения доступ останется до конца оплаченного срока.` }),
               signal: AbortSignal.timeout(15000),
             });
             if (!res.ok) throw new Error('mail_unavailable');
@@ -144,22 +144,31 @@ export function createHandler({ env, fetch: request = globalThis.fetch, crypto =
         const result = await rpc('login', { key, name, hash: body.hash, create: body.create === true, token_hash: await hash(token) });
         return reply({ ...result, ...(['ok', 'created'].includes(result.status) ? { token } : {}) });
       }
-      if (!['status', 'checkout', 'cancel', 'pull', 'push', 'logout'].includes(action)) return reply({ error: 'not_found' }, 404);
+      if (!['status', 'checkout', 'cancel', 'pull', 'push', 'logout', 'trial-start', 'trial-result', 'family-info', 'family-invite', 'family-join', 'family-remove', 'family-leave', 'family-revoke-invites'].includes(action)) return reply({ error: 'not_found' }, 404);
       const token = req.headers.get('authorization')?.replace(/^Bearer /, '') || '';
       if (!/^[a-f0-9]{64}$/.test(token)) return reply({ error: 'unauthorized' }, 401);
       const token_hash = await hash(token);
       if (action === 'checkout') {
         if (!ready) return reply({ error: 'payments_unavailable' }, 503);
         if (body.consent !== true) return reply({ error: 'consent_required' }, 400);
-        const order = await rpc('checkout', { token_hash, email: String(body.email || '').trim(), consent_version: body.consent_version });
+        const order = await rpc('checkout', { token_hash, email: String(body.email || '').trim(), consent_version: body.consent_version, plan: body.plan || 'individual' });
         const result = await submit(order);
         return reply({ confirmation_url: result.confirmation_url || null, processing: !result.confirmation_url });
       }
-      const data = { token_hash, ...(action === 'push' ? { rows: body.rows } : {}) };
-      return reply({ ...await rpc(action, data), ...(action === 'status' ? { ready } : {}) });
+      if (action === 'family-invite') {
+        const invite = [...crypto.getRandomValues(new Uint8Array(32))].map(x => x.toString(16).padStart(2, '0')).join('');
+        await rpc('family_invite', { token_hash, invite_hash: await hash(invite) });
+        return reply({ link: ORIGIN + '/neuro/#family=' + invite });
+      }
+      const data = { token_hash, ...(action === 'push' ? { rows: body.rows } : {}),
+        ...(action === 'trial-result' ? { trial_id: body.trial_id, row: body.row } : {}),
+        ...(action === 'family-join' ? { invite_hash: await hash(String(body.invite || '')) } : {}),
+        ...(action === 'family-remove' ? { member_key: String(body.member_key || '') } : {}),
+      };
+      return reply({ ...await rpc(action.replaceAll('-', '_'), data), ...(action === 'status' ? { ready } : {}) });
     } catch (e) {
       const message = String(e.message);
-      const known = ['unauthorized', 'subscription_required', 'already_active', 'consent_required', 'invalid_email', 'payments_unavailable'];
+      const known = ['unauthorized', 'subscription_required', 'already_active', 'consent_required', 'invalid_email', 'payments_unavailable', 'invalid_plan', 'checkout_in_progress', 'trial_completed', 'invalid_trial', 'trial_order', 'invalid_invite', 'family_full', 'family_owner_required'];
       return reply({ error: known.includes(message) ? message : 'temporarily_unavailable' }, message === 'unauthorized' ? 401 : message === 'subscription_required' ? 403 : known.includes(message) ? 400 : 503);
     }
   };
