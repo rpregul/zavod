@@ -26,6 +26,10 @@ Source: rpregul/zavod, neuro/. Frontend changes remain disabled until launch che
 
 ## Remaining launch requirements
 
+Seller confirmed by owner: Суханова Ольга Леонидовна, INN 691108496809 (merchant screenshot). Support: plotnikov.csh@gmail.com. Expert: Евгения Киргизова, преподаватель нейробиологии. offer.html and privacy.html are DRAFT documents, explicitly marked as such; finalize storage/support arrangements before publishing commercial terms. Current Supabase region is Frankfurt; do not claim Russian-localized storage.
+
+2026-11-10: actual YooKassa payment.succeeded notification verified on __qa_webhook_20261110: webhook_received_at and applied_at populated automatically; no polling was used for that payment. Both QA accounts have auto_renew=false after verification.
+
 - Publish offer.html and privacy.html with verified seller legal name, INN, support address and actual processor/storage details.
 - Offer must describe 299 RUB monthly recurring charges, explicit consent, calendar-month period, cancellation and refund process.
 - Add support/recovery process for a forgotten username/PIN before accepting paid customers.
