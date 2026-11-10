@@ -7,8 +7,11 @@ export function createHandler({ env, fetch: request = globalThis.fetch, crypto =
   const service = env('SUPABASE_SERVICE_ROLE_KEY');
   const shop = env('YOOKASSA_SHOP_ID');
   const secret = env('YOOKASSA_SECRET_KEY');
-  // Live traffic is enabled only after test payments and merchant details are checked.
-  const ready = !!(shop && secret && env('NZ_PAYMENTS_ENABLED') === 'true');
+  // Test keys can be exercised without enabling live charging. Verify the provider's
+  // test flag before creating anything; NZ_PAYMENTS_ENABLED=false is the kill switch.
+  const testMode = !!secret?.startsWith('test_');
+  const ready = !!(shop && secret && (env('NZ_PAYMENTS_ENABLED') === 'true' || (testMode && env('NZ_PAYMENTS_ENABLED') !== 'false')));
+  let verifiedTest = false;
   const hash = async value => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)))].map(x => x.toString(16).padStart(2, '0')).join('');
   const rpc = async (action, data = {}) => {
     const res = await request(url + '/rest/v1/rpc/nz_billing_api', {
@@ -21,13 +24,22 @@ export function createHandler({ env, fetch: request = globalThis.fetch, crypto =
   };
   const yk = async (path, data, idempotencyKey) => {
     if (!ready) throw new Error('payments_unavailable');
+    if (testMode && data && !verifiedTest) {
+      const check = await request('https://api.yookassa.ru/v3/me', {
+        headers: { Authorization: 'Basic ' + btoa(shop + ':' + secret) }, signal: AbortSignal.timeout(15000),
+      });
+      if (!check.ok || (await check.json()).test !== true) throw new Error('test_store_required');
+      verifiedTest = true;
+    }
     const res = await request('https://api.yookassa.ru/v3/' + path, {
       method: data ? 'POST' : 'GET', headers: { Authorization: 'Basic ' + btoa(shop + ':' + secret),
         'Content-Type': 'application/json', ...(data ? { 'Idempotence-Key': idempotencyKey } : {}) },
       ...(data ? { body: JSON.stringify(data) } : {}), signal: AbortSignal.timeout(20000),
     });
     if (!res.ok) throw new Error('provider_unavailable');
-    return res.json();
+    const result = await res.json();
+    if (testMode && result.test !== true) throw new Error('test_store_required');
+    return result;
   };
   const settle = async order => {
     if (!order.provider_id) return;
@@ -60,13 +72,24 @@ export function createHandler({ env, fetch: request = globalThis.fetch, crypto =
     const reply = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: cors });
     if (req.headers.get('origin') && req.headers.get('origin') !== ORIGIN) return reply({ error: 'origin_denied' }, 403);
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
-    if (req.method === 'GET') return reply({ ready, price: 299, currency: 'RUB', consent_version: CONSENT_VERSION });
+    if (req.method === 'GET') return reply({ ready, configured: !!(shop && secret), test_mode: testMode, price: 299, currency: 'RUB', consent_version: CONSENT_VERSION });
     if (req.method !== 'POST') return reply({ error: 'method_not_allowed' }, 405);
     try {
       const text = await req.text();
       if (text.length > 262144) return reply({ error: 'request_too_large' }, 413);
       const body = JSON.parse(text);
       const action = new URL(req.url).pathname.split('/').filter(Boolean).pop();
+      if (action === 'diagnostics') {
+        const auth = await rpc('job_auth', { token: req.headers.get('x-nz-job-token') || '' });
+        if (!auth.ok) return reply({ error: 'unauthorized' }, 401);
+        if (!shop || !secret) return reply({ configured: false });
+        const response = await request('https://api.yookassa.ru/v3/me', {
+          headers: { Authorization: 'Basic ' + btoa(shop + ':' + secret) }, signal: AbortSignal.timeout(15000),
+        });
+        if (!response.ok) return reply({ configured: true, verified: false, provider_status: response.status });
+        const info = await response.json();
+        return reply({ configured: true, verified: true, shop_id: info.account_id, test: info.test, ready });
+      }
       if (action === 'webhook') {
         if (!ready) return reply({ error: 'payments_unavailable' }, 503);
         const id = body.object?.id;
