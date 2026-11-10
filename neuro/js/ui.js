@@ -1,6 +1,6 @@
-import { el, sleep } from './util.js';
-import { haptic, sfx } from './fx.js';
-import { glyph } from './icons.js';
+import { el, sleep } from './util.js?v=1.1.0';
+import { haptic, sfx } from './fx.js?v=1.1.0';
+import { glyph } from './icons.js?v=1.1.0';
 
 // Контекст упражнения: корень экрана, настройки, возможность прервать.
 export function makeCtx(root, prefs) {
@@ -131,3 +131,4 @@ export function confirmSheet({ title, text = '', ok = 'Да', cancel = 'Отме
     s.node.parentElement.querySelector('.sheet-back').addEventListener('click', () => { if (!done) { done = true; resolve(false); } });
   });
 }
+

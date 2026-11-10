@@ -1,4 +1,4 @@
-import { shuffle } from './util.js';
+import { shuffle } from './util.js?v=1.1.0';
 
 // Существительные средней сложности (4-12 букв), в именительном падеже.
 // Важно для упражнения: окончания разные, на них и проверяем точность.
@@ -47,3 +47,4 @@ export function pickWords(n = 30, rnd = Math.random) {
   }
   return out;
 }
+

@@ -1,8 +1,8 @@
-import { el, esc, sleep } from './util.js';
-import { makeHud, startTimer, countdown } from './ui.js';
-import { haptic, sfx } from './fx.js';
-import { pickWords } from './words.js';
-import { glyph } from './icons.js';
+import { el, esc, sleep } from './util.js?v=1.1.0';
+import { makeHud, startTimer, countdown } from './ui.js?v=1.1.0';
+import { haptic, sfx } from './fx.js?v=1.1.0';
+import { pickWords } from './words.js?v=1.1.0';
+import { glyph } from './icons.js?v=1.1.0';
 
 export const MEMORY_MS = 60000;
 
@@ -228,3 +228,4 @@ export function runMemory(ctx, { step = '' } = {}) {
     })();
   });
 }
+

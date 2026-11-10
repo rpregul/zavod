@@ -1,4 +1,4 @@
-import { addDays, dayStr, fmtShort, logicalNow, parseDay } from './util.js';
+import { addDays, dayStr, fmtShort, logicalNow, parseDay } from './util.js?v=1.1.0';
 
 let gid = 0;
 const NS = 'http://www.w3.org/2000/svg';
@@ -139,3 +139,4 @@ export function ringSvg(frac, { size = 96, stroke = 10, id = `r${++gid}`, c1 = '
 }
 
 export { NS };
+

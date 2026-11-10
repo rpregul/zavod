@@ -1,6 +1,6 @@
-import { el, shuffle } from './util.js';
-import { makeHud, startTimer, countdown } from './ui.js';
-import { haptic, sfx, sparkle } from './fx.js';
+import { el, shuffle } from './util.js?v=1.1.0';
+import { makeHud, startTimer, countdown } from './ui.js?v=1.1.0';
+import { haptic, sfx, sparkle } from './fx.js?v=1.1.0';
 
 export const SCHULTE_MS = 60000;
 
@@ -116,3 +116,4 @@ export function runSchulte(ctx, { reverse = false, step = '' } = {}) {
     })();
   });
 }
+

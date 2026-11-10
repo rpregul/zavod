@@ -149,3 +149,4 @@ export default [
 <g fill="#ff6fae" stroke="none" opacity="0.85"><ellipse cx="24" cy="66" rx="5" ry="3.2"/><ellipse cx="76" cy="66" rx="5" ry="3.2"/></g>
 </g>` }
 ];
+

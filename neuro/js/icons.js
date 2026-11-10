@@ -35,3 +35,4 @@ export const glyph = {
 export function gi(name, color = 'orange', size = 'md') {
   return `<span class="gi gi--${color} gi--${size}">${glyph[name] || ''}</span>`;
 }
+

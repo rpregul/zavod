@@ -1,7 +1,7 @@
-import { el, shuffle, mulberry32, sleep } from './util.js';
-import { makeHud, startTimer, countdown } from './ui.js';
-import { haptic, sfx, sparkle, floatText } from './fx.js';
-import { SYMBOLS, ensureSprite } from './symbols/index.js';
+import { el, shuffle, mulberry32, sleep } from './util.js?v=1.1.0';
+import { makeHud, startTimer, countdown } from './ui.js?v=1.1.0';
+import { haptic, sfx, sparkle, floatText } from './fx.js?v=1.1.0';
+import { SYMBOLS, ensureSprite } from './symbols/index.js?v=1.1.0';
 
 export const DOBBLE_MS = 60000;
 const N = 7; // порядок проективной плоскости: 8 символов на карточке, 57 карточек, 57 символов
@@ -203,3 +203,4 @@ export function runDobble(ctx, { step = '' } = {}) {
 }
 
 export { SYMBOLS };
+

@@ -1,6 +1,6 @@
-import { CLOUD, BILLING } from './config.js';
-import { billingRequest } from './billing-api.js';
-import { dayStr, uid } from './util.js';
+import { CLOUD, BILLING } from './config.js?v=1.1.0';
+import { billingRequest } from './billing-api.js?v=1.1.0';
+import { dayStr, uid } from './util.js?v=1.1.0';
 
 const LS = {
   get(k, d = null) {

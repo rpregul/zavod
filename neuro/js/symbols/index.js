@@ -1,7 +1,7 @@
-import A from './partA.js';
-import B from './partB.js';
-import C from './partC.js';
-import D from './partD.js';
+import A from './partA.js?v=1.1.0';
+import B from './partB.js?v=1.1.0';
+import C from './partC.js?v=1.1.0';
+import D from './partD.js?v=1.1.0';
 
 export const SYMBOLS = [...A, ...B, ...C, ...D];
 
@@ -19,3 +19,4 @@ export function ensureSprite() {
   svg.innerHTML = `<defs>${SYMBOLS.map((s, i) => `<g id="sy-${i}">${s.svg}</g>`).join('')}</defs>`;
   document.body.prepend(svg);
 }
+
