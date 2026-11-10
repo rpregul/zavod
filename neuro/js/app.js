@@ -8,6 +8,8 @@ import { makeCtx, sheet, confirmSheet } from './ui.js';
 import { runSchulte } from './schulte.js';
 import { runDobble } from './dobble.js';
 import { runMemory } from './memory.js';
+import { BILLING } from './config.js';
+import { openSubscription, requireSubscription } from './subscription.js';
 
 // ---------------------------------------------------------------- упражнения
 export const EX = {
@@ -88,11 +90,12 @@ function renderLogin() {
           <p>Утро без рилсов. Четыре упражнения на 5 минут, и день начат осознанно.</p>
         </div>
         <form class="login__card glass" autocomplete="off">
-          <label for="nm">Как тебя зовут?</label>
-          <input id="nm" class="input" type="text" maxlength="30" placeholder="Например, Рома" autocomplete="given-name" autocapitalize="words" enterkeyhint="next" value="${esc(name)}">
+          ${BILLING.enabled ? '<p class="subscription-price"><b>299 ₽</b> / месяц</p><p class="login__note">С ежемесячным автопродлением. Отключение — в настройках подписки.</p>' : ''}
+          <label for="nm">${BILLING.enabled ? 'Твой уникальный логин' : 'Как тебя зовут?'}</label>
+          <input id="nm" class="input" type="text" maxlength="30" placeholder="${BILLING.enabled ? 'Например, Рома_123' : 'Например, Рома'}" autocomplete="username" autocapitalize="none" enterkeyhint="next" value="${esc(name)}">
           <div class="login__err" role="alert">${msg}</div>
           <button class="btn btn--primary btn--lg btn--block" type="submit">Дальше ${glyph.arrow}</button>
-          <p class="login__note">Без паролей и почты: только имя и 4 цифры. Те же имя и PIN на другом телефоне покажут твою историю.</p>
+          <p class="login__note">${BILLING.enabled ? 'Запомни логин и PIN: они нужны для входа с другого устройства. Для покупки потребуется почта.' : 'Без паролей и почты: только имя и 4 цифры. Те же имя и PIN на другом телефоне покажут твою историю.'}</p>
         </form>`;
       const input = node.querySelector('#nm');
       node.querySelector('form').addEventListener('submit', (e) => {
@@ -401,6 +404,7 @@ function openSettings() {
       <label class="set"><span>${gi('eye', 'teal', 'xs')}Точка-ориентир в центре таблицы</span><input type="checkbox" data-pref="dot" ${p.dot ? 'checked' : ''}><i class="sw"></i></label>
     </div>
     <div class="sheet__actions sheet__actions--col">
+      ${BILLING.enabled ? '<button class="btn btn--primary" data-set="subscription">Подписка · 299 ₽ / месяц</button>' : ''}
       <button class="btn btn--glass" data-set="export">${glyph.download}<span>Скачать мои результаты</span></button>
       <button class="btn btn--glass" data-set="logout">${glyph.logout}<span>Выйти из профиля</span></button>
     </div>`);
@@ -414,7 +418,10 @@ function openSettings() {
   s.node.addEventListener('click', async (e) => {
     const b = e.target.closest('[data-set]');
     if (!b) return;
-    if (b.dataset.set === 'export') {
+    if (b.dataset.set === 'subscription') {
+      s.close();
+      return openSubscription(store);
+    } else if (b.dataset.set === 'export') {
       const url = URL.createObjectURL(new Blob([store.exportJson()], { type: 'application/json' }));
       const a = el('a');
       a.href = url;
@@ -531,12 +538,14 @@ async function playOne(id, { guided = false, idx = 0 } = {}) {
 }
 
 async function runSingle(id) {
+  if (!await requireSubscription(store)) return;
   const r = await playOne(id);
   renderHome();
   if (r && r.action === 'home') return;
 }
 
 async function runSession() {
+  if (!await requireSubscription(store)) return;
   const startIdx = 0;
   const recs = [];
   for (let i = startIdx; i < ORDER.length; i++) {
@@ -605,7 +614,12 @@ function boot() {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
   // для отладки и тестов
-  window.__nz = { store, S, EX };
+  if (!BILLING.enabled) window.__nz = { store, S, EX };
+  if (BILLING.enabled && store.session && new URLSearchParams(location.search).get('payment') === 'return') {
+    history.replaceState(null, '', location.pathname);
+    openSubscription(store);
+  }
 }
 
 boot();
+
