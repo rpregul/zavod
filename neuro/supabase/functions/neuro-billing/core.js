@@ -7,10 +7,9 @@ export function createHandler({ env, fetch: request = globalThis.fetch, crypto =
   const service = env('SUPABASE_SERVICE_ROLE_KEY');
   const shop = env('YOOKASSA_SHOP_ID');
   const secret = env('YOOKASSA_SECRET_KEY');
-  // Test keys can be exercised without enabling live charging. Verify the provider's
-  // test flag before creating anything; NZ_PAYMENTS_ENABLED=false is the kill switch.
+  // Live payments are on by default once merchant credentials are installed. Set NZ_PAYMENTS_ENABLED=false to pause checkout.
   const testMode = !!secret?.startsWith('test_');
-  const ready = !!(shop && secret && (env('NZ_PAYMENTS_ENABLED') === 'true' || (testMode && env('NZ_PAYMENTS_ENABLED') !== 'false')));
+  const ready = !!(shop && secret && env('NZ_PAYMENTS_ENABLED') !== 'false');
   let verifiedTest = false;
   const hash = async value => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)))].map(x => x.toString(16).padStart(2, '0')).join('');
   const rpc = async (action, data = {}) => {
