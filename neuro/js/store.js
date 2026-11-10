@@ -61,6 +61,14 @@ export const store = {
   results: [],
   prefs: { ...DEFAULT_PREFS, ...(LS.get('nz.prefs') || {}) },
   status: 'idle', // idle | syncing | ok | offline | authfail
+  access: null,
+
+  async refreshAccess() {
+    if (!BILLING.enabled || !this.session) return null;
+    this.access = await this.billing('status');
+    this.emit();
+    return this.access;
+  },
 
   async billing(action, data = {}) {
     if (!this.session) throw new Error('unauthorized');
@@ -152,6 +160,7 @@ export const store = {
   logout() {
     if (BILLING.enabled && this.session?.token) billingRequest('logout', {}, this.session.token).catch(() => {});
     this.session = null;
+    this.access = null;
     this.results = [];
     this.status = 'idle';
     LS.del('nz.session');
@@ -174,7 +183,12 @@ export const store = {
       try {
         this.status = 'syncing';
         this.emit();
+        for (const row of this.results.filter(r => !r.s && r.meta?.trial_id)) {
+          await this.billing('trial-result', { trial_id: row.meta.trial_id, row });
+          row.s = 1;
+        }
         const subscription = await this.billing('status');
+        this.access = subscription;
         const unsynced = this.results.filter(r => !r.s);
         if (subscription.active) {
           for (let i = 0; i < unsynced.length; i += 200) {
