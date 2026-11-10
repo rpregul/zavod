@@ -1,6 +1,6 @@
 const ORIGIN = 'https://plotnikovprod.ru';
 const RETURN_URL = ORIGIN + '/neuro/?payment=return';
-export const CONSENT_VERSION = 'monthly-plans-v2';
+export const CONSENT_VERSION = 'monthly-plans-v3-once';
 
 export function createHandler({ env, fetch: request = globalThis.fetch, crypto = globalThis.crypto }) {
   const url = env('SUPABASE_URL');
