@@ -17,7 +17,7 @@ Source: rpregul/zavod, neuro/. Frontend changes remain disabled until launch che
 
 1. Confirm the YooKassa store contract is active and recurring payments are enabled for this store.
 2. Start with a TEST store. In Supabase → Edge Functions → Secrets set YOOKASSA_SHOP_ID and YOOKASSA_SECRET_KEY.
-3. NZ_PAYMENTS_ENABLED=true enables provider calls. Leave absent/false outside controlled tests until launch.
+3. Test keys work without enabling live payments, after checking /me.test=true. NZ_PAYMENTS_ENABLED=false disables all payment calls; true enables live credentials only after launch review.
 4. YooKassa HTTP notifications URL:
    https://qucwykwlhipjnbeljuvq.supabase.co/functions/v1/neuro-billing/webhook
    Subscribe to payment.succeeded and payment.canceled.
@@ -43,6 +43,8 @@ Source: rpregul/zavod, neuro/. Frontend changes remain disabled until launch che
 node --test neuro/supabase/functions/neuro-billing/core.test.mjs
 
 Run billing.test.sql on the prepared database; all synthetic records roll back.
+
+2026-11-10: test store 1525814 verified by GET /me (test=true). Hosted checkout of 299 RUB succeeded using YooKassa's documented test card; saved payment method confirmed, paid access issued. Accelerated renewal of the dedicated __qa_billing_20261110 account also succeeded for 299 RUB. No real money was charged. HTTP-notification delivery and frontend flow remain to be verified; provider reconciliation was invoked through the protected worker. Email reminder timing in the accelerated test was simulated on the QA account only.
 
 ## Rollback
 
