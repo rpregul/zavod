@@ -1,3 +1,4 @@
+import { initAnalytics, openFunnel } from './analytics.js?v=1.1.5';
 import { store, cloudOn } from './store.js?v=1.1.2';
 import * as S from './stats.js?v=1.1.2';
 import { el, esc, plural, dayStr, fmtLong, fmtShort, weekdayName, sleep, logicalDay } from './util.js?v=1.1.2';
@@ -276,6 +277,7 @@ function renderHome({ quiet = false } = {}) {
     </div>
     </div>
     <div data-install></div>
+    ${store.session?.key === 'рома' ? '<button type="button" class="btn btn--glass" data-act="funnel">Статистика сайта</button>' : ''}
     <footer class="foot">Нейро-зарядка · данные ${cloudOn() ? 'синхронизируются между устройствами' : 'хранятся на этом устройстве'}</footer>`;
 
   mount(node, 'home', { quiet });
@@ -322,6 +324,7 @@ function renderHome({ quiet = false } = {}) {
       return paintChart(node);
     }
     if (t.dataset.act === 'session') return runSession();
+    if (t.dataset.act === 'funnel') return openFunnel(store);
     if (t.dataset.act === 'settings') return openSettings();
     if (t.dataset.act === 'subscribe') return openSubscription(store);
   });
@@ -657,6 +660,7 @@ function boot() {
   initFx();
   initRipple();
   store.load();
+  initAnalytics(store);
   // перерисовываем главную, если изменилось содержимое результатов (в т.ч. дата у существующих), а не только их число
   const sig = () => store.results.map((r) => `${r.id}${r.day}${r.score}`).join('|') + JSON.stringify(store.access);
   let lastSig = sig();
@@ -688,4 +692,5 @@ function boot() {
 }
 
 boot();
+
 
