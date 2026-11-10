@@ -1,4 +1,4 @@
-# Subscription launch: 299 RUB per calendar month
+# Subscription launch: individual 299 RUB / family 599 RUB per calendar month
 
 Source: rpregul/zavod, neuro/. Frontend changes remain disabled until launch checks pass.
 
@@ -12,6 +12,9 @@ Source: rpregul/zavod, neuro/. Frontend changes remain disabled until launch che
 - Cancel stops renewal; paid access stays until paid_until. A failed renewal stops automatic attempts.
 - Ambiguous provider creation older than 20 hours is placed in review, never blindly charged again.
 - Each confirmed payment is queued for a manual NPD receipt (nz_payments.receipt_status='required').
+- First full trial: one ordered pass through sch_f, sch_r, dob, mem. Server tracks progression and allows interrupted sessions to resume. Future exercises are not automatically added to the trial.
+- Family plan: owner plus three invited profiles, private per-person results, 7-day single-use invitations, removal/leave/revocation, inherited access until the owner's paid term ends.
+- Personal exercise feedback is in js/recommendations.js. Absolute cutoffs remain null until expert validation; the current comparison uses the user's earlier attempts, not clinical norms. A two-week comparison is offered without a guaranteed magnitude of benefit.
 
 ## Merchant setup
 
@@ -48,7 +51,9 @@ node --test neuro/supabase/functions/neuro-billing/core.test.mjs
 
 Run billing.test.sql on the prepared database; all synthetic records roll back.
 
-2026-11-10: test store 1525814 verified by GET /me (test=true). Hosted checkout of 299 RUB succeeded using YooKassa's documented test card; saved payment method confirmed, paid access issued. Accelerated renewal of the dedicated __qa_billing_20261110 account also succeeded for 299 RUB. No real money was charged. HTTP-notification delivery and frontend flow remain to be verified; provider reconciliation was invoked through the protected worker. Email reminder timing in the accelerated test was simulated on the QA account only.
+2026-11-10: test store 1525814 verified by GET /me (test=true). Hosted checkout of 299 RUB succeeded using YooKassa's documented test card; saved payment method confirmed, paid access issued. Accelerated renewal of the dedicated __qa_billing_20261110 account also succeeded for 299 RUB. No real money was charged. HTTP notification delivery was subsequently verified separately; the new full frontend flow remains to be checked end to end. Email reminder timing in the accelerated test was simulated on the QA account only.
+
+2026-11-10: transactional access.test.sql passed: ordered four-exercise trial, duplicate result retry, second trial rejection, immutable family amount 599 RUB, owner plus three members, invitation replay rejection, separate results, member cannot cancel owner billing, cancellation preserves family access until expiry. The offer preview at the separate neuro-design-preview Vercel project uses example data and makes no payment calls. Mobile 390px plan choice and family checkout form visually checked.
 
 ## Rollback
 
