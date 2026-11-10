@@ -13,6 +13,6 @@ export const APP_VERSION = '1.0.0';
 export const BILLING = {
   enabled: false,
   endpoint: CLOUD.url + '/functions/v1/neuro-billing',
-  consentVersion: '299-monthly-v1',
+  consentVersion: 'monthly-plans-v2',
 };
 
