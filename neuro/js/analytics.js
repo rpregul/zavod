@@ -1,5 +1,4 @@
 import { CLOUD } from './config.js?v=1.1.2';
-import { sheet } from './ui.js?v=1.1.2';
 import { esc } from './util.js?v=1.1.2';
 
 async function rpc(name, data) {
@@ -31,9 +30,26 @@ export function initAnalytics(store) {
   record(); store.on(record);
 }
 export async function openFunnel(store) {
-  const box = sheet('<h3 class="sheet__title">Статистика сайта</h3><div class="sheet__text" data-report>Загружаю…</div><button type="button" class="btn btn--glass" data-close>Закрыть</button>');
-  box.node.querySelector('[data-close]').onclick = box.close;
-  const host = box.node.querySelector('[data-report]');
+  const previous = document.activeElement;
+  const overlay = document.createElement('div');
+  overlay.className = 'analytics-overlay';
+  overlay.innerHTML = '<section class="analytics-panel" role="dialog" aria-modal="true" aria-labelledby="analytics-title"><header class="analytics-header"><h2 id="analytics-title">Статистика сайта</h2><button type="button" class="btn" data-close aria-label="Закрыть статистику">Закрыть</button></header><div class="analytics-body" data-report tabindex="0" aria-live="polite">Загружаем…</div></section>';
+  const oldOverflow = document.body.style.overflow;
+  document.body.style.overflow = 'hidden';
+  const close = () => { overlay.remove(); document.body.style.overflow = oldOverflow; previous?.focus(); };
+  overlay.querySelector('[data-close]').onclick = close;
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+  overlay.addEventListener('keydown', e => {
+    if (e.key === 'Escape') close();
+    if (e.key === 'Tab') {
+      const nodes = [...overlay.querySelectorAll('button,[tabindex="0"]')];
+      if (e.shiftKey && document.activeElement === nodes[0]) { e.preventDefault(); nodes.at(-1).focus(); }
+      else if (!e.shiftKey && document.activeElement === nodes.at(-1)) { e.preventDefault(); nodes[0].focus(); }
+    }
+  });
+  document.getElementById('sheet-root').append(overlay);
+  overlay.querySelector('[data-close]').focus();
+  const host = overlay.querySelector('[data-report]');
   try {
     await store.billing('status');
     const data = await rpc('nz_funnel_report', { p_token: store.session.token, p_days: 30 });
@@ -42,3 +58,4 @@ export async function openFunnel(store) {
     host.innerHTML = '<b>Воронка новых посетителей за 30 дней</b><br><small>Сбор начат: '+(data.tracking_started?date(data.tracking_started):'первых посещений ещё нет')+'. Доли — от предыдущего шага на текущий момент, это ещё не итоговая конверсия: участники могут продолжить позже.</small><dl>'+steps.map(([title,n],i)=>'<dt>'+title+'</dt><dd><b>'+n+'</b>'+(i?' · '+(steps[i-1][1]?Math.round(n/steps[i-1][1]*100)+'%':'—'):'')+'</dd>').join('')+'</dl><small>До входа считаем браузеры, после входа объединяем устройства по аккаунту. Очистка данных и блокировщики влияют на точность. Тестовые аккаунты и посещения владельца исключены.</small><hr><b>Вся история без тестовых аккаунтов</b><p>Регистрации: '+data.totals.registrations+' · начали пробную: '+data.totals.trial_started+' · завершили: '+data.totals.trial_completed+' · покупателей: '+data.totals.buyers+'</p><small>Это отдельные исторические итоги, они не входят в воронку новых посещений.</small><hr><b>Пробные тренировки</b><ul>'+data.trials.map(t=>'<li>'+esc(t.name)+' — '+(t.completed_at?'завершена':'в процессе, '+t.exercises+' из 4')+'<br><small>Начало: '+date(t.started_at)+'</small></li>').join('')+'</ul>';
   } catch { host.textContent = 'Не удалось загрузить статистику. Доступ есть только у владельца. Попробуйте войти повторно.'; }
 }
+

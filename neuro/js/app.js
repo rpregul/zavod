@@ -1,4 +1,4 @@
-import { initAnalytics, openFunnel } from './analytics.js?v=1.1.5';
+import { initAnalytics, openFunnel } from './analytics.js?v=1.1.6';
 import { store, cloudOn } from './store.js?v=1.1.2';
 import * as S from './stats.js?v=1.1.2';
 import { el, esc, plural, dayStr, fmtLong, fmtShort, weekdayName, sleep, logicalDay } from './util.js?v=1.1.2';
@@ -277,7 +277,7 @@ function renderHome({ quiet = false } = {}) {
     </div>
     </div>
     <div data-install></div>
-    ${store.session?.key === 'рома' ? '<button type="button" class="btn btn--glass" data-act="funnel">Статистика сайта</button>' : ''}
+    ${store.session?.key === 'рома' ? '<button type="button" class="btn btn--glass analytics-launch" data-act="funnel">Статистика сайта</button>' : ''}
     <footer class="foot">Нейро-зарядка · данные ${cloudOn() ? 'синхронизируются между устройствами' : 'хранятся на этом устройстве'}</footer>`;
 
   mount(node, 'home', { quiet });
@@ -692,5 +692,6 @@ function boot() {
 }
 
 boot();
+
 
 
