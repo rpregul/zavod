@@ -496,6 +496,8 @@ small{font-size:.78rem;color:var(--muted);font-weight:600}
 .subscription-consent input { width: 20px; height: 20px; flex: 0 0 auto; margin-top: 3px; accent-color: #b24bf3; }
 .subscription-consent a { text-decoration: underline; }
 .subscription-offer { margin: 24px 0 10px; text-align: left; }
+.home-offer { max-width: 760px; margin: 0 auto 28px; }
+.home__cols.home__cols--single { grid-template-columns: minmax(0,1fr); max-width: 600px; margin-inline: auto; }
 .subscription-offer h2 { font-size: clamp(23px, 5vw, 30px); line-height: 1.2; margin-bottom: 12px; }
 .subscription-offer > p { line-height: 1.55; }
 .subscription-benefits { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0; }
