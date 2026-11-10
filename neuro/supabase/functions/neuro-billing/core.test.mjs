@@ -60,3 +60,27 @@ test('untrusted origin cannot initiate checkout', async () => {
   request.headers.set('Origin', 'https://evil.invalid');
   assert.equal((await handler(request)).status, 403);
 });
+test('test-key mode is available without enabling live payments', async () => {
+  const handler = make(() => { throw new Error('No provider call needed'); }, { YOOKASSA_SECRET_KEY: 'test_example', NZ_PAYMENTS_ENABLED: undefined });
+  const health = await (await handler(new Request('https://db.invalid/functions/v1/neuro-billing'))).json();
+  assert.equal(health.ready, true);
+  assert.equal(health.test_mode, true);
+});
+test('test creation refuses merchant that provider identifies as live', async () => {
+  const order = { id: '11111111-1111-4111-8111-111111111111', kind: 'checkout' };
+  let paymentPosts = 0;
+  const handler = make(async (url, options) => {
+    if (url.endsWith('/me')) return ok({ test: false });
+    if (url.includes('api.yookassa.ru')) { paymentPosts++; throw new Error('Unsafe'); }
+    return ok(order);
+  }, { YOOKASSA_SECRET_KEY: 'test_example', NZ_PAYMENTS_ENABLED: undefined });
+  const response = await handler(req('checkout', { consent: true }, 'a'.repeat(64)));
+  assert.equal(response.status, 503);
+  assert.equal(paymentPosts, 0);
+});
+test('diagnostics require worker authentication and never expose credentials', async () => {
+  const handler = make(async () => ok({ ok: false }));
+  const response = await handler(req('diagnostics', {}));
+  assert.equal(response.status, 401);
+  assert.deepEqual(await response.json(), { error: 'unauthorized' });
+});
