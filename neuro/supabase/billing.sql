@@ -33,6 +33,7 @@ create table if not exists public.nz_payments (
   confirmation_url text,
   created_at timestamptz not null default now(),
   checked_at timestamptz,
+  webhook_received_at timestamptz,
   lease_until timestamptz,
   applied_at timestamptz,
   receipt_status text not null default 'required',
@@ -40,6 +41,7 @@ create table if not exists public.nz_payments (
 );
 create unique index if not exists nz_one_open_payment on public.nz_payments(user_key)
   where state in ('creating','pending','review');
+alter table public.nz_payments add column if not exists webhook_received_at timestamptz;
 create schema if not exists nz_private;
 revoke all on schema nz_private from public, anon, authenticated;
 create table if not exists nz_private.job_secret (
@@ -118,6 +120,9 @@ begin
     if obj->>'id' is distinct from pay.provider_id or obj#>>'{metadata,order_id}' is distinct from pay.id::text
       or obj#>>'{amount,currency}' is distinct from 'RUB' or (obj#>>'{amount,value}')::numeric is distinct from pay.amount
       then raise exception 'payment_mismatch'; end if;
+    if p_data->>'source'='webhook' then
+      update public.nz_payments set webhook_received_at=now() where id=pay.id;
+    end if;
     if obj->>'status'='succeeded' and obj->>'paid'='true' and pay.applied_at is null then
       update public.nz_subscriptions set
         paid_until=greatest(now(),pay.period_start)+interval '1 month',
