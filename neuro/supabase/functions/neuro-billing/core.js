@@ -104,7 +104,7 @@ export function createHandler({ env, fetch: request = globalThis.fetch, crypto =
           if (payment.amount?.currency !== 'RUB' || Number(payment.amount?.value) !== 299) return reply({ error: 'payment_mismatch' }, 400);
           await rpc('attach', { order_id: orderId, provider_id: payment.id, confirmation_url: payment.confirmation?.confirmation_url || null });
         }
-        await rpc('settle', { order_id: orderId, payment });
+        await rpc('settle', { order_id: orderId, payment, source: 'webhook' });
         return reply({ ok: true });
       }
       if (action === 'renew') {
