@@ -87,21 +87,21 @@ const fmtTime = (ts) => {
 const sign = (n) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
 
 // ---------------------------------------------------------------- вход
-function guestWelcome() {
+async function guestWelcome() {
   const node = el('div', 'login');
-  node.innerHTML = '<div class="login__hero"><div class="login__logo">' + gi('brain','orange','xl') + '</div><h1>Нейро-<span class="grad">зарядка</span></h1><p>Четыре упражнения на внимание и память за пять минут.</p></div><div class="login__card glass"><button class="btn btn--primary btn--block" data-trial>Начать бесплатную тренировку</button><button class="link" data-login>Войти в свой профиль</button><p role="alert"></p></div><p class="login__note"><a href="privacy.html">Персональные данные</a> · <a href="mailto:plotnikov.csh@gmail.com">Поддержка</a></p>';
-  node.querySelector('[data-login]').onclick = renderLogin;
-  const button = node.querySelector('[data-trial]');
-  button.onclick = async () => {
-    button.disabled = true;
-    try {
-      const result = await store.startGuest();
-      if (!['created','ok'].includes(result.status)) throw Error();
-      await runSession();
-    } catch { node.querySelector('[role=alert]').textContent = 'Не удалось начать тренировку. Попробуйте ещё раз.'; }
-    finally { button.disabled = false; }
-  };
-  mount(node,'welcome');
+  node.innerHTML = '<p role="status">Загружаем упражнения…</p><button class="btn btn--glass" hidden>Повторить</button>';
+  mount(node, 'welcome');
+  try {
+    const result = await store.startGuest();
+    if (!['created', 'ok'].includes(result.status)) throw new Error('guest_unavailable');
+    renderHome();
+    store.sync();
+  } catch {
+    node.querySelector('[role="status"]').textContent = 'Не удалось загрузить упражнения. Проверьте соединение.';
+    const button = node.querySelector('button');
+    button.hidden = false;
+    button.onclick = guestWelcome;
+  }
 }
 
 function paidProfile() {
@@ -318,9 +318,9 @@ function renderHome({ quiet = false } = {}) {
   mount(node, 'home', { quiet });
   if (!premium) {
     const completed = store.access?.trial?.completed;
-    node.querySelector('.hero__txt h2').textContent = completed ? 'Продолжим тренировки?' : store.access?.trial?.started ? 'Продолжи первую тренировку' : 'Первая тренировка бесплатно';
+    node.querySelector('.hero__txt h2').textContent = completed ? 'Продолжим тренировки?' : store.access?.trial?.next_index > 0 ? 'Продолжите первую тренировку' : 'Первая тренировка бесплатно';
     node.querySelector('.hero__txt p').textContent = completed ? 'Твоя точка отсчёта сохранена' : 'Все четыре упражнения, без оплаты';
-    node.querySelector('.hero__cta span').textContent = completed ? 'Выбрать подписку' : 'Попробовать бесплатно';
+    node.querySelector('.hero__cta span').textContent = completed ? 'Выбрать подписку' : 'Начать тренировку';
     node.querySelector('.chips-row').hidden = true;
     node.querySelectorAll('.tile__best,.tile__badge,.tile__new').forEach(x => { x.textContent = 'В первой тренировке'; });
     node.querySelectorAll('.home__col')[1].innerHTML = `<section class="sec"><div class="progress glass subscription-locked"><h3>Твой следующий шаг</h3><p>Персональные подсказки, история и динамика результатов доступны по подписке.</p>${completed ? '<button class="btn btn--primary btn--block" data-act="subscribe">Продолжить с подпиской</button>' : '<p class="login__note">Сначала пройди бесплатную тренировку — она станет твоей точкой отсчёта.</p>'}</div></section>`;
