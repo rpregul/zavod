@@ -69,9 +69,7 @@ export async function openSubscription(store, { plan: selected = null } = {}) {
       if (!chosen) { selected = null; return draw(); }
       s.node.innerHTML = `<button class="link" data-back>← Другой тариф</button><h3 class="sheet__title">${chosen.title}</h3>
         <p class="subscription-price"><b>${chosen.price} ₽</b> / месяц</p><p class="sheet__text">${chosen.detail}</p>
-        ${sub.ready ? `<form data-checkout><label for="billing-email">Почта для чека и связи</label>
-          <input class="input" id="billing-email" type="email" required maxlength="254" autocomplete="email" value="${esc(sub.email || '')}" placeholder="you@example.ru">
-          <label class="subscription-consent"><input type="checkbox" required name="consent"><span>Принимаю <a href="offer.html" target="_blank" rel="noopener">условия</a> и соглашаюсь на разовое списание ${chosen.price} ₽ за один месяц доступа. Автоматических списаний не будет. Ознакомлен с <a href="privacy.html" target="_blank" rel="noopener">политикой обработки данных</a>.</span></label>
+        ${sub.ready ? `<form data-checkout><label class="subscription-consent"><input type="checkbox" required name="consent"><span>Принимаю <a href="offer.html" target="_blank" rel="noopener">условия</a> и соглашаюсь на разовое списание ${chosen.price} ₽ за один месяц доступа. Автоматических списаний не будет. Ознакомлен с <a href="privacy.html" target="_blank" rel="noopener">политикой обработки данных</a>.</span></label>
           <button class="btn btn--primary btn--lg btn--block" type="submit">Оплатить ${chosen.price} ₽</button>
           <p class="login__note">Оплата покрывает один месяц доступа. Чтобы продолжить пользоваться тренажёром, позже оформи новую оплату.</p></form>` : '<p class="sheet__text">Оплата готовится к запуску.</p>'}
         <p class="login__err" role="alert" data-error></p><button class="link" data-close>Закрыть</button>`;
@@ -83,7 +81,7 @@ export async function openSubscription(store, { plan: selected = null } = {}) {
         const button = form.querySelector('button'); button.disabled = true; button.textContent = 'Открываем оплату…';
         trackAction('checkout_submit_' + selected);
         try {
-          const result = await store.billing('checkout', { email: form.querySelector('input[type=email]').value,
+          const result = await store.billing('checkout', { 
             consent: form.elements.consent.checked, consent_version: BILLING.consentVersion, plan: selected });
           if (result.confirmation_url) { trackAction('checkout_redirect'); await flushAnalytics(); location.assign(result.confirmation_url); }
           else { trackAction('checkout_processing'); errorText('Платёж обрабатывается. Доступ появится после подтверждения оплаты.'); }

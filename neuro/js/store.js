@@ -1,6 +1,6 @@
-import { CLOUD, BILLING } from './config.js?v=1.1.1';
-import { billingRequest } from './billing-api.js?v=1.1.1';
-import { dayStr, uid } from './util.js?v=1.1.1';
+import { CLOUD, BILLING } from './config.js?v=1.1.2';
+import { billingRequest } from './billing-api.js?v=1.1.2';
+import { dayStr, uid } from './util.js?v=1.1.2';
 
 const LS = {
   get(k, d = null) {
@@ -63,6 +63,27 @@ export const store = {
   status: 'idle', // idle | syncing | ok | offline | authfail
   access: null,
 
+  async startGuest() {
+    let entry = LS.get('nz.guest');
+    if (!entry) {
+      entry = { key: 'g_' + crypto.randomUUID().replaceAll('-', ''), secret: crypto.randomUUID() };
+      LS.set('nz.guest', entry);
+    }
+    return this.login(entry.key, entry.secret, { create: true });
+  },
+  async claimGuest(name, pin) {
+    name = name.trim().replace(/\s+/g, ' ');
+    const key = normName(name);
+    const status = await rpc('nz_claim_guest', { p_token: this.session.token, p_name: name, p_key: key, p_hash: await sha256(key + ':' + pin + ':nz1') });
+    if (status === 'ok') {
+      this.session = { key, name, token: this.session.token };
+      LS.set('nz.session', this.session);
+      this.persist();
+      LS.del('nz.guest');
+      this.emit();
+    }
+    return status;
+  },
   async refreshAccess() {
     if (!BILLING.enabled || !this.session) return null;
     this.access = await this.billing('status');
@@ -114,7 +135,7 @@ export const store = {
       try {
         const result = await billingRequest('login', { name: cleanName, hash, create });
         if (result.token) {
-          this.session = { key, name: result.name || cleanName, token: result.token };
+          this.session = { key, name: result.name || cleanName, token: result.token, ...(/^g_[a-f0-9]{32}$/.test(key) ? { hash } : {}) };
           LS.set('nz.session', this.session);
           this.load();
           this.emit();

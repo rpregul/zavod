@@ -1,5 +1,5 @@
 import { initAnalytics, openFunnel, trackScreen, trackExercise } from './analytics.js?v=1.1.7';
-import { store, cloudOn } from './store.js?v=1.1.2';
+import { store, cloudOn } from './store.js?v=1.2.0';
 import * as S from './stats.js?v=1.1.2';
 import { el, esc, plural, dayStr, fmtLong, fmtShort, weekdayName, sleep, logicalDay } from './util.js?v=1.1.2';
 import { glyph, gi } from './icons.js?v=1.1.2';
@@ -10,7 +10,7 @@ import { runSchulte } from './schulte.js?v=1.1.2';
 import { runDobble } from './dobble.js?v=1.1.2';
 import { runMemory } from './memory.js?v=1.1.2';
 import { BILLING } from './config.js?v=1.1.2';
-import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.1.7';
+import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.2.0';
 import { recommendations, exerciseReport } from './recommendations.js?v=1.1.2';
 
 // ---------------------------------------------------------------- упражнения
@@ -87,6 +87,41 @@ const fmtTime = (ts) => {
 const sign = (n) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
 
 // ---------------------------------------------------------------- вход
+function guestWelcome() {
+  const node = el('div', 'login');
+  node.innerHTML = '<div class="login__hero"><div class="login__logo">' + gi('brain','orange','xl') + '</div><h1>Нейро-<span class="grad">зарядка</span></h1><p>Четыре упражнения на внимание и память за пять минут.</p></div><div class="login__card glass"><button class="btn btn--primary btn--block" data-trial>Начать бесплатную тренировку</button><button class="link" data-login>Войти в свой профиль</button><p role="alert"></p></div><p class="login__note"><a href="privacy.html">Персональные данные</a> · <a href="mailto:plotnikov.csh@gmail.com">Поддержка</a></p>';
+  node.querySelector('[data-login]').onclick = renderLogin;
+  const button = node.querySelector('[data-trial]');
+  button.onclick = async () => {
+    button.disabled = true;
+    try {
+      const result = await store.startGuest();
+      if (!['created','ok'].includes(result.status)) throw Error();
+      await runSession();
+    } catch { node.querySelector('[role=alert]').textContent = 'Не удалось начать тренировку. Попробуйте ещё раз.'; }
+    finally { button.disabled = false; }
+  };
+  mount(node,'welcome');
+}
+
+function paidProfile() {
+  const node = el('div','login');
+  node.innerHTML = '<h1>Сохраните оплаченный доступ</h1><form class="login__card glass"><label>Имя для входа<input class="input" name="login" maxlength="30" required></label><label>Придумайте PIN из четырёх цифр<input class="input" name="pin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required></label><label>Повторите PIN<input class="input" name="again" type="password" inputmode="numeric" required></label><p role="alert"></p><button class="btn btn--primary">Сохранить профиль</button></form>';
+  const form = node.querySelector('form');
+  form.onsubmit = async e => {
+    e.preventDefault();
+    const err = form.querySelector('[role=alert]');
+    if(form.elements.pin.value !== form.elements.again.value) { err.textContent='PIN не совпадает'; return; }
+    const button=form.querySelector('button'); button.disabled=true;
+    try {
+      if(await store.claimGuest(form.elements.login.value, form.elements.pin.value)==='ok') renderHome();
+      else err.textContent='Это имя уже занято. Выберите другое.';
+    } catch { err.textContent='Не удалось сохранить профиль. Попробуйте ещё раз.'; }
+    finally { button.disabled=false; }
+  };
+  mount(node,'paid_profile');
+}
+
 function renderLogin() {
   const node = el('div', 'login');
   let step = 'name', name = '', pin = '', first = '', msg = '', busy = false;
@@ -197,14 +232,15 @@ let chartEx = (() => { try { const v = sessionStorage.getItem('nz.chartEx'); ret
 const TAB_LABEL = { all: 'Общий', sch_f: 'Шульте', sch_r: 'Шульте ↕', dob: 'Совпадения', mem: 'Память' };
 
 function renderHome({ quiet = false } = {}) {
-  if (!store.session) return renderLogin();
+  if (!store.session) return guestWelcome();
+  if (/^g_[a-f0-9]{32}$/.test(store.session.key) && store.access?.active) return paidProfile();
   const res = store.results;
   const premium = !BILLING.enabled || !!store.access?.active;
   const done = S.doneToday(res);
   const streak = S.streak(res);
   const full = S.fullDays(res);
   const week = S.weekStrip(res);
-  const name = store.session.name;
+  const name = /^g_[a-f0-9]{32}$/.test(store.session.key) ? 'Гость' : store.session.name;
   const left = ORDER.filter((id) => !done.has(id));
   const allDone = left.length === 0;
   const startedCount = done.size;
@@ -674,7 +710,7 @@ function boot() {
     lastSig = now;
     if (screen === 'home' && changed) renderHome({ quiet: true });
   });
-  if (store.session) { renderHome(); store.sync(); } else renderLogin();
+  if (store.session) { renderHome(); store.sync(); } else guestWelcome();
   if (BILLING.enabled) acceptFamilyInvite(store);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && store.session) {
