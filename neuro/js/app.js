@@ -1,4 +1,4 @@
-import { runReading } from './reading.js?v=1.3.0';
+import { runReading, paintMeasurementStats } from './reading.js?v=1.3.1';
 import { comparisonMarkup } from './summary-comparison.js?v=1.3.0';
 import { initAnalytics, openFunnel, trackScreen, trackExercise } from './analytics.js?v=1.2.2';
 import { store, cloudOn } from './store.js?v=1.2.0';
@@ -291,13 +291,21 @@ function renderHome({ quiet = false } = {}) {
     </section>
 
     <section class="sec reading-category" style="--i:3">
-      <h3 class="sec__t">Чтение</h3>
-      <button class="tile glass reading-entry" data-act="reading">
-        ${gi('eye', 'blue')}
-        <span class="tile__txt"><b>Скорость чтения</b><small>Текст, таймер и проверка понимания</small></span>
-        <span class="tile__new">${premium ? 'Открыть' : 'По подписке'}</span>
-      </button>
+      <h3 class="sec__t">Замеры</h3>
+      <div class="measurement-tiles">
+        <button class="tile glass reading-entry" data-act="reading_aloud">
+          ${gi('sound', 'blue')}
+          <span class="tile__txt"><b>Чтение вслух</b><small>Скорость и понимание текста</small></span>
+          <span class="tile__new">${premium ? 'Открыть' : 'По подписке'}</span>
+        </button>
+        <button class="tile glass reading-entry" data-act="reading_silent">
+          ${gi('eye', 'violet')}
+          <span class="tile__txt"><b>Чтение про себя</b><small>Скорость и понимание текста</small></span>
+          <span class="tile__new">${premium ? 'Открыть' : 'По подписке'}</span>
+        </button>
+      </div>
     </section>
+    <section class="sec" data-measurement-stats ${premium ? '' : 'hidden'}></section>
     </div>
     <div class="home__col">
     <section class="sec" style="--i:3">
@@ -355,6 +363,7 @@ function renderHome({ quiet = false } = {}) {
     requestAnimationFrame(() => { a.style.strokeDashoffset = a.style.getPropertyValue('--to'); });
   });
   paintInstallHint(node);
+  if (premium) paintMeasurementStats(node.querySelector('[data-measurement-stats]'),store);
   paintSync();
 
   node.addEventListener('click', async (e) => {
@@ -368,10 +377,10 @@ function renderHome({ quiet = false } = {}) {
       node.querySelectorAll('.seg__b').forEach((b) => b.classList.toggle('on', b.dataset.chart === chartEx));
       return paintChart(node);
     }
-    if (t.dataset.act === 'reading') {
+    if (['reading_aloud','reading_silent'].includes(t.dataset.act)) {
       if (!await requireSubscription(store)) return;
       if (/^g_[a-f0-9]{32}$/.test(store.session.key)) return paidProfile();
-      return runReading({ store, mount, onHome: renderHome });
+      return runReading({ store, mount, onHome: renderHome, mode: t.dataset.act === 'reading_aloud' ? 'aloud' : 'silent' });
     }
     if (t.dataset.act === 'session') return runSession();
     if (t.dataset.act === 'funnel') return openFunnel(store);
@@ -778,6 +787,7 @@ function boot() {
 }
 
 boot();
+
 
 
 
