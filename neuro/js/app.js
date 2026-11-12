@@ -1,7 +1,7 @@
 import { runReading, paintMeasurementStats } from './reading.js?v=1.3.1';
 import { comparisonMarkup } from './summary-comparison.js?v=1.3.0';
 import { initAnalytics, openFunnel, trackScreen, trackExercise } from './analytics.js?v=1.2.2';
-import { store, cloudOn } from './store.js?v=1.2.0';
+import { store, cloudOn } from './store.js?v=1.3.2';
 import * as S from './stats.js?v=1.1.2';
 import { el, esc, plural, dayStr, fmtLong, fmtShort, weekdayName, sleep, logicalDay } from './util.js?v=1.1.2';
 import { glyph, gi } from './icons.js?v=1.1.2';
@@ -124,9 +124,9 @@ function paidProfile() {
   mount(node,'paid_profile');
 }
 
-function renderLogin() {
+function renderLogin({ restore = false } = {}) {
   const node = el('div', 'login');
-  let step = 'name', name = '', pin = '', first = '', msg = '', busy = false;
+  let step = restore ? 'pin' : 'name', name = restore ? store.session.name : '', pin = '', first = '', msg = '', busy = false;
 
   const dots = () => `<div class="pin-dots">${[0, 1, 2, 3].map((i) => `<i class="${i < pin.length ? 'on' : ''}"></i>`).join('')}</div>`;
   const keypad = () => `<div class="keypad">${[1, 2, 3, 4, 5, 6, 7, 8, 9, '', 0, 'x'].map((k) => (k === '' ? '<span></span>' : `<button class="key" data-k="${k}" aria-label="${k === 'x' ? 'Стереть' : k}">${k === 'x' ? glyph.back : k}</button>`)).join('')}</div>`;
@@ -178,7 +178,7 @@ function renderLogin() {
       if (step === 'pin') {
         const r = await store.login(name, pin);
         if (r.status === 'ok') return done();
-        if (r.status === 'no_user') { first = pin; pin = ''; step = 'confirm'; msg = ''; return draw(); }
+        if (r.status === 'no_user' && !restore) { first = pin; pin = ''; step = 'confirm'; msg = ''; return draw(); }
         fail({ bad_pin: 'Неверный PIN. Попробуй ещё раз', locked: 'Слишком много попыток. Подожди 10 минут', offline: 'Нет связи, а этого имени ещё нет на этом телефоне', invalid: 'Что-то не так с именем' }[r.status] || 'Не получилось войти');
       } else {
         if (pin !== first) { first = ''; pin = ''; step = 'pin'; msg = 'PIN не совпал. Введи его заново'; return draw(); }
@@ -334,7 +334,10 @@ function renderHome({ quiet = false } = {}) {
     <footer class="foot">Нейро-зарядка · данные ${cloudOn() ? 'синхронизируются между устройствами' : 'хранятся на этом устройстве'}</footer>`;
 
   mount(node, 'home', { quiet });
-  if (!premium) {
+  node.querySelector('header').insertAdjacentHTML('afterend', '<div class="sync-notice" data-sync-notice role="status" hidden></div>');
+  if (!premium && BILLING.enabled && !store.access) {
+    node.querySelectorAll('.home__col')[1].innerHTML = '<section class="sec"><div class="progress glass"><h3>История тренировок</h3><p data-history-loading>Загружаем сохранённые результаты вашего профиля…</p></div></section>';
+  } else if (!premium) {
     const completed = store.access?.trial?.completed;
     node.querySelector('.hero__txt h2').textContent = completed ? 'Продолжим тренировки?' : store.access?.trial?.next_index > 0 ? 'Продолжите первую тренировку' : 'Первая тренировка бесплатно';
     node.querySelector('.hero__txt p').textContent = completed ? 'Твоя точка отсчёта сохранена' : 'Все четыре упражнения, без оплаты';
@@ -382,6 +385,8 @@ function renderHome({ quiet = false } = {}) {
       if (/^g_[a-f0-9]{32}$/.test(store.session.key)) return paidProfile();
       return runReading({ store, mount, onHome: renderHome, mode: t.dataset.act === 'reading_aloud' ? 'aloud' : 'silent' });
     }
+    if (t.dataset.act === 'sync-retry') return store.sync();
+    if (t.dataset.act === 'sync-login') return renderLogin({ restore: true });
     if (t.dataset.act === 'session') return runSession();
     if (t.dataset.act === 'funnel') return openFunnel(store);
     if (t.dataset.act === 'settings') return openSettings();
@@ -518,6 +523,20 @@ function paintSync() {
   const dots = document.querySelectorAll('[data-sync]');
   const st = !cloudOn() ? 'local' : store.status;
   dots.forEach((d) => { d.className = `sync-dot sync-dot--${st}`; d.title = { local: 'Данные только на этом устройстве', ok: 'Синхронизировано', syncing: 'Синхронизация…', offline: 'Нет связи, синхронизируем позже', authfail: 'Не удалось войти в облако', idle: '' }[st] || ''; });
+  const notice = document.querySelector('[data-sync-notice]');
+  if (!notice) return;
+  const loading = !store.access && ['idle','syncing'].includes(st);
+  const historyLoading = document.querySelector('[data-history-loading]');
+  if (historyLoading) historyLoading.textContent = loading ? 'Загружаем сохранённые результаты вашего профиля…' : 'Загрузка истории не завершена. Воспользуйтесь кнопкой выше.';
+  notice.hidden = !loading && !['offline','authfail'].includes(st);
+  if (notice.hidden) { notice.innerHTML = ''; return; }
+  const text = st === 'authfail'
+    ? 'Для загрузки истории подтвердите вход в свой профиль. Локальные результаты сохранены.'
+    : st === 'offline'
+      ? 'Не удалось завершить синхронизацию. Сохранённые на этом устройстве результаты остаются на месте.'
+      : 'Загружаем вашу историю тренировок…';
+  notice.innerHTML = '<p>'+text+'</p>' + (loading ? '' : '<button class="btn btn--primary btn--sm" data-act="'+(st === 'authfail' ? 'sync-login' : 'sync-retry')+'">'+(st === 'authfail' ? 'Подтвердить вход' : 'Повторить загрузку')+'</button>');
+
 }
 
 // ---------------------------------------------------------------- настройки
@@ -774,6 +793,7 @@ function boot() {
       if (screen === 'home' && app.dataset.day !== dayStr()) { app.dataset.day = dayStr(); renderHome({ quiet: true }); }
     }
   });
+  window.addEventListener('online', () => { if (store.session) store.sync(); });
   app.dataset.day = dayStr();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('sw.js').catch(() => {});

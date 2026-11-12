@@ -94,6 +94,7 @@ export const store = {
   async billing(action, data = {}) {
     if (!this.session) throw new Error('unauthorized');
     if (!this.session.token) {
+      if (!this.session.hash) throw new Error('unauthorized');
       const result = await billingRequest('login', { name: this.session.name, hash: this.session.hash });
       if (!result.token) throw new Error('unauthorized');
       this.session.token = result.token;
@@ -137,6 +138,7 @@ export const store = {
         if (result.token) {
           this.session = { key, name: result.name || cleanName, token: result.token, ...(/^g_[a-f0-9]{32}$/.test(key) ? { hash } : {}) };
           LS.set('nz.session', this.session);
+          this.access = null;
           this.load();
           this.emit();
           this.sync();
@@ -204,31 +206,51 @@ export const store = {
       try {
         this.status = 'syncing';
         this.emit();
-        for (const row of this.results.filter(r => !r.s && r.meta?.trial_id)) {
-          await this.billing('trial-result', { trial_id: row.meta.trial_id, row });
-          row.s = 1;
-        }
-        const subscription = await this.billing('status');
-        this.access = subscription;
-        const unsynced = this.results.filter(r => !r.s);
-        if (subscription.active) {
-          for (let i = 0; i < unsynced.length; i += 200) {
-            const chunk = unsynced.slice(i, i + 200);
-            await this.billing('push', { rows: chunk.map(({ s, ...row }) => row) });
-            chunk.forEach(r => { r.s = 1; });
+        // Restore saved history before attempting any local uploads. A rejected
+        // pending attempt must never hide results already stored on the server.
+        const errors = [];
+        try {
+          const pulled = await this.billing('pull');
+          const byId = new Map(this.results.map(r => [r.id, r]));
+          for (const row of pulled.rows || []) {
+            const mine = byId.get(row.id);
+            if (!mine) { const saved = { ...row, s: 1 }; this.results.push(saved); byId.set(row.id, saved); }
+            else Object.assign(mine, row, { s: 1 });
+          }
+          this.results.sort((a, b) => a.ts - b.ts);
+          this.persist();
+          this.emit();
+        } catch (error) { errors.push(error); }
+        try { this.access = await this.billing('status'); this.emit(); }
+        catch (error) { errors.push(error); }
+        if (!errors.some(error => error.status === 401 || error.message === 'unauthorized')) {
+          let trialChanged = false;
+          for (const row of this.results.filter(r => !r.s && r.meta?.trial_id)) {
+            try {
+              await this.billing('trial-result', { trial_id: row.meta.trial_id, row });
+              row.s = 1;
+              trialChanged = true;
+            } catch (error) { errors.push(error); break; }
+          }
+          if (this.access?.active) {
+            const unsynced = this.results.filter(r => !r.s);
+            for (let i = 0; i < unsynced.length; i += 200) {
+              const chunk = unsynced.slice(i, i + 200);
+              try {
+                await this.billing('push', { rows: chunk.map(({ s, ...row }) => row) });
+                chunk.forEach(r => { r.s = 1; });
+              } catch (error) { errors.push(error); break; }
+            }
+          }
+          if (trialChanged) {
+            try { this.access = await this.billing('status'); }
+            catch (error) { errors.push(error); }
           }
         }
-        const pulled = await this.billing('pull');
-        const byId = new Map(this.results.map(r => [r.id, r]));
-        for (const row of pulled.rows) {
-          const mine = byId.get(row.id);
-          if (!mine) this.results.push({ ...row, s: 1 });
-          else if (mine.s) Object.assign(mine, row);
-        }
-        this.results.sort((a, b) => a.ts - b.ts);
         this.persist();
-        this.status = 'ok';
-      } catch (error) { this.status = error.message === 'unauthorized' ? 'authfail' : 'offline'; }
+        this.status = errors.some(error => error.status === 401 || error.message === 'unauthorized')
+          ? 'authfail' : errors.length ? 'offline' : 'ok';
+      } catch (error) { this.status = error.status === 401 || error.message === 'unauthorized' ? 'authfail' : 'offline'; }
       finally { this._syncing = false; this.emit(); }
       return;
     }
@@ -273,4 +295,5 @@ export const store = {
     return JSON.stringify({ name: this.session?.name, exported: new Date().toISOString(), results: this.results.map(({ s, ...r }) => r) }, null, 2);
   },
 };
+
 
