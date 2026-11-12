@@ -1,4 +1,4 @@
-import { initAnalytics, openFunnel, trackScreen, trackExercise } from './analytics.js?v=1.1.7';
+import { initAnalytics, openFunnel, trackScreen, trackExercise } from './analytics.js?v=1.2.2';
 import { store, cloudOn } from './store.js?v=1.2.0';
 import * as S from './stats.js?v=1.1.2';
 import { el, esc, plural, dayStr, fmtLong, fmtShort, weekdayName, sleep, logicalDay } from './util.js?v=1.1.2';
@@ -10,7 +10,7 @@ import { runSchulte } from './schulte.js?v=1.1.2';
 import { runDobble } from './dobble.js?v=1.1.2';
 import { runMemory } from './memory.js?v=1.1.2';
 import { BILLING } from './config.js?v=1.1.2';
-import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.2.0';
+import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.2.2';
 import { recommendations, exerciseReport } from './recommendations.js?v=1.1.2';
 
 // ---------------------------------------------------------------- упражнения
@@ -731,5 +731,6 @@ function boot() {
 }
 
 boot();
+
 
 

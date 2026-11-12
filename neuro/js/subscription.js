@@ -1,4 +1,4 @@
-import { trackAction, flushAnalytics } from './analytics.js?v=1.1.7';
+import { trackAction, flushAnalytics } from './analytics.js?v=1.2.2';
 import { BILLING } from './config.js?v=1.1.2';
 import { sheet, confirmSheet } from './ui.js?v=1.1.2';
 import { esc } from './util.js?v=1.1.2';
@@ -162,4 +162,5 @@ export async function acceptFamilyInvite(store) {
     result.node.querySelector('button').onclick = result.close;
   }
 }
+
 

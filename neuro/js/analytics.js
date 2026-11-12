@@ -54,9 +54,35 @@ export async function openFunnel(store) {
   try {
     await store.billing('status');
     const data = await rpc('nz_funnel_report', { p_token: store.session.token, p_days: 30 });
-    const f = data.funnel, steps = [['Посетили',f.visitors],['Зарегистрировались',f.registered],['Начали пробную',f.trial_started],['Завершили пробную',f.trial_completed],['Купили',f.buyers]];
+    const f = data.funnel;
+    const steps = [
+      ['Посетили', f.visitors],
+      ['Начали пробную', f.trial_started],
+      ['Сохранили все 4 результата', f.trial_completed],
+      ['Открыли общие итоги', f.summary_seen],
+      ['Увидели тарифы', f.offer_seen],
+      ['Выбрали тариф', f.plan_selected],
+      ['Нажали оплатить', f.checkout_submitted],
+      ['Оплатили', f.buyers],
+      ['Создали профиль после оплаты', f.profile_created_after_payment],
+    ];
     const date = value => new Date(value).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day:'numeric',month:'short',hour:'2-digit',minute:'2-digit' });
-    host.innerHTML = '<b>Воронка новых посетителей за 30 дней</b><br><small>Сбор начат: '+(data.tracking_started?date(data.tracking_started):'первых посещений ещё нет')+'. Доли — от предыдущего шага на текущий момент, это ещё не итоговая конверсия: участники могут продолжить позже.</small><dl>'+steps.map(([title,n],i)=>'<dt>'+title+'</dt><dd><b>'+n+'</b>'+(i?' · '+(steps[i-1][1]?Math.round(n/steps[i-1][1]*100)+'%':'—'):'')+'</dd>').join('')+'</dl><small>До входа считаем браузеры, после входа объединяем устройства по аккаунту. Очистка данных и блокировщики влияют на точность. Тестовые аккаунты и посещения владельца исключены.</small><hr><b>Вся история без тестовых аккаунтов</b><p>Регистрации: '+data.totals.registrations+' · начали пробную: '+data.totals.trial_started+' · завершили: '+data.totals.trial_completed+' · покупателей: '+data.totals.buyers+'</p><small>Это отдельные исторические итоги, они не входят в воронку новых посещений.</small><hr><b>Пробные тренировки</b><ul>'+data.trials.map(t=>'<li>'+esc(t.name)+' — '+(t.completed_at?'завершена':'в процессе, '+t.exercises+' из 4')+'<br><small>Начало: '+date(t.started_at)+'</small></li>').join('')+'</ul>';
+    const rows = steps.map(([title, count], index) => {
+      const share = index && f.visitors ? ' · ' + Math.round(count / f.visitors * 100) + '% посетителей' : '';
+      return '<dt>' + title + '</dt><dd><b>' + count + '</b>' + share + '</dd>';
+    }).join('');
+    host.innerHTML = '<b>Новые посетители после переноса регистрации</b>'
+      + '<p>С ' + date(data.cohort_start) + ' по ' + date(data.measured_at) + ' (МСК).</p>'
+      + '<small>Каждый человек учитывается один раз на шаге. Доли рассчитаны от посетителей этой группы. Это текущий срез, участники ещё могут продолжить.</small>'
+      + '<dl>' + rows + '</dl>'
+      + '<small>Четвёртый результат сохраняется до открытия общих итогов. Просмотр тарифа фиксируется, когда хотя бы половина карточки тарифа или блока предложения видна одну секунду. Пропуски событий возможны из-за сети, блокировщиков и закрытия вкладки. Покупка подтверждается сервером независимо от событий браузера.</small>'
+      + '<hr><b>Вся история участников</b><p>Профилей с именем и PIN: ' + data.totals.registrations
+      + ' · гостевых профилей: ' + data.totals.guests + '</p><p>Начали пробную: ' + data.totals.trial_started
+      + ' · сохранили 4 результата: ' + data.totals.trial_completed + ' · покупателей: ' + data.totals.buyers + '</p>'
+      + '<small>Именные профили включают регистрации до переноса. Гостевой профиль создаётся автоматически. Владелец и тестовые аккаунты исключены. До входа учитываются браузеры, после входа устройства объединяются по профилю.</small>'
+      + '<hr><b>Пробные тренировки</b><ul>'
+      + data.trials.map(t => '<li>' + esc(t.name) + ' — ' + (t.completed_at ? '4 результата сохранены' : 'в процессе, ' + t.exercises + ' из 4')
+        + '<br><small>Начало: ' + date(t.started_at) + '</small></li>').join('') + '</ul>';
     try {
       const behavior = await rpc('nz_behavior_report', { p_token: store.session.token, p_days: 30 });
       if (host.isConnected) renderBehavior(host, behavior);
@@ -117,7 +143,7 @@ function initBehavior(store, visitor) {
   function activity() { accountTime(); lastActivity = performance.now(); }
   ['pointerdown','keydown','scroll','touchstart'].forEach(type => document.addEventListener(type, activity, {passive:true,capture:true}));
   document.addEventListener('click', e => {
-    if (!(e.target instanceof Element) || e.target.closest('.analytics-overlay')) return;
+    if (!(e.target instanceof Element) || e.target.closest('.analytics-overlay,.keypad')) return;
     const node = e.target.closest('button,a,input,label,[data-act],[data-plan],[data-ex],[data-chart],[data-r]') || e.target;
     let id = controlId(node);
     if (!id && node.matches('input')) id = 'field_' + (['email','checkbox','password'].includes(node.type) ? node.type : 'text');
@@ -199,3 +225,4 @@ function renderBehavior(host, data) {
   sec.innerHTML = '<hr><h3>Поведение за 30 дней</h3><p>Сессий: '+data.sessions+' · активное время: '+Math.round(data.active_ms/60000)+' мин · ошибок запросов: '+data.errors+'</p><small>Активное время учитывает видимую вкладку и паузы до 60 секунд. Показы кнопок — видимость не менее секунды. Отсутствие нажатия само по себе не доказывает отсутствие интереса. Сбор начат после обновления; блокировщики и закрытие браузера могут приводить к пропускам.</small><details open><summary>Путь к оплате</summary><ul>'+data.commerce.map(x=>'<li>'+esc(targetLabel(x.target))+' — '+x.visitors+' посетителей, '+x.count+' событий</li>').join('')+'</ul></details><details><summary>Кнопки: показы и нажатия</summary><table><thead><tr><th>Элемент</th><th>Показы</th><th>Нажатия</th></tr></thead><tbody>'+data.controls.map(x=>'<tr><td>'+esc(targetLabel(x.target))+'</td><td>'+x.views+'</td><td>'+x.clicks+'</td></tr>').join('')+'</tbody></table></details><details><summary>Ожидание и ошибки</summary><ul>'+data.requests.map(x=>'<li>'+esc(targetLabel(x.target))+': '+x.count+' запросов · медиана '+(x.median_ms/1000).toFixed(1)+' с · 95% до '+(x.p95_ms/1000).toFixed(1)+' с · ошибок '+x.errors+'</li>').join('')+'</ul></details><details><summary>Последние сессии и последовательность действий</summary><small>Время по Москве. Анонимные посетители обозначены без имени. Показаны до 40 сессий и 100 последних событий в каждой.</small>'+data.journeys.map(x=>'<details><summary>'+esc(x.name || 'Посетитель')+' · '+new Date(x.started).toLocaleString('ru-RU',{timeZone:'Europe/Moscow'})+' · '+(x.mobile?'телефон':'компьютер')+'</summary><ol>'+x.events.map(e=>'<li>'+new Date(e.created_at).toLocaleTimeString('ru-RU',{timeZone:'Europe/Moscow'})+' · '+esc(eventNames[e.event] || e.event)+' · '+esc(targetLabel(e.target || e.screen))+(e.ms?' · '+(e.ms/1000).toFixed(1)+' с':'')+(e.event==='scroll'?' · '+e.value+'%':'')+(e.event==='click' && e.x !== null?' · точка '+Math.round(e.x/10)+'% × '+Math.round(e.y/10)+'% экрана':'')+'</li>').join('')+'</ol></details>').join('')+'</details>';
   host.append(sec);
 }
+
