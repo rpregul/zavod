@@ -1,4 +1,4 @@
-import { runReading, paintMeasurementStats } from './reading.js?v=1.3.1';
+import { runReading, paintMeasurementStats } from './reading.js?v=1.3.3';
 import { comparisonMarkup } from './summary-comparison.js?v=1.3.0';
 import { initAnalytics, openFunnel, trackScreen, trackExercise } from './analytics.js?v=1.2.2';
 import { store, cloudOn } from './store.js?v=1.3.2';

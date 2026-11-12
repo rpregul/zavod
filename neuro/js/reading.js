@@ -1,6 +1,6 @@
 import { CLOUD } from './config.js?v=1.1.2';
 import { esc, plural } from './util.js?v=1.1.2';
-import { READING_TEXTS, randomReadingText } from './reading-texts.js?v=1.3.1';
+import { READING_TEXTS, randomReadingText } from './reading-texts.js?v=1.3.3';
 import { trackAction } from './analytics.js?v=1.2.2';
 
 async function readingRequest(store, action, row = null) {
@@ -51,7 +51,7 @@ export async function runReading({ store, mount, onHome, mode }) {
   const rpc = (action, row = null) => readingRequest(store, action, row);
   function historyMarkup() {
     if (!history.length) return '<p class="reading-note">Первый замер станет вашей точкой отсчёта.</p>';
-    return `<section class="reading-history"><h3>Ваши замеры ${modeShort}</h3><div class="reading-history-table"><table><thead><tr><th>Дата</th><th>Слов/мин</th><th>Понимание</th></tr></thead><tbody>${history.slice(0,7).map(row => `<tr><td>${new Date(row.created_at).toLocaleDateString('ru-RU', {timeZone:'Europe/Moscow',day:'numeric',month:'short'})}<small>${esc(READING_TEXTS.find(text => text.id === row.text_id)?.title || 'Текст')}</small></td><td>${row.wpm}</td><td>${row.correct} из ${row.questions}</td></tr>`).join('')}</tbody></table></div></section>`;
+    return `<section class="reading-history"><h3>Ваши замеры ${modeShort}</h3><div class="reading-history-table"><table><thead><tr><th>Дата</th><th>Слов/мин</th><th>Понимание</th></tr></thead><tbody>${history.slice(0,7).map(row => `<tr><td>${new Date(row.created_at).toLocaleDateString('ru-RU', {timeZone:'Europe/Moscow',day:'numeric',month:'short'})}<small>${measurementTime(row.created_at)}</small></td><td>${row.wpm}</td><td>${row.correct} из ${row.questions}</td></tr>`).join('')}</tbody></table></div></section>`;
   }
   function intro() {
     stage = 'intro';
@@ -142,6 +142,35 @@ export async function runReading({ store, mount, onHome, mode }) {
 }
 
 
+
+const measurementDate = value => new Date(value).toLocaleDateString('ru-RU',{timeZone:'Europe/Moscow',day:'2-digit',month:'2-digit',year:'numeric'});
+const measurementTime = value => new Date(value).toLocaleTimeString('ru-RU',{timeZone:'Europe/Moscow',hour:'2-digit',minute:'2-digit'});
+export function measurementTrend(rows) {
+  const recent = rows.slice().sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).slice(-7);
+  const latest = recent.at(-1), previous = recent.at(-2), first = recent[0];
+  const percent = base => base?.wpm > 0 && latest ? (latest.wpm-base.wpm)/base.wpm*100 : null;
+  return {recent,latest,previous,previousPercent:percent(previous),firstPercent:recent.length>1?percent(first):null};
+}
+const percentText = value => (value>0?'+':value<0?'−':'')+Math.abs(value).toLocaleString('ru-RU',{maximumFractionDigits:1})+'%';
+function measurementMarkup(rows,group) {
+  const {recent,latest,previous,previousPercent,firstPercent} = measurementTrend(rows);
+  if (!latest) return '<p class="reading-note">На этом уровне пока нет замеров '+group.short+'.</p>';
+  const width = Math.max(280,recent.length*64), height=200, top=30, bottom=156;
+  const max = Math.max(1,...recent.map(row=>row.wpm));
+  const x = i => (i+.5)*width/recent.length;
+  const y = row => bottom-row.wpm/max*(bottom-top);
+  const chart = '<div class="measurement-trend-scroll" tabindex="0" aria-label="График скорости чтения, горизонтальная прокрутка"><svg class="measurement-trend-svg" style="min-width:'+width+'px" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+group.title+': '+recent.map(row=>measurementDate(row.created_at)+', '+row.wpm+' слов в минуту').join('; ')+'">'
+    + recent.map((row,i)=>'<rect x="'+(x(i)-13)+'" y="'+y(row)+'" width="26" height="'+(bottom-y(row))+'" rx="5" fill="#dfc9ef"/>').join('')
+    + (recent.length>1?'<polyline points="'+recent.map((row,i)=>x(i)+','+y(row)).join(' ')+'" fill="none" stroke="#8439b3" stroke-width="2.5" stroke-linejoin="round"/>':'')
+    + recent.map((row,i)=>'<circle cx="'+x(i)+'" cy="'+y(row)+'" r="4" fill="#8439b3"/><text x="'+x(i)+'" y="'+(y(row)-12)+'" text-anchor="middle" fill="#49335e" font-size="12" font-weight="800">'+row.wpm+'</text><text x="'+x(i)+'" y="178" text-anchor="middle" fill="#625071" font-size="11">'+measurementDate(row.created_at).slice(0,5)+'</text>').join('')+'</svg></div>';
+  return '<p class="measurement-latest">Последний результат — <b>'+latest.wpm+' слов/мин</b></p>'
+    + (previousPercent===null?'<p class="reading-note">Первый замер — ваша точка отсчёта. После следующего появится изменение скорости.</p>':'<p class="measurement-change"><b>'+percentText(previousPercent)+'</b> к предыдущему замеру<br><span>'+percentText(firstPercent)+' к первому на графике</span></p><p class="reading-note">Понимание: '+latest.correct+' из '+latest.questions+' · ранее '+previous.correct+' из '+previous.questions+'</p>')
+    + chart + '<p class="reading-note">Скорость, слов/мин · последние '+recent.length+' '+plural(recent.length,'замер','замера','замеров')+'. Сравниваются один способ чтения и один уровень. Учитывайте понимание текста.</p>'
+    + (group.id==='legacy'?'<p class="reading-note">В этих замерах способ чтения не указывался.</p>':'')
+    + '<div class="reading-history-table"><table><thead><tr><th>Дата замера</th><th>Слов/мин</th><th>Понимание</th></tr></thead><tbody>'
+    + recent.slice().reverse().map(row=>'<tr><td>'+measurementDate(row.created_at)+'<small>'+measurementTime(row.created_at)+'</small></td><td>'+row.wpm+'</td><td>'+row.correct+' из '+row.questions+'</td></tr>').join('')+'</tbody></table></div>';
+}
+
 export async function paintMeasurementStats(host, store) {
   if (!host) return;
   host.innerHTML = '<p class="reading-note" role="status">Загружаем статистику замеров…</p>';
@@ -169,15 +198,18 @@ export async function paintMeasurementStats(host, store) {
         chart.innerHTML += '<p class="reading-note">Здесь появятся скорость и понимание после первого замера '+group.short+'.</p>';
         return;
       }
-      const recent = group.rows.slice(0,7).reverse();
-      const maximum = Math.max(...recent.map(row=>row.wpm));
-      chart.innerHTML += '<p class="measurement-latest">Последний результат — <b>'+group.rows[0].wpm+' слов/мин</b></p>'
-        + '<div class="measurement-chart" role="img" aria-label="Последние замеры '+group.title+': '+recent.map(row=>row.wpm+' слов в минуту').join(', ')+'">'
-        + recent.map(row=>'<div class="measurement-column"><b>'+row.wpm+'</b><div class="measurement-column-track"><i style="height:'+Math.round(row.wpm/maximum*100)+'%"></i></div><small>'+new Date(row.created_at).toLocaleDateString('ru-RU',{timeZone:'Europe/Moscow',day:'2-digit',month:'2-digit'})+'</small></div>').join('')
-        + '</div><p class="reading-note">Слов в минуту · '+recent.length+' '+plural(recent.length,'замер','замера','замеров')+'</p>'
-        + (group.id==='legacy'?'<p class="reading-note">В этих замерах способ чтения не указывался.</p>':'')
-        + '<div class="reading-history-table"><table><thead><tr><th>Текст</th><th>Слов/мин</th><th>Понимание</th></tr></thead><tbody>'
-        + group.rows.slice(0,7).map(row=>'<tr><td>'+esc(READING_TEXTS.find(text=>text.id===row.text_id)?.title || 'Текст')+'</td><td>'+row.wpm+'</td><td>'+row.correct+' из '+row.questions+'</td></tr>').join('')+'</tbody></table></div>';
+      const latestLevel = READING_TEXTS.find(text => text.id === group.rows[0].text_id)?.level || 1;
+      chart.innerHTML += '<label class="reading-select">Уровень<select data-measure-level><option value="1">Уровень 1</option><option value="2">Уровень 2</option></select></label><div data-measure-level-chart></div>';
+      const levelSelect = chart.querySelector('[data-measure-level]');
+      levelSelect.value = String(latestLevel);
+      const drawLevel = () => {
+        const rows = group.rows.filter(row => READING_TEXTS.find(text => text.id === row.text_id)?.level === Number(levelSelect.value));
+        chart.querySelector('[data-measure-level-chart]').innerHTML = measurementMarkup(rows,group);
+        const scroll = chart.querySelector('.measurement-trend-scroll');
+        if (scroll) scroll.scrollLeft = scroll.scrollWidth;
+      };
+      levelSelect.onchange = drawLevel;
+      drawLevel();
     }
     select(groups[0]);
     host.querySelectorAll('[data-measure-tab]').forEach((button,index) => {
