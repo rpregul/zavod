@@ -38,7 +38,7 @@ test('webhook verifies with provider; never trusts forged success payload', asyn
   assert.equal(calls.at(-1).body.p_data.payment.status, 'pending');
 });
 test('checkout fixes server-side amount and uses order UUID as idempotency key', async () => {
-  const order = { id: '11111111-1111-4111-8111-111111111111', kind: 'checkout', amount: 299, plan: 'individual' };
+  const order = { id: '11111111-1111-4111-8111-111111111111', kind: 'checkout', amount: 399, plan: 'individual' };
   let providerCall;
   const handler = make(async (url, options) => {
     if (url.includes('api.yookassa.ru')) {
@@ -48,11 +48,11 @@ test('checkout fixes server-side amount and uses order UUID as idempotency key',
     const action = JSON.parse(options.body).p_action;
     return ok(['checkout', 'claim'].includes(action) ? order : { ok: true });
   });
-  const response = await handler(req('checkout', { consent: true, consent_version: '299-monthly-v1', email: 'test@example.ru', amount: '0.01' }, 'a'.repeat(64)));
+  const response = await handler(req('checkout', { consent: true, consent_version: 'monthly-plans-v4-once', email: 'test@example.ru', amount: '0.01' }, 'a'.repeat(64)));
   assert.equal(response.status, 200);
   assert.equal(providerCall.headers['Idempotence-Key'], order.id);
-  assert.deepEqual(JSON.parse(providerCall.body).amount, { value: '299.00', currency: 'RUB' });
-  assert.equal(JSON.parse(providerCall.body).save_payment_method, true);
+  assert.deepEqual(JSON.parse(providerCall.body).amount, { value: '399.00', currency: 'RUB' });
+  assert.notEqual(JSON.parse(providerCall.body).save_payment_method, true);
 });
 test('untrusted origin cannot initiate checkout', async () => {
   const handler = make(() => { throw new Error('Must not call provider'); });
@@ -60,15 +60,15 @@ test('untrusted origin cannot initiate checkout', async () => {
   request.headers.set('Origin', 'https://evil.invalid');
   assert.equal((await handler(request)).status, 403);
 });
-test('family checkout uses 599 from reserved order, not client-provided amount', async () => {
+test('family checkout uses 999 from reserved order, not client-provided amount', async () => {
   let sent;
   const handler = make(async (url, options) => {
     if (url.includes('api.yookassa.ru')) { sent = JSON.parse(options.body); return ok({ id: 'family-payment', status: 'pending' }); }
     const action = JSON.parse(options.body).p_action;
-    return ok(['checkout','claim'].includes(action) ? { id: '11111111-1111-4111-8111-111111111111', kind: 'checkout', plan: 'family', amount: 599 } : { ok: true });
+    return ok(['checkout','claim'].includes(action) ? { id: '11111111-1111-4111-8111-111111111111', kind: 'checkout', plan: 'family', amount: 999 } : { ok: true });
   });
   await handler(req('checkout', { consent: true, plan: 'family', amount: '1.00' }, 'a'.repeat(64)));
-  assert.deepEqual(sent.amount, { value: '599.00', currency: 'RUB' });
+  assert.deepEqual(sent.amount, { value: '999.00', currency: 'RUB' });
   assert.match(sent.description, /4 человек/);
 });
 test('test-key mode is available without enabling live payments', async () => {
@@ -78,7 +78,7 @@ test('test-key mode is available without enabling live payments', async () => {
   assert.equal(health.test_mode, true);
 });
 test('test creation refuses merchant that provider identifies as live', async () => {
-  const order = { id: '11111111-1111-4111-8111-111111111111', kind: 'checkout', amount: 299, plan: 'individual' };
+  const order = { id: '11111111-1111-4111-8111-111111111111', kind: 'checkout', amount: 399, plan: 'individual' };
   let paymentPosts = 0;
   const handler = make(async (url, options) => {
     if (url.endsWith('/me')) return ok({ test: false });
@@ -95,3 +95,4 @@ test('diagnostics require worker authentication and never expose credentials', a
   assert.equal(response.status, 401);
   assert.deepEqual(await response.json(), { error: 'unauthorized' });
 });
+

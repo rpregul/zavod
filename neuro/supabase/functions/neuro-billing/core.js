@@ -1,6 +1,6 @@
 const ORIGIN = 'https://plotnikovprod.ru';
 const RETURN_URL = ORIGIN + '/neuro/?payment=return';
-export const CONSENT_VERSION = 'monthly-plans-v3-once';
+export const CONSENT_VERSION = 'monthly-plans-v4-once';
 
 export function createHandler({ env, fetch: request = globalThis.fetch, crypto = globalThis.crypto }) {
   const url = env('SUPABASE_URL');
@@ -71,7 +71,7 @@ export function createHandler({ env, fetch: request = globalThis.fetch, crypto =
     const reply = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: cors });
     if (req.headers.get('origin') && req.headers.get('origin') !== ORIGIN) return reply({ error: 'origin_denied' }, 403);
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
-    if (req.method === 'GET') return reply({ ready, configured: !!(shop && secret), test_mode: testMode, price: 299, currency: 'RUB', consent_version: CONSENT_VERSION });
+    if (req.method === 'GET') return reply({ ready, configured: !!(shop && secret), test_mode: testMode, price: 399, plans: { individual: 399, family: 999 }, currency: 'RUB', consent_version: CONSENT_VERSION });
     if (req.method !== 'POST') return reply({ error: 'method_not_allowed' }, 405);
     try {
       const text = await req.text();
@@ -172,3 +172,4 @@ export function createHandler({ env, fetch: request = globalThis.fetch, crypto =
     }
   };
 }
+

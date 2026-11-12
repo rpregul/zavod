@@ -1,5 +1,5 @@
 // Сначала сеть, при её отсутствии кэш: после деплоя всегда свежая версия, а без интернета приложение всё равно открывается.
-const CACHE = 'nz-v6-login-copy';
+const CACHE = 'nz-v7-reading-summary';
 
 self.addEventListener('install', (e) => { self.skipWaiting(); });
 
@@ -32,4 +32,5 @@ self.addEventListener('fetch', (e) => {
     }
   })());
 });
+
 

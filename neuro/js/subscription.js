@@ -4,11 +4,11 @@ import { sheet, confirmSheet } from './ui.js?v=1.1.2';
 import { esc } from './util.js?v=1.1.2';
 
 export const PLANS = {
-  individual: { title: 'Для себя', price: 299, detail: 'Один профиль' },
-  family: { title: 'Для семьи', price: 599, detail: 'До 4 человек · отдельный прогресс каждого' },
+  individual: { title: 'Для себя', price: 399, detail: 'Один профиль' },
+  family: { title: 'Для семьи', price: 999, detail: 'До 4 человек · отдельный прогресс каждого' },
 };
 const date = value => new Date(value).toLocaleDateString('ru-RU');
-const message = error => ({ unauthorized: 'Войди в профиль заново.', invalid_email: 'Проверь адрес почты.',
+const message = error => ({ consent_required: 'Обновите страницу, чтобы увидеть актуальные условия оплаты.', unauthorized: 'Войди в профиль заново.', invalid_email: 'Проверь адрес почты.',
   payments_unavailable: 'Оплата пока не подключена.', already_active: 'У тебя уже есть действующая подписка.',
   family_full: 'Все четыре места уже заняты или зарезервированы приглашениями.',
   invalid_invite: 'Приглашение истекло, уже использовано или отозвано.',
@@ -17,12 +17,12 @@ const message = error => ({ unauthorized: 'Войди в профиль зано
 
 export function offerMarkup({ completed = false } = {}) {
   return `<div class="subscription-offer">
-    <h2>${completed ? 'Твоя точка отсчёта готова' : 'Сделай тренировку привычкой'}</h2>
-    <p>Продолжай тренировать внимание и память: получай подсказки по своим результатам и замечай прогресс от занятия к занятию.</p>
-    <div class="subscription-benefits"><span>Персональные подсказки</span><span>История и динамика</span><span>Все текущие упражнения без ограничения повторов</span></div>
+    <h2>${completed ? 'Ваша точка отсчёта готова' : 'Сделайте тренировку привычкой'}</h2>
+    <p>Продолжайте тренировать функции мозга и отслеживайте результаты в удобных графиках, узнайте, как далеко вы сможете продвинуться!</p>
+    <ul class="subscription-benefits"><li>Получите персональный разбор ваших результатов</li><li>Практические советы для повседневной жизни</li><li>Новые упражнения, уровни сложности</li><li>Замеры скорости чтения</li></ul>
     <div class="subscription-plans">${Object.entries(PLANS).map(([id, plan]) => `<button class="subscription-plan glass${id === 'individual' ? ' subscription-plan--primary' : ''}" data-plan="${id}">
       <b>${plan.title}</b><span class="subscription-plan__price">${plan.price} <small>₽/месяц</small></span><span>${plan.detail}</span>
-      ${id === 'family' ? '<small>Около 150 ₽ на человека, если вас четверо</small>' : ''}<strong>Выбрать</strong></button>`).join('')}</div>
+      ${id === 'family' ? '<small>Около 250 ₽ на человека, если вас четверо</small>' : ''}<strong>Выбрать</strong></button>`).join('')}</div>
     <p class="login__note">Разовая оплата за один месяц. Для следующего месяца нужно оформить оплату заново.</p>
   </div>`;
 }
@@ -30,6 +30,7 @@ export function offerMarkup({ completed = false } = {}) {
 export async function openSubscription(store, { plan: selected = null } = {}) {
   trackAction('subscription_open');
   const s = sheet('<h3 class="sheet__title">Подписка</h3><p class="sheet__text" role="status">Проверяем подписку…</p>');
+  s.node.classList.add('subscription-sheet');
   const errorText = text => { const node = s.node.querySelector('[data-error]'); if (node) node.textContent = text; };
   const refresh = async () => { await store.refreshAccess(); await draw(); };
   async function draw() {
@@ -82,7 +83,7 @@ export async function openSubscription(store, { plan: selected = null } = {}) {
         trackAction('checkout_submit_' + selected);
         try {
           const result = await store.billing('checkout', { 
-            consent: form.elements.consent.checked, consent_version: BILLING.consentVersion, plan: selected });
+            consent: form.elements.consent.checked, consent_version: 'monthly-plans-v4-once', plan: selected });
           if (result.confirmation_url) { trackAction('checkout_redirect'); await flushAnalytics(); location.assign(result.confirmation_url); }
           else { trackAction('checkout_processing'); errorText('Платёж обрабатывается. Доступ появится после подтверждения оплаты.'); }
         } catch (error) { trackAction('checkout_error'); errorText(message(error)); }
@@ -162,5 +163,6 @@ export async function acceptFamilyInvite(store) {
     result.node.querySelector('button').onclick = result.close;
   }
 }
+
 
 

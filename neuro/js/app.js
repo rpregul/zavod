@@ -1,3 +1,5 @@
+import { runReading } from './reading.js?v=1.3.0';
+import { comparisonMarkup } from './summary-comparison.js?v=1.3.0';
 import { initAnalytics, openFunnel, trackScreen, trackExercise } from './analytics.js?v=1.2.2';
 import { store, cloudOn } from './store.js?v=1.2.0';
 import * as S from './stats.js?v=1.1.2';
@@ -10,8 +12,8 @@ import { runSchulte } from './schulte.js?v=1.1.2';
 import { runDobble } from './dobble.js?v=1.1.2';
 import { runMemory } from './memory.js?v=1.1.2';
 import { BILLING } from './config.js?v=1.1.2';
-import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.2.2';
-import { recommendations, exerciseReport } from './recommendations.js?v=1.1.2';
+import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.3.0';
+import { recommendations, exerciseReport } from './recommendations.js?v=1.3.0';
 
 // ---------------------------------------------------------------- упражнения
 export const EX = {
@@ -288,6 +290,14 @@ function renderHome({ quiet = false } = {}) {
       <div class="tiles">${tileHtml}</div>
     </section>
 
+    <section class="sec reading-category" style="--i:3">
+      <h3 class="sec__t">Чтение</h3>
+      <button class="tile glass reading-entry" data-act="reading">
+        ${gi('eye', 'blue')}
+        <span class="tile__txt"><b>Скорость чтения</b><small>Текст, таймер и проверка понимания</small></span>
+        <span class="tile__new">${premium ? 'Открыть' : 'По подписке'}</span>
+      </button>
+    </section>
     </div>
     <div class="home__col">
     <section class="sec" style="--i:3">
@@ -322,14 +332,14 @@ function renderHome({ quiet = false } = {}) {
     node.querySelector('.hero__txt p').textContent = completed ? 'Твоя точка отсчёта сохранена' : 'Все четыре упражнения, без оплаты';
     node.querySelector('.hero__cta span').textContent = completed ? 'Выбрать подписку' : 'Начать тренировку';
     node.querySelector('.chips-row').hidden = true;
-    node.querySelectorAll('.tile__best,.tile__badge,.tile__new').forEach(x => { x.textContent = 'В первой тренировке'; });
+    node.querySelectorAll('.tiles .tile__best,.tiles .tile__badge,.tiles .tile__new').forEach(x => { x.textContent = 'В первой тренировке'; });
     node.querySelectorAll('.home__col')[1].innerHTML = `<section class="sec"><div class="progress glass subscription-locked"><h3>Твой следующий шаг</h3><p>Персональные подсказки, история и динамика результатов доступны по подписке.</p>${completed ? '<button class="btn btn--primary btn--block" data-act="subscribe">Продолжить с подпиской</button>' : '<p class="login__note">Сначала пройди бесплатную тренировку — она станет твоей точкой отсчёта.</p>'}</div></section>`;
     if (completed) {
       const offer = el('section', 'sec home-offer', offerMarkup({ completed: true }));
       node.querySelector('header').after(offer);
       node.querySelectorAll('.home__col')[1].hidden = true;
       node.querySelector('.home__cols').classList.add('home__cols--single');
-      node.querySelectorAll('.tile__best,.tile__badge,.tile__new').forEach(x => { x.textContent = 'По подписке'; });
+      node.querySelectorAll('.tiles .tile__best,.tiles .tile__badge,.tiles .tile__new').forEach(x => { x.textContent = 'По подписке'; });
     }
   } else {
     paintChart(node);
@@ -357,6 +367,11 @@ function renderHome({ quiet = false } = {}) {
       try { sessionStorage.setItem('nz.chartEx', chartEx); } catch { /* ignore */ }
       node.querySelectorAll('.seg__b').forEach((b) => b.classList.toggle('on', b.dataset.chart === chartEx));
       return paintChart(node);
+    }
+    if (t.dataset.act === 'reading') {
+      if (!await requireSubscription(store)) return;
+      if (/^g_[a-f0-9]{32}$/.test(store.session.key)) return paidProfile();
+      return runReading({ store, mount, onHome: renderHome });
     }
     if (t.dataset.act === 'session') return runSession();
     if (t.dataset.act === 'funnel') return openFunnel(store);
@@ -447,19 +462,48 @@ function paintHistory(node) {
 
 function paintInstallHint(node) {
   const host = node.querySelector('[data-install]');
+  if (!host) return;
+  const context = node.classList.contains('summary') ? 'summary' : 'home';
+  const dismissKey = 'nz.hint.' + context;
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   let dismissed = false;
-  try { dismissed = localStorage.getItem('nz.hint') === '1'; } catch { /* ignore */ }
+  try { dismissed = localStorage.getItem(dismissKey) === '1'; } catch { /* Storage may be disabled. */ }
   if (standalone || dismissed) return;
-  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
-  if (!ios && !deferredInstall) return;
-  host.innerHTML = `<div class="hint glass">${gi('share', 'blue', 'sm')}<p>${ios ? 'Добавь на экран «Домой»: <b>Поделиться → На экран «Домой»</b>. Тогда зарядка откроется одним нажатием, как приложение.' : 'Установи зарядку на телефон, чтобы открывать её одним нажатием.'}</p>
-    ${ios ? '' : '<button class="btn btn--primary btn--sm" data-install-btn>Установить</button>'}<button class="hint__x" aria-label="Скрыть">${glyph.close}</button></div>`;
-  host.querySelector('.hint__x').addEventListener('click', () => { try { localStorage.setItem('nz.hint', '1'); } catch { /* ignore */ } host.innerHTML = ''; });
-  host.querySelector('[data-install-btn]')?.addEventListener('click', async () => { deferredInstall.prompt(); await deferredInstall.userChoice; deferredInstall = null; host.innerHTML = ''; });
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const android = /Android/.test(navigator.userAgent);
+  const embedded = /Instagram|FBAN|FBAV/.test(navigator.userAgent);
+  if (!ios && !android && !deferredInstall) return;
+  let instruction;
+  if (ios) instruction = (embedded ? 'Сначала откройте сайт в Safari через меню ⋯ в Instagram. Затем ' : 'В Safari нажмите ') + '<b>Поделиться → На экран «Домой»</b>.';
+  else instruction = (embedded ? 'Через меню Instagram откройте сайт в Chrome. Затем ' : 'В меню Chrome выберите ') + '<b>Добавить на главный экран</b>.';
+  host.innerHTML = `<section class="hint glass install-hint">${gi('share', 'blue', 'sm')}<div><h3>Зарядка в одном касании</h3><p>Добавьте приложение на главный экран, чтобы вернуться завтра.</p><p class="install-instruction">${instruction}</p><small>С иконки откроется главная страница. Для оплаченного профиля используйте те же имя и PIN.</small>${deferredInstall ? '<button class="btn btn--primary btn--sm" data-install-btn>Добавить на главный экран</button>' : ''}</div><button class="hint__x" aria-label="Скрыть предложение установки">${glyph.close}</button></section>`;
+  host.querySelector('.hint__x').onclick = () => {
+    try { localStorage.setItem(dismissKey, '1'); } catch { /* Ignore unavailable storage. */ }
+    host.innerHTML = '';
+  };
+  host.querySelector('[data-install-btn]')?.addEventListener('click', async () => {
+    const prompt = deferredInstall;
+    if (!prompt) return;
+    try {
+      await prompt.prompt();
+      const choice = await prompt.userChoice;
+      deferredInstall = null;
+      if (choice.outcome === 'accepted') host.innerHTML = '';
+      else paintInstallHint(node);
+    } catch { deferredInstall = null; paintInstallHint(node); }
+  });
 }
 let deferredInstall = null;
-addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstall = e; });
+addEventListener('beforeinstallprompt', (event) => {
+  event.preventDefault();
+  deferredInstall = event;
+  const node = document.querySelector('#app > .screen');
+  if (node) paintInstallHint(node);
+});
+addEventListener('appinstalled', () => {
+  deferredInstall = null;
+  document.querySelectorAll('[data-install]').forEach(host => { host.innerHTML = ''; });
+});
 
 function paintSync() {
   const dots = document.querySelectorAll('[data-sync]');
@@ -569,7 +613,7 @@ function resultScreen(id, rec, res, { guided, idx, isLast, trial = false }) {
       </div>
       <div class="xstats">${(res.extra || []).map((x) => `<div class="xstat glass"><b>${x.value}</b><small>${x.label}</small></div>`).join('')}</div>
       ${res.detail ? `<div class="detail glass">${res.detail}</div>` : ''}
-      ${report ? `<div class="detail glass coaching-card"><h3>${esc(report.label)}</h3><p>${esc(report.text)}</p>${!trial ? `<p><b>Как тренироваться:</b> ${esc(report.tip)}</p><p class="login__note">${esc(report.routine)}</p>` : '<p class="login__note">Подсказки по дальнейшим занятиям откроются с подпиской.</p>'}</div>` : ''}
+      ${report ? `<div class="detail glass coaching-card"><h3>${esc(report.label)}</h3><p>${esc(report.text)}</p>${!trial ? `<p><b>Как тренироваться:</b> ${esc(report.tip)}</p><p><b>В повседневной жизни:</b> ${esc(report.everyday)}</p><p class="login__note">${esc(report.routine)}</p>` : '<p class="login__note">Подсказки по дальнейшим занятиям откроются с подпиской.</p>'}</div>` : ''}
       <div class="result__actions">
         ${guided ? `<button class="btn btn--primary btn--lg btn--block btn--shine" data-r="next"><span>${next ? `Дальше: ${next.title}` : 'Завершить зарядку'}</span>${glyph.arrow}</button>` : ''}
         <div class="row2">
@@ -685,9 +729,12 @@ function summaryScreen(recs, { trial = false } = {}) {
         const rec = pb !== null && r.score > pb;
         return `<div class="sum-row" style="--i:${i}">${gi(e.icon, e.color, 'sm')}<span class="sum-row__t"><b>${e.title}</b><small>${d === null ? 'первая попытка' : d === 0 ? 'как в прошлый раз' : `${sign(d)} к прошлой`}</small></span><span class="sum-row__v">${rec ? '<i class="star">★</i>' : ''}<b>${r.score}</b></span></div>`;
       }).join('')}</div>
-      <div class="summary__streak glass">${gi('flame', 'orange', 'sm')}<span><b>${streak} ${plural(streak, 'день', 'дня', 'дней')} подряд</b><small>Приходи завтра утром, не сбрасывай серию</small></span></div>
+      ${comparisonMarkup(recs)}
+      <div class="summary__streak glass">${gi('flame', 'orange', 'sm')}<span><b>${streak} ${plural(streak, 'день', 'дня', 'дней')} подряд</b><small>Приходите завтра утром, не сбрасывайте серию</small></span></div>
+      <div data-install></div>
       ${trial ? offerMarkup({ completed: true }) + '<button class="link" data-r="home">Позже</button>' : `<button class="btn btn--primary btn--lg btn--block btn--shine" data-r="home">К моему дашборду ${glyph.arrow}</button>`}`;
     mount(node, 'summary');
+    paintInstallHint(node);
     setTimeout(() => { confetti({ count: 180 }); setTimeout(() => confetti({ count: 120, x: innerWidth * 0.2 }), 250); setTimeout(() => confetti({ count: 120, x: innerWidth * 0.8 }), 450); sfx('done'); haptic([20, 40, 20, 40, 40]); }, 300);
     node.querySelector('[data-r]').addEventListener('click', () => resolve());
     node.querySelectorAll('[data-plan]').forEach(button => { button.onclick = () => resolve(button.dataset.plan); });
@@ -731,6 +778,7 @@ function boot() {
 }
 
 boot();
+
 
 
 
