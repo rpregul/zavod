@@ -1,4 +1,4 @@
-import { runColors } from './colors.js?v=1.6.0';
+import { runColors } from './colors.js?v=1.7.0';
 import { initReminders, openReminders } from './reminders.js?v=1.5.0';
 import { openRoutine, ownComparisonMarkup } from './routine.js?v=1.6.0';
 import { askQuestion, completePersonalSurvey, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=1.6.0';
@@ -16,7 +16,7 @@ import { runSchulte } from './schulte.js?v=1.5.0';
 import { runDobble } from './dobble.js?v=1.5.0';
 import { runMemory } from './memory.js?v=1.5.0';
 import { BILLING } from './config.js?v=1.5.0';
-import { openSubscription, initSaleCountdown, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.5.0';
+import { openSubscription, initSaleCountdown, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.7.0';
 import { recommendations, exerciseReport } from './recommendations.js?v=1.5.0';
 
 // ---------------------------------------------------------------- упражнения
@@ -53,7 +53,7 @@ export const EX = {
     rules: ['Минуту смотрите на 3 столбика по 10 слов', 'В голове стройте цепочку образов: слово за словом', 'Потом минуту записывайте слова в точности, с окончаниями'],
     run: (ctx, o) => runMemory(ctx, o),
   },
-  colors: { id: 'colors', title: 'Цвета', sub: 'Цвет букв · тестовая игра', icon: 'cards', color: 'violet', unit: 'ответов', c1: '#9955ce', c2: '#4f7cff', lead: 'Концентрация и переключение правила', skill: 'Удерживать правило: отвечать на цвет букв, подавляя привычное чтение слова. Переключать внимание между значением и визуальным признаком.', everyday: 'Такая практика помогает исследовать, как вы удерживаете инструкцию при отвлекающей информации. В игре следите за скоростью вместе с точностью.', rules: ['Выбирайте цвет букв, а не значение слова', 'Кнопки остаются на своих местах весь раунд', 'После короткой демонстрации — 60 секунд. При ошибке увидите правильный ответ'], run: runColors },
+  colors: { id: 'colors', title: 'Цвета', sub: 'Цвет букв · тестовая игра', icon: 'cards', color: 'violet', unit: 'ответов', c1: '#9955ce', c2: '#4f7cff', lead: 'Концентрация и переключение правила', skill: 'Удерживать правило: отвечать на цвет букв, подавляя привычное чтение слова. Переключать внимание между значением и визуальным признаком.', everyday: 'Такая практика помогает исследовать, как вы удерживаете инструкцию при отвлекающей информации. В игре следите за скоростью вместе с точностью.', rules: ['Выбирайте цвет букв, а не значение слова', 'Раунд длится 60 секунд. При ошибке увидите правильный ответ'], run: runColors },
 };
 const ORDER = ['sch_f', 'sch_r', 'dob', 'mem'];
 // Future exercises are paid-only unless explicitly added to this trial whitelist.
@@ -307,7 +307,6 @@ function renderHome({ quiet = false } = {}) {
         <button class="tile glass reading-entry" data-act="reading_silent">${gi('eye', 'violet')}<span class="tile__txt"><b>Чтение про себя</b><small>Скорость и понимание текста</small></span></button>
       </div></div>
     </section>
-    <section class="sec" data-measurement-stats ${premium ? '' : 'hidden'}></section>
     </div>
     <div class="home__col">
     <section class="sec" style="--i:3">
@@ -319,6 +318,8 @@ function renderHome({ quiet = false } = {}) {
         <div data-breakdown></div>
       </div>
     </section>
+
+    <section class="sec" data-measurement-stats ${premium ? '' : 'hidden'}></section>
 
     <section class="sec" style="--i:4">
       <h3 class="sec__t">Постоянство</h3>
@@ -333,7 +334,7 @@ function renderHome({ quiet = false } = {}) {
     </div>
     <div data-install></div>
     ${store.session?.key === 'рома' ? '<button type="button" class="btn btn--glass analytics-launch" data-act="funnel">Статистика сайта</button>' : ''}
-    <section class="habit-advice glass"><h3>Как сделать зарядку привычкой</h3><p>Регулярность помогает замечать динамику. Выберите посильную нагрузку и старайтесь заниматься понемногу каждый день.</p><p>Чтобы начать было проще, <button class="link inline-link" data-act="routine">сократите число упражнений</button>. Можно временно исключить самое сложное или нелюбимое: небольшой устойчивый ритм полезнее нагрузки, которую постоянно откладываете.</p><p>Свяжите тренировку с привычным ритуалом: например, несколько минут утром за чашкой кофе вместо прокрутки ленты. Наблюдайте, какой режим удобнее именно вам.</p></section>
+    <section class="habit-advice habit-card glass"><img src="assets/habit-character.webp" width="960" height="640" alt="" loading="lazy" decoding="async"><div class="habit-card__body"><h3>Как сделать зарядку привычкой</h3><ul><li><span aria-hidden="true">🌱</span><div><b>Начните с посильного</b><p>Небольшая нагрузка каждый день помогает удерживать регулярность.</p></div></li><li><span aria-hidden="true">🎯</span><div><b>Сделайте начало проще</b><p><button class="link inline-link" data-act="routine">Сократите число упражнений</button> или временно уберите самое сложное. Лучше короткая зарядка, к которой хочется вернуться.</p></div></li><li><span aria-hidden="true">☕</span><div><b>Привяжите к знакомому ритуалу</b><p>Например, несколько минут утром за чашкой кофе вместо прокрутки ленты. Выберите удобное время для себя.</p></div></li></ul></div></section>
     <footer class="foot">Нейро-зарядка · данные ${cloudOn() ? 'синхронизируются между устройствами' : 'хранятся на этом устройстве'}</footer>`;
 
   mount(node, 'home', { quiet });
@@ -506,7 +507,7 @@ function paintInstallHint(node) {
   let instruction;
   if (ios) instruction = (embedded ? 'Сначала откройте сайт в Safari через меню ⋯ в Instagram. Затем ' : 'В Safari нажмите ') + '<b>Поделиться → На экран «Домой»</b>.';
   else instruction = (embedded ? 'Через меню Instagram откройте сайт в Chrome. Затем ' : 'В меню Chrome выберите ') + '<b>Добавить на главный экран</b>.';
-  host.innerHTML = `<section class="hint glass install-hint">${gi('share', 'blue', 'sm')}<div><h3>Зарядка в одном касании</h3><p>Добавьте приложение на главный экран, чтобы вернуться завтра.</p><p class="install-instruction">${instruction}</p><small>С иконки откроется главная страница. Для оплаченного профиля используйте те же имя и PIN.</small>${deferredInstall ? '<button class="btn btn--primary btn--sm" data-install-btn>Добавить на главный экран</button>' : ''}</div><button class="hint__x" aria-label="Скрыть предложение установки">${glyph.close}</button></section>`;
+  host.innerHTML = `<section class="hint glass install-hint">${gi('share', 'blue', 'sm')}<div><h3>Зарядка в одном касании</h3><p>Добавьте приложение на главный экран, чтобы вернуться завтра.</p><p class="install-instruction">${instruction}</p>${deferredInstall ? '<button class="btn btn--primary btn--sm" data-install-btn>Добавить на главный экран</button>' : ''}</div><button class="hint__x" aria-label="Скрыть предложение установки">${glyph.close}</button></section>`;
   host.querySelector('.hint__x').onclick = () => {
     try { localStorage.setItem(dismissKey, '1'); } catch { /* Ignore unavailable storage. */ }
     host.innerHTML = '';

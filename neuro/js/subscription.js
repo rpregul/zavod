@@ -12,8 +12,7 @@ export function initSaleCountdown(){
   node.querySelectorAll('[data-clock-unit]').forEach((tile,i)=>{const next=text.split(':')[i];if(tile.dataset.value===next)return;tile.querySelector('.flip-top>span').textContent=tile.dataset.value;tile.querySelector('.flip-bottom>span').textContent=next;tile.querySelector('.flip-current').textContent=next;tile.dataset.value=next;tile.classList.remove('is-flipping');void tile.offsetWidth;tile.classList.add('is-flipping');});
   if(Date.now()>=SALE_END){node.closest('.bf-countdown').textContent='Скидка завершилась. Действуют обычные цены.';document.querySelectorAll('.black-friday').forEach(plans=>{plans.classList.remove('black-friday');plans.querySelectorAll('[data-plan]').forEach(button=>{const plan=PLANS[button.dataset.plan];button.querySelector('.bf-old')?.remove();button.querySelector('.subscription-plan__price').innerHTML=money(plan.oldPrice)+' <small>₽/месяц</small>';const note=[...button.querySelectorAll('small')].find(n=>n.textContent.includes('на человека'));if(note)note.textContent='Около '+Math.ceil(plan.oldPrice/4)+' ₽ на человека, если вас четверо';});});document.querySelectorAll('.bf-heading').forEach(h=>h.textContent='Обычные цены');}
  });
- const highlight=event=>{const plan=event.target.closest('.black-friday .subscription-plan');if(!plan)return;plan.parentNode.querySelectorAll('.is-spotlit').forEach(n=>n.classList.remove('is-spotlit'));plan.classList.add('is-spotlit');};
- document.addEventListener('pointerover',highlight);document.addEventListener('focusin',highlight);update();setInterval(update,1000);
+ update();setInterval(update,1000);
 }
 export const saleActive = (now = Date.now()) => now >= Date.parse('2026-11-13T00:00:00+03:00') && now < Date.parse('2026-11-14T00:00:00+03:00');
 export const money = value => Number(value).toLocaleString('ru-RU', { minimumFractionDigits: Number.isInteger(value) ? 0 : 2, maximumFractionDigits: 2 });
@@ -34,7 +33,7 @@ export function offerMarkup({ completed = false } = {}) {
     <h2>${completed ? 'Ваша точка отсчёта готова' : 'Сделайте тренировку привычкой'}</h2>
     <p>Продолжайте тренировать функции мозга и отслеживайте результаты в удобных графиках, узнайте, как далеко вы сможете продвинуться!</p>
     <ul class="subscription-benefits"><li>Получите персональный разбор ваших результатов</li><li>Практические советы для повседневной жизни</li><li>Новые упражнения, уровни сложности</li><li>Замеры скорости чтения</li></ul>
-    ${saleActive() ? `<section class="bf-shell"><header class="bf-heading"><h3>Чёрная пятница</h3><span>−50%</span></header><div class="bf-countdown"><p>До конца скидки</p>${clockMarkup()}<small>До 00:00 МСК · затем обычные цены</small></div>` : ''}
+    ${saleActive() ? `<section class="bf-shell"><header class="bf-heading"><h3>Чёрная пятница</h3><span>−50%</span></header><div class="bf-countdown"><p>До конца скидки</p>${clockMarkup()}</div>` : ''}
     <div class="subscription-plans${saleActive() ? ' black-friday' : ''}">${Object.entries(PLANS).map(([id, plan]) => `<button class="subscription-plan glass${id === 'individual' ? ' subscription-plan--primary is-spotlit' : ''}" data-plan="${id}">
       <b>${plan.title}</b>${saleActive() ? `<span class="bf-old"><s>${money(plan.oldPrice)} ₽</s><strong>−50%</strong></span>` : ''}<span class="subscription-plan__price">${money(plan.price)} <small>₽/месяц</small></span><span>${plan.detail}</span>
       ${id === 'family' ? `<small>Около ${Math.ceil(plan.price/4)} ₽ на человека, если вас четверо</small>` : ''}<strong>Выбрать</strong></button>`).join('')}</div>
