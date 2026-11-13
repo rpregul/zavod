@@ -1,8 +1,8 @@
-import { openSubscription } from './subscription.js?v=1.4.2';
-import { CLOUD } from './config.js?v=1.4.2';
-import { esc, plural } from './util.js?v=1.4.2';
-import { READING_TEXTS, randomReadingText } from './reading-texts.js?v=1.4.2';
-import { trackAction } from './analytics.js?v=1.4.2';
+import { openSubscription } from './subscription.js?v=1.5.0';
+import { CLOUD } from './config.js?v=1.5.0';
+import { esc, plural } from './util.js?v=1.5.0';
+import { READING_TEXTS, randomReadingText } from './reading-texts.js?v=1.5.0';
+import { trackAction } from './analytics.js?v=1.5.0';
 
 async function readingRequest(store, action, row = null) {
   const response = await fetch(CLOUD.url + '/rest/v1/rpc/nz_reading', {
@@ -27,7 +27,7 @@ export async function runReading({ store, mount, onHome, mode }) {
   let history = [];
   let access = { active: false, free_available: {} };
   function locked() {
-    paint('<section class="reading-intro glass"><h1>'+modeTitle+'</h1><p>Ваш бесплатный замер уже сохранён. История остаётся доступной, следующие замеры — по подписке.</p><button class="btn btn--primary btn--block" data-reading-subscribe>Посмотреть подписку</button></section>'+historyMarkup());
+    paint('<section class="reading-intro glass"><h1>'+modeTitle+'</h1><p>Этот замер уже сохранён. История остаётся доступной, следующие замеры — по подписке.</p><button class="btn btn--primary btn--block" data-reading-subscribe>Посмотреть подписку</button></section>'+historyMarkup());
     root.querySelector('[data-reading-subscribe]').onclick = async () => { await openSubscription(store); onHome(); };
   }
   let passage;
@@ -65,10 +65,10 @@ export async function runReading({ store, mount, onHome, mode }) {
     if (!access.active && !access.free_available?.[mode] && !saved) return locked();
     const canStart = access.active || access.free_available?.[mode];
     stage = 'intro';
-    paint(`<section class="reading-intro glass"><h1>${modeTitle}</h1><p>Прочитайте текст ${mode === 'aloud' ? 'вслух' : 'про себя'} в привычном темпе, затем ответьте на вопросы. Получите скорость в словах в минуту и отдельный результат понимания.</p><ol><li>Выберите уровень и нажмите «Начать чтение».</li><li>Прочитайте весь текст и нажмите «Я прочитал(а)».</li><li>Ответьте на вопросы по содержанию.</li></ol><label class="reading-select">Уровень<select data-reading-level><option value="1">Уровень 1 · 3 вопроса</option><option value="2">Уровень 2 · 4 вопроса</option></select></label><p class="reading-note">Текст выбирается случайно. При следующем замере того же уровня подряд будет другой текст. При уходе из вкладки таймер ставится на паузу.</p><button class="btn btn--primary btn--block" data-reading-start ${canStart ? '' : 'disabled'}>${canStart ? 'Начать чтение' : 'Бесплатный замер использован'}</button>${saved ? '<p class="reading-note">Есть несохранённый замер' + (saved.mode ? '.' : ' прежней версии.') + '</p><button class="btn btn--glass btn--block" data-reading-restore>Сохранить предыдущий замер</button>' : ''}</section>${historyMarkup()}`);
+    paint(`<section class="reading-intro glass"><h1>${modeTitle}</h1><p>Прочитайте текст ${mode === 'aloud' ? 'вслух' : 'про себя'} в привычном темпе, затем ответьте на вопросы. Получите скорость в словах в минуту и отдельный результат понимания.</p><ol><li>Нажмите «Начать чтение» — текст выберется автоматически.</li><li>Прочитайте весь текст и нажмите «Я прочитал(а)».</li><li>Ответьте на вопросы по содержанию.</li></ol><p class="reading-note">Текст выбирается случайно. В следующий раз подряд будет другой текст. При уходе из вкладки таймер ставится на паузу.</p><button class="btn btn--primary btn--block" data-reading-start ${canStart ? '' : 'disabled'}>${canStart ? 'Начать чтение' : 'Замер уже выполнен'}</button>${saved ? '<p class="reading-note">Есть несохранённый замер' + (saved.mode ? '.' : ' прежней версии.') + '</p><button class="btn btn--glass btn--block" data-reading-restore>Сохранить предыдущий замер</button>' : ''}</section>${historyMarkup()}`);
     root.querySelector('[data-reading-start]').onclick = () => {
-      const level = root.querySelector('[data-reading-level]').value;
-      const lastKey = 'nz.reading.last.' + store.session.key + '.' + level;
+      const level = null;
+      const lastKey = 'nz.reading.last.' + store.session.key;
       let previousId;
       try { previousId = localStorage.getItem(lastKey); } catch { /* Selection works without storage. */ }
       passage = randomReadingText(level, previousId);
@@ -166,7 +166,7 @@ export function measurementTrend(rows) {
 const percentText = value => (value>0?'+':value<0?'−':'')+Math.abs(value).toLocaleString('ru-RU',{maximumFractionDigits:1})+'%';
 function measurementMarkup(rows,group) {
   const {recent,latest,previous,previousPercent,firstPercent} = measurementTrend(rows);
-  if (!latest) return '<p class="reading-note">На этом уровне пока нет замеров '+group.short+'.</p>';
+  if (!latest) return '<p class="reading-note">Пока нет замеров '+group.short+'.</p>';
   const width = Math.max(280,recent.length*64), height=200, top=30, bottom=156;
   const max = Math.max(1,...recent.map(row=>row.wpm));
   const x = i => (i+.5)*width/recent.length;
@@ -177,7 +177,7 @@ function measurementMarkup(rows,group) {
     + recent.map((row,i)=>'<circle cx="'+x(i)+'" cy="'+y(row)+'" r="4" fill="#8439b3"/><text x="'+x(i)+'" y="'+(y(row)-12)+'" text-anchor="middle" fill="#49335e" font-size="12" font-weight="800">'+row.wpm+'</text><text x="'+x(i)+'" y="178" text-anchor="middle" fill="#625071" font-size="11">'+measurementDate(row.created_at).slice(0,5)+'</text>').join('')+'</svg></div>';
   return '<p class="measurement-latest">Последний результат — <b>'+latest.wpm+' слов/мин</b></p>'
     + (previousPercent===null?'<p class="reading-note">Первый замер — ваша точка отсчёта. После следующего появится изменение скорости.</p>':'<p class="measurement-change"><b>'+percentText(previousPercent)+'</b> к предыдущему замеру<br><span>'+percentText(firstPercent)+' к первому на графике</span></p><p class="reading-note">Понимание: '+latest.correct+' из '+latest.questions+' · ранее '+previous.correct+' из '+previous.questions+'</p>')
-    + chart + '<p class="reading-note">Скорость, слов/мин · последние '+recent.length+' '+plural(recent.length,'замер','замера','замеров')+'. Сравниваются один способ чтения и один уровень. Учитывайте понимание текста.</p>'
+    + chart + '<p class="reading-note">Скорость, слов/мин · последние '+recent.length+' '+plural(recent.length,'замер','замера','замеров')+'. Сравнивается один способ чтения. Учитывайте понимание текста.</p>'
     + (group.id==='legacy'?'<p class="reading-note">В этих замерах способ чтения не указывался.</p>':'')
     + '<div class="reading-history-table"><table><thead><tr><th>Дата замера</th><th>Слов/мин</th><th>Понимание</th></tr></thead><tbody>'
     + recent.slice().reverse().map(row=>'<tr><td>'+measurementDate(row.created_at)+'<small>'+measurementTime(row.created_at)+'</small></td><td>'+row.wpm+'</td><td>'+row.correct+' из '+row.questions+'</td></tr>').join('')+'</tbody></table></div>';
@@ -210,18 +210,9 @@ export async function paintMeasurementStats(host, store) {
         chart.innerHTML += '<p class="reading-note">Здесь появятся скорость и понимание после первого замера '+group.short+'.</p>';
         return;
       }
-      const latestLevel = READING_TEXTS.find(text => text.id === group.rows[0].text_id)?.level || 1;
-      chart.innerHTML += '<label class="reading-select">Уровень<select data-measure-level><option value="1">Уровень 1</option><option value="2">Уровень 2</option></select></label><div data-measure-level-chart></div>';
-      const levelSelect = chart.querySelector('[data-measure-level]');
-      levelSelect.value = String(latestLevel);
-      const drawLevel = () => {
-        const rows = group.rows.filter(row => READING_TEXTS.find(text => text.id === row.text_id)?.level === Number(levelSelect.value));
-        chart.querySelector('[data-measure-level-chart]').innerHTML = measurementMarkup(rows,group);
-        const scroll = chart.querySelector('.measurement-trend-scroll');
-        if (scroll) scroll.scrollLeft = scroll.scrollWidth;
-      };
-      levelSelect.onchange = drawLevel;
-      drawLevel();
+      chart.innerHTML += measurementMarkup(group.rows,group);
+      const scroll = chart.querySelector('.measurement-trend-scroll');
+      if (scroll) scroll.scrollLeft = scroll.scrollWidth;
     }
     select(groups[0]);
     host.querySelectorAll('[data-measure-tab]').forEach((button,index) => {

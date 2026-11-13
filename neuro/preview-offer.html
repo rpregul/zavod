@@ -1,8 +1,9 @@
 <!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Предпросмотр подписки — Нейро-зарядка</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"><link rel="stylesheet" href="css/app.css"></head><body>
 <div class="aurora" aria-hidden="true"><b></b><b></b><b></b><b></b></div><main id="app"><p class="login__note" style="margin-bottom:20px">Предпросмотр · пример результатов · списаний нет</p><div class="summary"><div class="summary__hero"><div class="summary__emoji">🌅</div><h2>Первая тренировка завершена!</h2><p>Вы прошли все четыре упражнения</p></div><div class="sum-list glass"><div class="sum-row"><span class="sum-row__t"><b>Шульте</b><small>первая попытка</small></span><span class="sum-row__v"><b>32</b></span></div><div class="sum-row"><span class="sum-row__t"><b>Шульте вверх ногами</b><small>первая попытка</small></span><span class="sum-row__v"><b>21</b></span></div><div class="sum-row"><span class="sum-row__t"><b>Поиск пары</b><small>первая попытка</small></span><span class="sum-row__v"><b>15</b></span></div><div class="sum-row"><span class="sum-row__t"><b>Запоминание слов</b><small>первая попытка</small></span><span class="sum-row__v"><b>12</b></span></div></div><div id="offer"></div></div></main><div id="sheet-root"></div><div id="toast-root"></div><script type="module">
-import { offerMarkup, openSubscription } from './js/subscription.js';
+import { offerMarkup, openSubscription, initSaleCountdown } from './js/subscription.js?v=1.5.0';
 document.querySelector('#offer').innerHTML=offerMarkup({completed:true});
 const status={active:false,ready:true,trial:{completed:true}};
+initSaleCountdown();
 const demo={async refreshAccess(){return status;},async billing(){throw new Error('payments_unavailable');}};
 document.querySelectorAll('[data-plan]').forEach(button=>button.onclick=()=>openSubscription(demo,{plan:button.dataset.plan}));
 </script></body></html>

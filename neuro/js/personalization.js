@@ -1,8 +1,8 @@
-import { CLOUD } from './config.js?v=1.4.2';
-import { esc } from './util.js?v=1.4.2';
-import { gi, glyph } from './icons.js?v=1.4.2';
-import { lineChart } from './charts.js?v=1.4.2';
-import { trackAction, trackExercise } from './analytics.js?v=1.4.2';
+import { CLOUD } from './config.js?v=1.5.0';
+import { esc } from './util.js?v=1.5.0';
+import { gi, glyph } from './icons.js?v=1.5.0';
+import { lineChart } from './charts.js?v=1.5.0';
+import { trackAction, trackExercise } from './analytics.js?v=1.5.0';
 
 export const QUESTIONS = {
  sch_f:{title:'Где вам хочется лучше удерживать внимание?',skill:'Внимание',exercise:'Шульте',icon:'eye',options:['Во время работы или учёбы','Когда читаю','В разговорах','Когда много повседневных дел','Просто проверяю себя'],tips:['Перед началом работы выберите одну конкретную задачу и на десять минут уберите уведомления.','После небольшого фрагмента закройте текст и сформулируйте три главные мысли. Затем проверьте себя.','В конце важного разговора коротко повторите договорённость своими словами.','Запишите все дела и выберите одно, к которому приступите сейчас. Остальные пока оставьте в списке.','Повторяйте упражнение в похожих условиях и сравнивайте свои результаты.']},
@@ -29,10 +29,10 @@ if(item.action==='goal'&&!s.pending.some(p=>p.action==='goal'))s.goal=result.goa
 }
 async function load(store){
  const k=key(store);if(!k)return;if(loaded.has(k))return;if(loading.has(k))return loading.get(k);
- const task=(async()=>{try{const remote=await request(store,'get');if(key(store)!==k)return;const s=state(store);const oldRoutine=JSON.stringify(s.exercises);if(!s.pending.some(p=>p.action==='routine'))s.exercises=remote.exercises;
-s.answers={...remote.answers,...Object.fromEntries(s.pending.filter(p=>p.action==='answer').map(p=>[p.data.ex,{option:p.data.option,frequency:p.data.frequency}]))};if(!s.pending.some(p=>p.action==='goal'))s.goal=remote.goal;persist(store);loaded.add(k);if(oldRoutine!==JSON.stringify(s.exercises))window.dispatchEvent(new Event('nz-routine-updated'));}catch{}await flushPersonalization(store);})().finally(()=>loading.delete(k));loading.set(k,task);return task;
+ const task=(async()=>{try{const revision=state(store).revision||0;const remote=await request(store,'get');if(key(store)!==k)return;const s=state(store);const localChanged=(s.revision||0)!==revision;const oldRoutine=JSON.stringify(s.exercises);if(!localChanged&&!s.pending.some(p=>p.action==='routine'))s.exercises=remote.exercises;
+s.answers={...remote.answers,...(localChanged?s.answers:{}),...Object.fromEntries(s.pending.filter(p=>p.action==='answer').map(p=>[p.data.ex,{option:p.data.option,frequency:p.data.frequency}]))};if(!localChanged&&!s.pending.some(p=>p.action==='goal'))s.goal=remote.goal;persist(store);loaded.add(k);if(oldRoutine!==JSON.stringify(s.exercises))window.dispatchEvent(new Event('nz-routine-updated'));}catch{}await flushPersonalization(store);})().finally(()=>loading.delete(k));loading.set(k,task);return task;
 }
-function queue(store,action,data){const s=state(store);s.pending.push({action,data});persist(store);void flushPersonalization(store);}
+function queue(store,action,data){const s=state(store);s.revision=(s.revision||0)+1;s.pending.push({action,data});persist(store);void flushPersonalization(store);}
 export function firstResult(store,ex){return store.results.filter(row=>row.ex===ex).slice().sort((a,b)=>a.ts-b.ts||a.id.localeCompare(b.id))[0];}
 export async function askQuestion({store,mount,ex,force=false}){
  await Promise.race([load(store),new Promise(resolve=>setTimeout(resolve,600))]);if(!force&&Object.hasOwn(state(store).answers,ex))return;
@@ -62,6 +62,13 @@ export function drawGoal(host,store){
 }
 export async function paintPersonal({host,store,summary=false,recs=store.results,onEditAnswers=null}){
  if(!host)return;if(!loaded.has(key(store)))await Promise.race([load(store),new Promise(resolve=>setTimeout(resolve,600))]);if(!host.isConnected)return;
+ if(!store.access?.active){
+  const answers=state(store).answers;
+  const selected=Object.keys(QUESTIONS).filter(ex=>answers[ex]?.option>=0&&answers[ex]?.option<4).sort((a,b)=>(answers[b].frequency??-1)-(answers[a].frequency??-1));
+  if(!summary||!selected.length){host.innerHTML='';return;}
+  const ex=selected[0],q=QUESTIONS[ex];
+  host.innerHTML='<section class="personal-summary glass"><h2>Полезное действие на сегодня</h2><p>'+esc(q.tips[answers[ex].option])+'</p></section>';return;
+ }
  const s=state(store),available=Object.keys(QUESTIONS).filter(ex=>recs.some(r=>r.ex===ex));if(!available.length){host.innerHTML='';return;}
  const answered=available.filter(ex=>s.answers[ex]?.option>=0&&s.answers[ex]?.option<4);
  let chosen=s.goal?.ex&&available.includes(s.goal.ex)?s.goal.ex:answered[0]||available[0];let editing=summary&&!s.goal;
@@ -84,7 +91,7 @@ export async function paintPersonal({host,store,summary=false,recs=store.results
    edit.querySelector('[data-save-goal]').onclick=()=>{const n=Number(input.value);if(edit.querySelector('[data-save-goal]').disabled)return;s.goal={ex:chosen,baseline:baseline.score,baseline_id:baseline.id,baseline_day:baseline.day,percent:zero?null:n,target:zero?n:Math.ceil(baseline.score*(1+n/100))};queue(store,'goal',{ex:chosen,...(zero?{target:n}:{percent:n})});trackAction('personal_goal_saved');editing=false;render();};
   }
   host.querySelectorAll('[data-priority]').forEach(button=>button.onclick=()=>{chosen=button.dataset.priority;editing=true;trackAction('priority_'+chosen);render();});
-  if(onEditAnswers){const button=document.createElement('button');button.className='link';button.textContent='Изменить ответы';button.onclick=onEditAnswers;host.querySelector('section').append(button);}
+  if(onEditAnswers){const button=document.createElement('button');button.className='link';button.textContent=Object.keys(s.answers).length?'Изменить ответы':'Подобрать личный маршрут';button.onclick=onEditAnswers;host.querySelector('section').append(button);}
   if(s.pending.length){const note=document.createElement('p');note.className='reading-note';note.dataset.personalSync='';note.textContent='Сохранено на устройстве. Синхронизируем при подключении.';host.querySelector('section').append(note);flushPersonalization(store).then(()=>{if(host.isConnected&&!s.pending.length)host.querySelector('[data-personal-sync]')?.remove();});}
  }
  render();
@@ -93,3 +100,5 @@ export async function paintPersonal({host,store,summary=false,recs=store.results
 export function selectedExercises(store){const all=Object.keys(QUESTIONS);const chosen=state(store).exercises;return Array.isArray(chosen)&&chosen.length?all.filter(ex=>chosen.includes(ex)):all;}
 export function saveExercises(store,exercises){state(store).exercises=exercises;queue(store,'routine',{exercises});}
 
+
+export async function completePersonalSurvey({store,mount,recs}){await load(store);for(const ex of Object.keys(QUESTIONS).filter(ex=>recs.some(r=>r.ex===ex)))await askQuestion({store,mount,ex});}

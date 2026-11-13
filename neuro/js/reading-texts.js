@@ -330,8 +330,9 @@ export function wordCount(text) {
 
 
 export function randomReadingText(level, previousId, random = Math.random) {
-  const pool = READING_TEXTS.filter(text => text.level === Number(level));
+  const pool = level == null ? READING_TEXTS : READING_TEXTS.filter(text => text.level === Number(level));
   const alternatives = pool.filter(text => text.id !== previousId);
   const candidates = alternatives.length ? alternatives : pool;
   return candidates[Math.floor(random() * candidates.length)];
 }
+

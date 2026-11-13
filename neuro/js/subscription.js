@@ -1,13 +1,25 @@
-import { trackAction, flushAnalytics } from './analytics.js?v=1.4.2';
-import { BILLING } from './config.js?v=1.4.2';
-import { sheet, confirmSheet } from './ui.js?v=1.4.2';
-import { esc } from './util.js?v=1.4.2';
+import { trackAction, flushAnalytics } from './analytics.js?v=1.5.0';
+import { BILLING } from './config.js?v=1.5.0';
+import { sheet, confirmSheet } from './ui.js?v=1.5.0';
+import { esc } from './util.js?v=1.5.0';
 
+export const SALE_END = Date.parse('2026-11-14T00:00:00+03:00');
+export function countdownText(now=Date.now()){const seconds=Math.max(0,Math.floor((SALE_END-now)/1000));return [Math.floor(seconds/3600),Math.floor(seconds/60)%60,seconds%60].map(n=>String(n).padStart(2,'0')).join(':');}
+export function clockMarkup(){const values=countdownText().split(':');return '<div class="flip-clock" data-sale-countdown role="timer" aria-label="До окончания скидки '+countdownText()+'">'+values.map((value,i)=>'<div class="flip-unit"><div class="flip-tile" data-clock-unit="'+i+'" data-value="'+value+'"><span class="flip-current">'+value+'</span><span class="flip-top" aria-hidden="true"><span>'+value+'</span></span><span class="flip-bottom" aria-hidden="true"><span>'+value+'</span></span></div><small>'+['часов','минут','секунд'][i]+'</small></div>').join('')+'</div>';}
+export function initSaleCountdown(){
+ const update=()=>document.querySelectorAll('[data-sale-countdown]').forEach(node=>{
+  const text=countdownText();node.setAttribute('aria-label','До окончания скидки '+text);
+  node.querySelectorAll('[data-clock-unit]').forEach((tile,i)=>{const next=text.split(':')[i];if(tile.dataset.value===next)return;tile.querySelector('.flip-top>span').textContent=tile.dataset.value;tile.querySelector('.flip-bottom>span').textContent=next;tile.querySelector('.flip-current').textContent=next;tile.dataset.value=next;tile.classList.remove('is-flipping');void tile.offsetWidth;tile.classList.add('is-flipping');});
+  if(Date.now()>=SALE_END){node.closest('.bf-countdown').textContent='Скидка завершилась. Действуют обычные цены.';document.querySelectorAll('.black-friday').forEach(plans=>{plans.classList.remove('black-friday');plans.querySelectorAll('[data-plan]').forEach(button=>{const plan=PLANS[button.dataset.plan];button.querySelector('.bf-old')?.remove();button.querySelector('.subscription-plan__price').innerHTML=money(plan.oldPrice)+' <small>₽/месяц</small>';const note=[...button.querySelectorAll('small')].find(n=>n.textContent.includes('на человека'));if(note)note.textContent='Около '+Math.ceil(plan.oldPrice/4)+' ₽ на человека, если вас четверо';});});document.querySelectorAll('.bf-heading').forEach(h=>h.textContent='Обычные цены');}
+ });
+ const highlight=event=>{const plan=event.target.closest('.black-friday .subscription-plan');if(!plan)return;plan.parentNode.querySelectorAll('.is-spotlit').forEach(n=>n.classList.remove('is-spotlit'));plan.classList.add('is-spotlit');};
+ document.addEventListener('pointerover',highlight);document.addEventListener('focusin',highlight);update();setInterval(update,1000);
+}
 export const saleActive = (now = Date.now()) => now >= Date.parse('2026-11-13T00:00:00+03:00') && now < Date.parse('2026-11-14T00:00:00+03:00');
 export const money = value => Number(value).toLocaleString('ru-RU', { minimumFractionDigits: Number.isInteger(value) ? 0 : 2, maximumFractionDigits: 2 });
 export const PLANS = {
-  individual: { title: 'Для себя', oldPrice: 399, get price() { return saleActive() ? 199.5 : 399; }, detail: 'Один профиль' },
-  family: { title: 'Для семьи', oldPrice: 999, get price() { return saleActive() ? 499.5 : 999; }, detail: 'До 4 человек · отдельный прогресс каждого' },
+  individual: { title: 'Для себя', oldPrice: 399, get price() { return saleActive() ? 199 : 399; }, detail: 'Один профиль' },
+  family: { title: 'Для семьи', oldPrice: 999, get price() { return saleActive() ? 499 : 999; }, detail: 'До 4 человек · отдельный прогресс каждого' },
 };
 const date = value => new Date(value).toLocaleDateString('ru-RU');
 const message = error => ({ consent_required: 'Обновите страницу, чтобы увидеть актуальные условия оплаты.', unauthorized: 'Войдите в профиль заново.', invalid_email: 'Проверьте адрес почты.',
@@ -22,9 +34,11 @@ export function offerMarkup({ completed = false } = {}) {
     <h2>${completed ? 'Ваша точка отсчёта готова' : 'Сделайте тренировку привычкой'}</h2>
     <p>Продолжайте тренировать функции мозга и отслеживайте результаты в удобных графиках, узнайте, как далеко вы сможете продвинуться!</p>
     <ul class="subscription-benefits"><li>Получите персональный разбор ваших результатов</li><li>Практические советы для повседневной жизни</li><li>Новые упражнения, уровни сложности</li><li>Замеры скорости чтения</li></ul>
-    ${saleActive() ? '<div class="bf-heading"><b>Чёрная пятница</b><span>−50%</span><p>13 ноября · до 23:59 МСК</p></div>' : ''}<div class="subscription-plans${saleActive() ? ' black-friday' : ''}">${Object.entries(PLANS).map(([id, plan]) => `<button class="subscription-plan glass${id === 'individual' ? ' subscription-plan--primary' : ''}" data-plan="${id}">
+    ${saleActive() ? `<section class="bf-shell"><header class="bf-heading"><h3>Чёрная пятница</h3><span>−50%</span></header><div class="bf-countdown"><p>До конца скидки</p>${clockMarkup()}<small>До 00:00 МСК · затем обычные цены</small></div>` : ''}
+    <div class="subscription-plans${saleActive() ? ' black-friday' : ''}">${Object.entries(PLANS).map(([id, plan]) => `<button class="subscription-plan glass${id === 'individual' ? ' subscription-plan--primary is-spotlit' : ''}" data-plan="${id}">
       <b>${plan.title}</b>${saleActive() ? `<span class="bf-old"><s>${money(plan.oldPrice)} ₽</s><strong>−50%</strong></span>` : ''}<span class="subscription-plan__price">${money(plan.price)} <small>₽/месяц</small></span><span>${plan.detail}</span>
       ${id === 'family' ? `<small>Около ${Math.ceil(plan.price/4)} ₽ на человека, если вас четверо</small>` : ''}<strong>Выбрать</strong></button>`).join('')}</div>
+    ${saleActive() ? '</section>' : ''}
     <p class="login__note">Разовая оплата за один месяц. Для следующего месяца нужно оформить оплату заново.</p>
   </div>`;
 }
@@ -69,7 +83,7 @@ export async function openSubscription(store, { plan: selected = null } = {}) {
         return;
       }
       const promo = saleActive();
-      const chosen = PLANS[selected] ? { ...PLANS[selected], price: promo ? PLANS[selected].oldPrice / 2 : PLANS[selected].oldPrice, consentVersion: promo ? 'black-friday-2026-v1' : 'monthly-plans-v4-once', sale: promo } : null;
+      const chosen = PLANS[selected] ? { ...PLANS[selected], price: promo ? Math.floor(PLANS[selected].oldPrice / 2) : PLANS[selected].oldPrice, consentVersion: promo ? 'black-friday-2026-v2' : 'monthly-plans-v4-once', sale: promo } : null;
       if (!chosen) { selected = null; return draw(); }
       s.node.innerHTML = `<button class="link" data-back>← Другой тариф</button><h3 class="sheet__title">${chosen.title}</h3>
         <p class="subscription-price">${chosen.sale ? `<s>${money(chosen.oldPrice)} ₽</s> <span class="bf-checkout-badge">−50%</span><br>` : ''}<b>${money(chosen.price)} ₽</b> / месяц</p><p class="sheet__text">${chosen.detail}</p>

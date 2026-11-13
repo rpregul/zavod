@@ -1,4 +1,4 @@
-import { addDays, dayStr, fmtShort, logicalNow, parseDay } from './util.js?v=1.4.2';
+import { addDays, dayStr, fmtShort, logicalNow, parseDay } from './util.js?v=1.5.0';
 
 let gid = 0;
 const NS = 'http://www.w3.org/2000/svg';

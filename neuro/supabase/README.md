@@ -1,27 +1,9 @@
-# Подключение общей базы (Supabase)
+# Reminder release
 
-**Статус: подключено.** Проект `neuro-zaryadka` (регион eu-central-1), `schema.sql` применена, URL и anon-ключ прописаны в `neuro/js/config.js`. Шаги ниже нужны, только если базу придётся пересоздать.
+Apply `reminders.sql`, deploy `functions/neuro-reminders` with `deno.json`, run `select nz_private.invoke_reminder_job()` once to initialize VAPID keys, then apply `reminders-schedule.sql`. The function authenticates the scheduler with a private job token; `verify_jwt=false` is intentional for this custom-auth endpoint. Public browser RPC validates the app session and never returns private keys or push subscriptions.
 
-1. Создать бесплатный проект на supabase.com.
-2. В проекте открыть **SQL Editor**, вставить содержимое `schema.sql`, нажать **Run**.
-3. В **Project Settings → API** скопировать `Project URL` и `anon public` ключ.
-4. Вписать их в `neuro/js/config.js`:
+VAPID keys are generated inside the worker and stored in the private database schema. Do not print, commit, or rotate them during a normal deployment. Existing opt-in subscriptions would stop working after a key rotation.
 
-```js
-export const CLOUD = {
-  url: 'https://xxxx.supabase.co',
-  key: 'eyJ...',
-};
-```
+`reminders.test.sql` uses rolled-back fixtures; it sends no HTTP requests. `rounded-sale.sql` upgrades the existing campaign to integer checkout amounts and a fresh consent version; prior orders retain their amount.
 
-5. Закоммитить и запушить. Готово: все, кто зайдёт по имени и PIN, будут видеть свою историю на любом устройстве.
-
-## Как это защищено
-
-- anon-ключ публичный по дизайну, он лежит в коде страницы.
-- У таблиц включён RLS и нет ни одной политики, поэтому напрямую из браузера к ним не достучаться.
-- Вся работа идёт через 3 функции (`nz_login`, `nz_push`, `nz_pull`), каждая проверяет имя и PIN.
-- PIN не хранится: в базу уходит SHA-256 от `имя:PIN`. После 10 неверных попыток вход блокируется на 10 минут.
-- Это защита уровня «чтобы одногруппники не мешали друг другу», а не банковская. Не используйте здесь PIN от чего-то важного.
-
-Схема проверена на настоящем Postgres: создание профиля, неверный PIN, блокировка, повторная отправка без дублей, закрытый прямой доступ к таблицам.
+The full guest goal/recommendation algorithm remains pending product review. Do not restore automatic percentages or manual point targets for guests without approval.

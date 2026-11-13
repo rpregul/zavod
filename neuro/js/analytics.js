@@ -1,5 +1,5 @@
-import { CLOUD } from './config.js?v=1.4.2';
-import { esc } from './util.js?v=1.4.2';
+import { CLOUD } from './config.js?v=1.5.0';
+import { esc } from './util.js?v=1.5.0';
 
 async function rpc(name, data) {
   const response = await fetch(CLOUD.url + '/rest/v1/rpc/' + name, {

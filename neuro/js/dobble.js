@@ -1,6 +1,6 @@
-import { el, shuffle, mulberry32, sleep } from './util.js?v=1.4.2';
-import { makeHud, startTimer, countdown } from './ui.js?v=1.4.2';
-import { haptic, sfx, sparkle, floatText } from './fx.js?v=1.4.2';
+import { el, shuffle, mulberry32, sleep } from './util.js?v=1.5.0';
+import { makeHud, startTimer, countdown } from './ui.js?v=1.5.0';
+import { haptic, sfx, sparkle, floatText } from './fx.js?v=1.5.0';
 import { SYMBOLS, ensureSprite } from './symbols/index.js?v=1.1.1';
 
 export const DOBBLE_MS = 60000;

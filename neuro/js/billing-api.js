@@ -1,4 +1,4 @@
-import { BILLING } from './config.js?v=1.4.2';
+import { BILLING } from './config.js?v=1.5.0';
 
 export async function billingRequest(action, data = {}, token = null) {
   const response = await fetch(BILLING.endpoint + '/' + action, {

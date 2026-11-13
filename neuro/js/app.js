@@ -1,21 +1,22 @@
-import { openRoutine, ownComparisonMarkup } from './routine.js?v=1.4.2';
-import { askQuestion, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=1.4.2';
-import { runReading, paintMeasurementStats, readingAccess } from './reading.js?v=1.4.2';
-import { comparisonMarkup } from './summary-comparison.js?v=1.4.2';
-import { initAnalytics, openFunnel, trackScreen, trackExercise } from './analytics.js?v=1.4.2';
-import { store, cloudOn } from './store.js?v=1.4.2';
-import * as S from './stats.js?v=1.4.2';
-import { el, esc, plural, dayStr, fmtLong, fmtShort, weekdayName, sleep, logicalDay } from './util.js?v=1.4.2';
-import { glyph, gi } from './icons.js?v=1.4.2';
-import { initFx, initRipple, confetti, haptic, sfx, countUp, toast } from './fx.js?v=1.4.2';
-import { lineChart, heatmap, ringSvg } from './charts.js?v=1.4.2';
-import { makeCtx, sheet, confirmSheet } from './ui.js?v=1.4.2';
-import { runSchulte } from './schulte.js?v=1.4.2';
-import { runDobble } from './dobble.js?v=1.4.2';
-import { runMemory } from './memory.js?v=1.4.2';
-import { BILLING } from './config.js?v=1.4.2';
-import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.4.2';
-import { recommendations, exerciseReport } from './recommendations.js?v=1.4.2';
+import { initReminders, openReminders } from './reminders.js?v=1.5.0';
+import { openRoutine, ownComparisonMarkup } from './routine.js?v=1.5.0';
+import { askQuestion, completePersonalSurvey, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=1.5.0';
+import { runReading, paintMeasurementStats, readingAccess } from './reading.js?v=1.5.0';
+import { comparisonMarkup } from './summary-comparison.js?v=1.5.0';
+import { initAnalytics, openFunnel, trackScreen, trackExercise } from './analytics.js?v=1.5.0';
+import { store, cloudOn } from './store.js?v=1.5.0';
+import * as S from './stats.js?v=1.5.0';
+import { el, esc, plural, dayStr, fmtLong, fmtShort, weekdayName, sleep, logicalDay } from './util.js?v=1.5.0';
+import { glyph, gi } from './icons.js?v=1.5.0';
+import { initFx, initRipple, confetti, haptic, sfx, countUp, toast } from './fx.js?v=1.5.0';
+import { lineChart, heatmap, ringSvg } from './charts.js?v=1.5.0';
+import { makeCtx, sheet, confirmSheet } from './ui.js?v=1.5.0';
+import { runSchulte } from './schulte.js?v=1.5.0';
+import { runDobble } from './dobble.js?v=1.5.0';
+import { runMemory } from './memory.js?v=1.5.0';
+import { BILLING } from './config.js?v=1.5.0';
+import { openSubscription, initSaleCountdown, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.5.0';
+import { recommendations, exerciseReport } from './recommendations.js?v=1.5.0';
 
 // ---------------------------------------------------------------- упражнения
 export const EX = {
@@ -298,10 +299,9 @@ function renderHome({ quiet = false } = {}) {
       <img class="reading-feature__art" src="assets/reading-character.webp" width="960" height="640" alt="" loading="lazy" decoding="async">
       <div class="reading-feature__body"><h3 class="sec__t">Замеры</h3>
       <p class="reading-feature__description">Хотите развить скорочтение? Сделайте свои первые замеры, а затем каждый день проходите нашу нейроразминку хотя бы 5 минут, чтобы подготовить мозг к более высокой скорости чтения.</p>
-      <p class="reading-free-note">${premium ? 'Замеры доступны по вашей подписке.' : 'Первый замер каждого способа — бесплатно. Без регистрации.'}</p>
       <div class="measurement-tiles">
-        <button class="tile glass reading-entry" data-act="reading_aloud">${gi('sound', 'blue')}<span class="tile__txt"><b>Чтение вслух</b><small>Скорость и понимание текста</small></span><span class="tile__new">${premium ? 'Открыть' : '1 раз бесплатно'}</span></button>
-        <button class="tile glass reading-entry" data-act="reading_silent">${gi('eye', 'violet')}<span class="tile__txt"><b>Чтение про себя</b><small>Скорость и понимание текста</small></span><span class="tile__new">${premium ? 'Открыть' : '1 раз бесплатно'}</span></button>
+        <button class="tile glass reading-entry" data-act="reading_aloud">${gi('sound', 'blue')}<span class="tile__txt"><b>Чтение вслух</b><small>Скорость и понимание текста</small></span></button>
+        <button class="tile glass reading-entry" data-act="reading_silent">${gi('eye', 'violet')}<span class="tile__txt"><b>Чтение про себя</b><small>Скорость и понимание текста</small></span></button>
       </div></div>
     </section>
     <section class="sec" data-measurement-stats ${premium ? '' : 'hidden'}></section>
@@ -341,7 +341,7 @@ function renderHome({ quiet = false } = {}) {
     const completed = store.access?.trial?.completed;
     node.querySelector('.hero__txt h2').textContent = completed ? 'Продолжим тренировки?' : store.access?.trial?.next_index > 0 ? 'Продолжите первую тренировку' : 'Начните первую тренировку';
     node.querySelector('.hero__txt p').textContent = completed ? 'Ваша точка отсчёта сохранена' : 'Выработайте новую полезную привычку развития своего мозга';
-    node.querySelector('.hero__cta span').textContent = completed ? 'Выбрать подписку' : 'Начать тренировку';
+    node.querySelector('.hero__cta span').textContent = completed ? 'Мой персональный итог' : 'Начать тренировку';
     node.querySelector('.chips-row').hidden = true;
     node.querySelectorAll('.tiles .tile__best,.tiles .tile__badge,.tiles .tile__new').forEach(x => { x.textContent = 'В первой тренировке'; });
     node.querySelectorAll('.home__col')[1].innerHTML = `<section class="sec"><div class="progress glass subscription-locked"><h3>Ваш следующий шаг</h3><p>Доступны после прохождения первой тренировки:</p><ul class="guest-benefit-pills"><li>Персональные подсказки</li><li>Динамика прогресса</li><li>Статистика</li><li>Дополнительные упражнения</li></ul><small>Расширенная статистика и дополнительные упражнения — по подписке.</small>${completed ? '<button class="btn btn--primary btn--block" data-act="subscribe">Продолжить с подпиской</button>' : '<p class="login__note">Сначала пройдите бесплатную тренировку — она станет вашей точкой отсчёта.</p>'}</div></section>`;
@@ -373,7 +373,6 @@ function renderHome({ quiet = false } = {}) {
   if (premium) paintMeasurementStats(node.querySelector('[data-measurement-stats]'),store);
   void readingAccess(store).then(access => {
     if (!node.isConnected) return;
-    for (const mode of ['aloud','silent']) node.querySelector('[data-act=reading_'+mode+'] .tile__new').textContent = access.active ? 'Открыть' : access.free_available?.[mode] ? '1 раз бесплатно' : 'По подписке';
     if (!premium && (!access.free_available?.aloud || !access.free_available?.silent)) { const host = node.querySelector('[data-measurement-stats]'); host.hidden = false; void paintMeasurementStats(host,store); }
   }).catch(() => {});
   paintSync();
@@ -492,7 +491,7 @@ function paintInstallHint(node) {
   const host = node.querySelector('[data-install]');
   if (!host) return;
   const context = node.classList.contains('summary') ? 'summary' : 'home';
-  const dismissKey = 'nz.hint.' + context;
+  const dismissKey = 'nz.hint.' + context + (context === 'summary' ? '.v2' : '');
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   let dismissed = false;
   try { dismissed = localStorage.getItem(dismissKey) === '1'; } catch { /* Storage may be disabled. */ }
@@ -566,6 +565,7 @@ function openSettings() {
     </div>
     <div class="sheet__actions sheet__actions--col">
       ${BILLING.enabled ? '<button class="btn btn--primary" data-set="subscription">Моя подписка</button>' : ''}
+      <button class="btn btn--glass" data-set="reminders">Напоминания о зарядке</button>
       <button class="btn btn--glass" data-set="export">${glyph.download}<span>Скачать мои результаты</span></button>
       <button class="btn btn--glass" data-set="logout">${glyph.logout}<span>Выйти из профиля</span></button>
     </div>`);
@@ -579,6 +579,7 @@ function openSettings() {
   s.node.addEventListener('click', async (e) => {
     const b = e.target.closest('[data-set]');
     if (!b) return;
+    if (b.dataset.set === 'reminders') { s.close(); return openReminders(store); }
     if (b.dataset.set === 'subscription') {
       s.close();
       return openSubscription(store);
@@ -591,7 +592,7 @@ function openSettings() {
       setTimeout(() => URL.revokeObjectURL(url), 2000);
     } else if (b.dataset.set === 'logout') {
       s.close();
-      if (await confirmSheet({ title: 'Выйти из профиля?', text: 'История останется. Войдёшь снова по имени и PIN.', ok: 'Выйти', danger: true })) {
+      if (await confirmSheet({ title: 'Выйти из профиля?', text: 'История останется. Для повторного входа используйте имя и PIN.', ok: 'Выйти', danger: true })) {
         store.logout();
         renderLogin();
       }
@@ -706,7 +707,7 @@ async function playOne(id, { guided = false, idx = 0, trial = null, sessionOrder
       }
       const action = await resultScreen(id, rec, res, { guided, idx, isLast: idx === sessionOrder.length - 1, trial: !!trial, sessionOrder });
       if (action === 'again') continue;
-      if (trial && guided && action === 'next') await askQuestion({ store, mount, ex: id });
+      if (action === 'next' || !guided) await askQuestion({ store, mount, ex: id });
       return { rec, action };
     }
   }
@@ -730,7 +731,11 @@ async function runSession() {
       await store.sync();
       const access = await store.refreshAccess();
       if (!access.active) {
-        if (access.trial?.completed) return openSubscription(store);
+        if (access.trial?.completed) {
+          const recs=store.results.filter(r=>r.meta?.trial_id);
+          await completePersonalSurvey({store,mount,recs});
+          const plan=await summaryScreen(recs,{trial:true});renderHome();if(plan)await openSubscription(store,{plan});return;
+        }
         trial = await store.billing('trial-start');
         if (trial.paid) trial = null;
       }
@@ -745,6 +750,7 @@ async function runSession() {
     recs.push(r.rec);
   }
   if (BILLING.enabled) await store.refreshAccess().catch(() => {});
+  await completePersonalSurvey({store,mount,recs});
   const plan = await summaryScreen(recs, { trial: !!trial });
   renderHome();
   if (plan) await openSubscription(store, { plan });
@@ -765,6 +771,7 @@ function summaryScreen(recs, { trial = false } = {}) {
         <p>${records ? `Рекордов за сегодня: ${records}. Отличный старт дня.` : 'Мозг разогрет, день начат без рилсов. Это уже победа.'}</p>
       </div>
       <div class="summary__streak glass">${gi('flame', 'orange', 'sm')}<span><b>${streak} ${plural(streak, 'день', 'дня', 'дней')} подряд</b><small>Приходите завтра утром, не сбрасывайте серию</small></span></div>
+      <div data-install></div>
       <div class="sum-list glass">${recs.map((r, i) => {
         const e = EX[r.ex];
         const prev = S.lastBefore(store.results, r.ex, r.ts);
@@ -777,7 +784,6 @@ function summaryScreen(recs, { trial = false } = {}) {
       ${ownComparisonMarkup(recs, store.results)}
       <div data-personal-summary></div>
 
-      <div data-install></div>
       ${trial ? offerMarkup({ completed: true }) + '<button class="link" data-r="home">Позже</button>' : `<button class="btn btn--primary btn--lg btn--block btn--shine" data-r="home">На главную ${glyph.arrow}</button>`}`;
     mount(node, 'summary');
     void paintPersonal({ host: node.querySelector('[data-personal-summary]'), store, summary: true, recs });
@@ -792,8 +798,10 @@ function summaryScreen(recs, { trial = false } = {}) {
 function boot() {
   initFx();
   initRipple();
+  initSaleCountdown();
   store.load();
   initAnalytics(store);
+  initReminders(store,{onOpen:()=>{if(screen!=='play')renderHome();else toast('Продолжите текущую тренировку.');}});
   if (store.session) initPersonalization(store);
   // перерисовываем главную, если изменилось содержимое результатов (в т.ч. дата у существующих), а не только их число
   const sig = () => store.results.map((r) => `${r.id}${r.day}${r.score}`).join('|') + JSON.stringify(store.access);

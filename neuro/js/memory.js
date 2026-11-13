@@ -1,8 +1,8 @@
-import { el, esc, sleep } from './util.js?v=1.4.2';
-import { makeHud, startTimer, countdown } from './ui.js?v=1.4.2';
-import { haptic, sfx } from './fx.js?v=1.4.2';
-import { pickWords } from './words.js?v=1.4.2';
-import { glyph } from './icons.js?v=1.4.2';
+import { el, esc, sleep } from './util.js?v=1.5.0';
+import { makeHud, startTimer, countdown } from './ui.js?v=1.5.0';
+import { haptic, sfx } from './fx.js?v=1.5.0';
+import { pickWords } from './words.js?v=1.5.0';
+import { glyph } from './icons.js?v=1.5.0';
 
 export const MEMORY_MS = 60000;
 

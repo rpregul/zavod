@@ -1,6 +1,6 @@
-import { el, sleep } from './util.js?v=1.4.2';
-import { haptic, sfx } from './fx.js?v=1.4.2';
-import { glyph } from './icons.js?v=1.4.2';
+import { el, sleep } from './util.js?v=1.5.0';
+import { haptic, sfx } from './fx.js?v=1.5.0';
+import { glyph } from './icons.js?v=1.5.0';
 
 // Контекст упражнения: корень экрана, настройки, возможность прервать.
 export function makeCtx(root, prefs) {

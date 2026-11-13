@@ -1,6 +1,6 @@
-import { el, shuffle } from './util.js?v=1.4.2';
-import { makeHud, startTimer, countdown } from './ui.js?v=1.4.2';
-import { haptic, sfx, sparkle } from './fx.js?v=1.4.2';
+import { el, shuffle } from './util.js?v=1.5.0';
+import { makeHud, startTimer, countdown } from './ui.js?v=1.5.0';
+import { haptic, sfx, sparkle } from './fx.js?v=1.5.0';
 
 export const SCHULTE_MS = 60000;
 

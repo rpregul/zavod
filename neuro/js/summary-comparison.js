@@ -1,4 +1,4 @@
-import { esc } from './util.js?v=1.4.2';
+import { esc } from './util.js?v=1.5.0';
 
 export const SUMMARY_AVERAGE = 61;
 export function comparisonMarkup(records) {

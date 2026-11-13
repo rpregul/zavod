@@ -1,5 +1,5 @@
 // Сначала сеть, при её отсутствии кэш: после деплоя всегда свежая версия, а без интернета приложение всё равно открывается.
-const CACHE = 'nz-v7-reading-summary';
+const CACHE = 'nz-v8-reminders';
 
 self.addEventListener('install', (e) => { self.skipWaiting(); });
 
@@ -34,3 +34,5 @@ self.addEventListener('fetch', (e) => {
 });
 
 
+self.addEventListener('push',event=>{let data={};try{data=event.data?.json()||{};}catch{}const target=new URL(data.url||'./',self.registration.scope);if(target.origin!==self.location.origin)target.href=self.registration.scope;event.waitUntil(self.registration.showNotification(data.title||'Нейро-зарядка',{body:data.body||'Несколько минут для себя. Начнём зарядку?',icon:'icons/icon-192.png',badge:'icons/icon-192.png',tag:data.tag||'neuro-training',data:{url:target.href,kind:data.kind||'daily'}}));});
+self.addEventListener('notificationclick',event=>{event.notification.close();const url=event.notification.data?.url||self.registration.scope;event.waitUntil((async()=>{const tabs=await self.clients.matchAll({type:'window',includeUncontrolled:true});for(const tab of tabs){if(new URL(tab.url).origin===self.location.origin&&new URL(tab.url).pathname.startsWith(new URL(self.registration.scope).pathname)){tab.postMessage({type:'neuro-reminder-open',kind:event.notification.data?.kind||'daily'});return tab.focus();}}return self.clients.openWindow(url);})());});
