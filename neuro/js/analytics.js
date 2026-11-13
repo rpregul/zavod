@@ -1,5 +1,5 @@
-import { CLOUD } from './config.js?v=1.1.2';
-import { esc } from './util.js?v=1.1.2';
+import { CLOUD } from './config.js?v=1.4.2';
+import { esc } from './util.js?v=1.4.2';
 
 async function rpc(name, data) {
   const response = await fetch(CLOUD.url + '/rest/v1/rpc/' + name, {
@@ -236,3 +236,4 @@ function renderPersonalReport(host,data) {
  const names={sch_f:'Внимание',sch_r:'Переключение',dob:'Поиск и точность',mem:'Память'};
  host.insertAdjacentHTML('beforeend','<hr><h3>Цели аудитории</h3><p>Участников опроса: '+Number(data.profiles)+' · выбрали цель: '+Number(data.goals)+'</p><small>Все участники с начала опроса. Владелец и тесты исключены. Один человек может ответить на несколько вопросов; строки нельзя складывать как число людей.</small>'+(data.answers.length?'<ul>'+data.answers.map(row=>'<li><b>'+esc(names[row.ex]||row.ex)+' · '+esc(row.option===-1?'Пропущено':labels[row.ex]?.[row.option]||'Без ответа')+'</b><br>Ответов: '+Number(row.count)+' · завершили пробную: '+Number(row.completed)+' · реальных покупателей: '+Number(row.buyers)+'</li>').join('')+'</ul>':'<p>Ответов пока нет.</p>'));
 }
+

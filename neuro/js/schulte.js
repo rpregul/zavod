@@ -1,6 +1,6 @@
-import { el, shuffle } from './util.js?v=1.1.1';
-import { makeHud, startTimer, countdown } from './ui.js?v=1.1.1';
-import { haptic, sfx, sparkle } from './fx.js?v=1.1.1';
+import { el, shuffle } from './util.js?v=1.4.2';
+import { makeHud, startTimer, countdown } from './ui.js?v=1.4.2';
+import { haptic, sfx, sparkle } from './fx.js?v=1.4.2';
 
 export const SCHULTE_MS = 60000;
 
@@ -16,7 +16,7 @@ export function runSchulte(ctx, { reverse = false, step = '' } = {}) {
 
     const stage = el('div', 'stage schulte pre');
     stage.innerHTML = `
-      <div class="schulte__hint">Смотри в <b>центр</b>, ищи <span class="schulte__next">${reverse ? 25 : 1}</span></div>
+      <div class="schulte__hint">Смотрите в <b>центр</b>, ищите <span class="schulte__next">${reverse ? 25 : 1}</span></div>
       <div class="schulte__wrap"><div class="schulte__table${reverse ? ' flip' : ''}"></div></div>
       <div class="schulte__foot"><span>круг <b class="s-lap">1</b></span><span>ошибок <b class="s-err">0</b></span></div>`;
     root.appendChild(stage);
@@ -116,4 +116,5 @@ export function runSchulte(ctx, { reverse = false, step = '' } = {}) {
     })();
   });
 }
+
 

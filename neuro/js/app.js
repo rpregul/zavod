@@ -1,21 +1,21 @@
-import { openRoutine, ownComparisonMarkup } from './routine.js?v=1.4.1';
-import { askQuestion, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=1.4.1';
-import { runReading, paintMeasurementStats } from './reading.js?v=1.4.0';
-import { comparisonMarkup } from './summary-comparison.js?v=1.3.0';
-import { initAnalytics, openFunnel, trackScreen, trackExercise } from './analytics.js?v=1.4.0';
-import { store, cloudOn } from './store.js?v=1.4.0';
-import * as S from './stats.js?v=1.1.2';
-import { el, esc, plural, dayStr, fmtLong, fmtShort, weekdayName, sleep, logicalDay } from './util.js?v=1.1.2';
-import { glyph, gi } from './icons.js?v=1.1.2';
-import { initFx, initRipple, confetti, haptic, sfx, countUp, toast } from './fx.js?v=1.1.2';
-import { lineChart, heatmap, ringSvg } from './charts.js?v=1.1.2';
-import { makeCtx, sheet, confirmSheet } from './ui.js?v=1.1.2';
-import { runSchulte } from './schulte.js?v=1.1.2';
-import { runDobble } from './dobble.js?v=1.1.2';
-import { runMemory } from './memory.js?v=1.1.2';
-import { BILLING } from './config.js?v=1.1.2';
-import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.4.1';
-import { recommendations, exerciseReport } from './recommendations.js?v=1.3.0';
+import { openRoutine, ownComparisonMarkup } from './routine.js?v=1.4.2';
+import { askQuestion, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=1.4.2';
+import { runReading, paintMeasurementStats, readingAccess } from './reading.js?v=1.4.2';
+import { comparisonMarkup } from './summary-comparison.js?v=1.4.2';
+import { initAnalytics, openFunnel, trackScreen, trackExercise } from './analytics.js?v=1.4.2';
+import { store, cloudOn } from './store.js?v=1.4.2';
+import * as S from './stats.js?v=1.4.2';
+import { el, esc, plural, dayStr, fmtLong, fmtShort, weekdayName, sleep, logicalDay } from './util.js?v=1.4.2';
+import { glyph, gi } from './icons.js?v=1.4.2';
+import { initFx, initRipple, confetti, haptic, sfx, countUp, toast } from './fx.js?v=1.4.2';
+import { lineChart, heatmap, ringSvg } from './charts.js?v=1.4.2';
+import { makeCtx, sheet, confirmSheet } from './ui.js?v=1.4.2';
+import { runSchulte } from './schulte.js?v=1.4.2';
+import { runDobble } from './dobble.js?v=1.4.2';
+import { runMemory } from './memory.js?v=1.4.2';
+import { BILLING } from './config.js?v=1.4.2';
+import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.4.2';
+import { recommendations, exerciseReport } from './recommendations.js?v=1.4.2';
 
 // ---------------------------------------------------------------- упражнения
 export const EX = {
@@ -24,7 +24,7 @@ export const EX = {
     lead: 'Поиск чисел и зрительное внимание',
     skill: 'Зрительный поиск: находить нужное число среди отвлекающих и удерживать порядок действий.',
     everyday: 'Тот же навык нужен, чтобы искать строку в таблице, пункт в списке или нужную кнопку. Ориентир в игре — находить быстрее, сохраняя точность.',
-    rules: ['Смотри только на подсвеченный центр таблицы', 'Находи числа по порядку: 1, 2, 3 … 25', 'Глаза не двигай. Таблица закончилась? Выдадим новую'],
+    rules: ['Смотрите только на подсвеченный центр таблицы', 'Находите числа по порядку: 1, 2, 3 … 25', 'Глаза не двигайте. Таблица закончилась? Выдадим новую'],
     run: (ctx, o) => runSchulte(ctx, { ...o, reverse: false }),
   },
   sch_r: {
@@ -32,23 +32,23 @@ export const EX = {
     lead: 'Гибкость внимания и обратный счёт',
     skill: 'Поиск непривычных символов и следование обратному порядку: действовать по правилу, а не по привычке.',
     everyday: 'Это полезная практика для задач с необычным форматом или новым порядком действий. Ориентир — уверенно выполнять непривычное задание без пропусков.',
-    rules: ['Таблица перевёрнута, цифры вверх ногами', 'Ищи числа в обратном порядке: 25, 24, 23 … 1', 'Смотри в центр, не двигай глазами'],
+    rules: ['Таблица перевёрнута, цифры вверх ногами', 'Ищите числа в обратном порядке: 25, 24, 23 … 1', 'Смотрите в центр, не двигайте глазами'],
     run: (ctx, o) => runSchulte(ctx, { ...o, reverse: true }),
   },
   dob: {
-    id: 'dob', title: 'Совпадения', sub: 'найди пару', icon: 'cards', color: 'violet', unit: 'пар', c1: '#8b5cf6', c2: '#4f7cff',
+    id: 'dob', title: 'Совпадения', sub: 'найдите пару', icon: 'cards', color: 'violet', unit: 'пар', c1: '#8b5cf6', c2: '#4f7cff',
     lead: 'Скорость зрительного поиска и переключения',
     skill: 'Сравнение двух наборов, поиск общего символа и отсев лишних деталей.',
     everyday: 'Такой поиск нужен при сверке документов, изображений и товаров. Ориентир — быстрее замечать совпадения, не жертвуя точностью.',
-    rules: ['На двух картах всегда есть ровно один одинаковый рисунок', 'Найди его и нажми. Общая карта ляжет на твою, откроется следующая', 'За минуту набери как можно больше пар. Ошибка = короткая пауза'],
+    rules: ['На двух картах всегда есть ровно один одинаковый рисунок', 'Найдите его и нажмите. Общая карта ляжет на вашу, откроется следующая', 'За минуту наберите как можно больше пар. Ошибка = короткая пауза'],
     run: (ctx, o) => runDobble(ctx, o),
   },
   mem: {
     id: 'mem', title: 'Запоминание слов', sub: '30 слов, цепочка', icon: 'words', color: 'teal', unit: 'слов из 30', c1: '#22c5a5', c2: '#4f7cff',
     lead: 'Рабочая память и точность',
     skill: 'Запоминание и воспроизведение слов с помощью цепочки образов и ассоциаций.',
-    everyday: 'Этот приём можно применять к списку покупок, тезисам выступления или новым терминам. Ориентир — вспомнить больше нужного без подсказки; переноси сам приём в повседневные задачи.',
-    rules: ['Минуту смотри на 3 столбика по 10 слов', 'В голове строй цепочку образов: слово за словом', 'Потом минуту записывай слова в точности, с окончаниями'],
+    everyday: 'Этот приём можно применять к списку покупок, тезисам выступления или новым терминам. Ориентир — вспомнить больше нужного без подсказки; переносите сам приём в повседневные задачи.',
+    rules: ['Минуту смотрите на 3 столбика по 10 слов', 'В голове стройте цепочку образов: слово за словом', 'Потом минуту записывайте слова в точности, с окончаниями'],
     run: (ctx, o) => runMemory(ctx, o),
   },
 };
@@ -142,7 +142,7 @@ function renderLogin({ restore = false } = {}) {
           <p>Утро без рилсов. Четыре упражнения на 5 минут, и день начат осознанно.</p>
         </div>
         <form class="login__card glass" autocomplete="off">
-          <label for="nm">${BILLING.enabled ? 'Твой уникальный логин' : 'Как тебя зовут?'}</label>
+          <label for="nm">${BILLING.enabled ? 'Ваш уникальный логин' : 'Как к вам обращаться?'}</label>
           <input id="nm" class="input" type="text" maxlength="30" placeholder="${BILLING.enabled ? 'Например, Рома_123' : 'Например, Рома'}" autocomplete="username" autocapitalize="none" enterkeyhint="next" value="${esc(name)}">
           <div class="login__err" role="alert">${msg}</div>
           <button class="btn btn--primary btn--lg btn--block" type="submit">Дальше ${glyph.arrow}</button>
@@ -152,14 +152,14 @@ function renderLogin({ restore = false } = {}) {
       node.querySelector('form').addEventListener('submit', (e) => {
         e.preventDefault();
         const v = input.value.trim();
-        if (!v) { msg = 'Напиши имя'; draw(); return; }
+        if (!v) { msg = 'Напишите имя'; draw(); return; }
         name = v; pin = ''; first = ''; msg = ''; step = 'pin'; draw();
       });
       setTimeout(() => input.focus({ preventScroll: true }), 350);
       return;
     }
-    const title = step === 'pin' ? `Привет, ${esc(name)}!` : 'Профиля с таким именем ещё нет';
-    const sub = step === 'pin' ? 'Введи свой PIN из 4 цифр' : `Повтори PIN, и мы создадим профиль «${esc(name)}»`;
+    const title = step === 'pin' ? `Здравствуйте, ${esc(name)}!` : 'Профиля с таким именем ещё нет';
+    const sub = step === 'pin' ? 'Введите свой PIN из 4 цифр' : `Повторите PIN, и мы создадим профиль «${esc(name)}»`;
     node.innerHTML = `
       <div class="login__hero login__hero--sm">
         <div class="login__logo">${gi('user', 'violet', 'xl')}</div>
@@ -170,7 +170,7 @@ function renderLogin({ restore = false } = {}) {
         ${dots()}
         <div class="login__err" role="alert">${msg}</div>
         ${keypad()}
-        <button class="link" data-act="other">${step === 'pin' ? 'Это не я, другое имя' : 'Ошибся в имени'}</button>
+        <button class="link" data-act="other">${step === 'pin' ? 'Это не я, другое имя' : 'Исправить имя'}</button>
       </div>`;
   }
 
@@ -181,12 +181,12 @@ function renderLogin({ restore = false } = {}) {
         const r = await store.login(name, pin);
         if (r.status === 'ok') return done();
         if (r.status === 'no_user' && !restore) { first = pin; pin = ''; step = 'confirm'; msg = ''; return draw(); }
-        fail({ bad_pin: 'Неверный PIN. Попробуй ещё раз', locked: 'Слишком много попыток. Подожди 10 минут', offline: 'Нет связи, а этого имени ещё нет на этом телефоне', invalid: 'Что-то не так с именем' }[r.status] || 'Не получилось войти');
+        fail({ bad_pin: 'Неверный PIN. Попробуйте ещё раз', locked: 'Слишком много попыток. Подождите 10 минут', offline: 'Нет связи, а этого имени ещё нет на этом телефоне', invalid: 'Что-то не так с именем' }[r.status] || 'Не получилось войти');
       } else {
-        if (pin !== first) { first = ''; pin = ''; step = 'pin'; msg = 'PIN не совпал. Введи его заново'; return draw(); }
+        if (pin !== first) { first = ''; pin = ''; step = 'pin'; msg = 'PIN не совпал. Введите его заново'; return draw(); }
         const r = await store.login(name, pin, { create: true });
         if (r.status === 'created' || r.status === 'ok') return done(true);
-        fail(r.status === 'offline' ? 'Нет связи с сервером. Попробуй позже' : 'Не получилось создать профиль');
+        fail(r.status === 'offline' ? 'Нет связи с сервером. Попробуйте позже' : 'Не получилось создать профиль');
       }
     } finally { busy = false; }
   }
@@ -294,20 +294,15 @@ function renderHome({ quiet = false } = {}) {
       <div class="tiles">${tileHtml}</div>
     </section>
 
-    <section class="sec reading-category" style="--i:3">
-      <h3 class="sec__t">Замеры</h3>
+    <section class="sec reading-category glass reading-feature" style="--i:3">
+      <img class="reading-feature__art" src="assets/reading-character.webp" width="960" height="640" alt="" loading="lazy" decoding="async">
+      <div class="reading-feature__body"><h3 class="sec__t">Замеры</h3>
+      <p class="reading-feature__description">Хотите развить скорочтение? Сделайте свои первые замеры, а затем каждый день проходите нашу нейроразминку хотя бы 5 минут, чтобы подготовить мозг к более высокой скорости чтения.</p>
+      <p class="reading-free-note">${premium ? 'Замеры доступны по вашей подписке.' : 'Первый замер каждого способа — бесплатно. Без регистрации.'}</p>
       <div class="measurement-tiles">
-        <button class="tile glass reading-entry" data-act="reading_aloud">
-          ${gi('sound', 'blue')}
-          <span class="tile__txt"><b>Чтение вслух</b><small>Скорость и понимание текста</small></span>
-          <span class="tile__new">${premium ? 'Открыть' : 'По подписке'}</span>
-        </button>
-        <button class="tile glass reading-entry" data-act="reading_silent">
-          ${gi('eye', 'violet')}
-          <span class="tile__txt"><b>Чтение про себя</b><small>Скорость и понимание текста</small></span>
-          <span class="tile__new">${premium ? 'Открыть' : 'По подписке'}</span>
-        </button>
-      </div>
+        <button class="tile glass reading-entry" data-act="reading_aloud">${gi('sound', 'blue')}<span class="tile__txt"><b>Чтение вслух</b><small>Скорость и понимание текста</small></span><span class="tile__new">${premium ? 'Открыть' : '1 раз бесплатно'}</span></button>
+        <button class="tile glass reading-entry" data-act="reading_silent">${gi('eye', 'violet')}<span class="tile__txt"><b>Чтение про себя</b><small>Скорость и понимание текста</small></span><span class="tile__new">${premium ? 'Открыть' : '1 раз бесплатно'}</span></button>
+      </div></div>
     </section>
     <section class="sec" data-measurement-stats ${premium ? '' : 'hidden'}></section>
     </div>
@@ -344,8 +339,8 @@ function renderHome({ quiet = false } = {}) {
     node.querySelectorAll('.home__col')[1].innerHTML = '<section class="sec"><div class="progress glass"><h3>История тренировок</h3><p data-history-loading>Загружаем сохранённые результаты вашего профиля…</p></div></section>';
   } else if (!premium) {
     const completed = store.access?.trial?.completed;
-    node.querySelector('.hero__txt h2').textContent = completed ? 'Продолжим тренировки?' : store.access?.trial?.next_index > 0 ? 'Продолжите первую тренировку' : 'Первая тренировка бесплатно';
-    node.querySelector('.hero__txt p').textContent = completed ? 'Твоя точка отсчёта сохранена' : 'Все четыре упражнения, без оплаты';
+    node.querySelector('.hero__txt h2').textContent = completed ? 'Продолжим тренировки?' : store.access?.trial?.next_index > 0 ? 'Продолжите первую тренировку' : 'Начните первую тренировку';
+    node.querySelector('.hero__txt p').textContent = completed ? 'Ваша точка отсчёта сохранена' : 'Выработайте новую полезную привычку развития своего мозга';
     node.querySelector('.hero__cta span').textContent = completed ? 'Выбрать подписку' : 'Начать тренировку';
     node.querySelector('.chips-row').hidden = true;
     node.querySelectorAll('.tiles .tile__best,.tiles .tile__badge,.tiles .tile__new').forEach(x => { x.textContent = 'В первой тренировке'; });
@@ -363,7 +358,7 @@ function renderHome({ quiet = false } = {}) {
     paintHistory(node);
     const tips = recommendations(res);
     const section = el('section', 'sec');
-    section.innerHTML = `<h3 class="sec__t">Твои подсказки</h3>${tips.map(tip => `<div class="progress glass coaching-card"><h4>${esc(tip.title)}</h4><p>${esc(tip.text)}</p></div>`).join('')}`;
+    section.innerHTML = `<h3 class="sec__t">Ваши подсказки</h3>${tips.map(tip => `<div class="progress glass coaching-card"><h4>${esc(tip.title)}</h4><p>${esc(tip.text)}</p></div>`).join('')}`;
     node.querySelectorAll('.home__col')[1].prepend(section);
   }
   node.querySelectorAll('.ring__arc').forEach((a) => {
@@ -376,6 +371,11 @@ function renderHome({ quiet = false } = {}) {
   void paintPersonal({ host: personalHost, store, onEditAnswers: async () => { for (const ex of ORDER) await askQuestion({ store, mount, ex, force: true }); renderHome(); } });
   paintInstallHint(node);
   if (premium) paintMeasurementStats(node.querySelector('[data-measurement-stats]'),store);
+  void readingAccess(store).then(access => {
+    if (!node.isConnected) return;
+    for (const mode of ['aloud','silent']) node.querySelector('[data-act=reading_'+mode+'] .tile__new').textContent = access.active ? 'Открыть' : access.free_available?.[mode] ? '1 раз бесплатно' : 'По подписке';
+    if (!premium && (!access.free_available?.aloud || !access.free_available?.silent)) { const host = node.querySelector('[data-measurement-stats]'); host.hidden = false; void paintMeasurementStats(host,store); }
+  }).catch(() => {});
   paintSync();
 
   node.addEventListener('click', async (e) => {
@@ -390,9 +390,13 @@ function renderHome({ quiet = false } = {}) {
       return paintChart(node);
     }
     if (['reading_aloud','reading_silent'].includes(t.dataset.act)) {
-      if (!await requireSubscription(store)) return;
-      if (/^g_[a-f0-9]{32}$/.test(store.session.key)) return paidProfile();
-      return runReading({ store, mount, onHome: renderHome, mode: t.dataset.act === 'reading_aloud' ? 'aloud' : 'silent' });
+      const mode = t.dataset.act === 'reading_aloud' ? 'aloud' : 'silent';
+      try {
+        const access = await readingAccess(store);
+        if (!access.active && !access.free_available?.[mode]) return openSubscription(store);
+        if (access.active && /^g_[a-f0-9]{32}$/.test(store.session.key)) return paidProfile();
+        return runReading({ store, mount, onHome: renderHome, mode });
+      } catch { toast('Не удалось проверить доступ к замеру. Попробуйте ещё раз.'); return; }
     }
     if (t.dataset.act === 'sync-retry') return store.sync();
     if (t.dataset.act === 'sync-login') return renderLogin({ restore: true });
@@ -414,7 +418,7 @@ function paintChart(node) {
     const o = S.overall(res);
     if (!o) {
       kpis.innerHTML = '';
-      node.querySelector('[data-chart-host]').innerHTML = `<div class="empty"><div class="empty__art">🧩</div><b>Общий итог появится после первой полной зарядки</b><span>Сделай все 4 упражнения в один день. Этот день станет стартом: 100%.</span></div>`;
+      node.querySelector('[data-chart-host]').innerHTML = `<div class="empty"><div class="empty__art">🧩</div><b>Общий итог появится после первой полной зарядки</b><span>Сделайте все 4 упражнения в один день. Этот день станет стартом: 100%.</span></div>`;
       bd.innerHTML = '';
       return;
     }
@@ -632,7 +636,7 @@ function resultScreen(id, rec, res, { guided, idx, isLast, trial = false, sessio
     const record = prevBest !== null && rec.score > prevBest;
     const first = prev === null;
     let chip;
-    if (first) chip = '<span class="delta delta--first">Первая попытка: твоя точка отсчёта</span>';
+    if (first) chip = '<span class="delta delta--first">Первая попытка: ваша точка отсчёта</span>';
     else if (record) chip = `<span class="delta delta--rec">🏆 Новый рекорд! ${sign(rec.score - prevBest)}</span>`;
     else {
       const d = rec.score - prev.score;
@@ -824,6 +828,7 @@ function boot() {
 }
 
 boot();
+
 
 
 

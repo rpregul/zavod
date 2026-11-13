@@ -1,7 +1,7 @@
-import { trackAction, flushAnalytics } from './analytics.js?v=1.4.0';
-import { BILLING } from './config.js?v=1.1.2';
-import { sheet, confirmSheet } from './ui.js?v=1.1.2';
-import { esc } from './util.js?v=1.1.2';
+import { trackAction, flushAnalytics } from './analytics.js?v=1.4.2';
+import { BILLING } from './config.js?v=1.4.2';
+import { sheet, confirmSheet } from './ui.js?v=1.4.2';
+import { esc } from './util.js?v=1.4.2';
 
 export const saleActive = (now = Date.now()) => now >= Date.parse('2026-11-13T00:00:00+03:00') && now < Date.parse('2026-11-14T00:00:00+03:00');
 export const money = value => Number(value).toLocaleString('ru-RU', { minimumFractionDigits: Number.isInteger(value) ? 0 : 2, maximumFractionDigits: 2 });
@@ -10,12 +10,12 @@ export const PLANS = {
   family: { title: 'Для семьи', oldPrice: 999, get price() { return saleActive() ? 499.5 : 999; }, detail: 'До 4 человек · отдельный прогресс каждого' },
 };
 const date = value => new Date(value).toLocaleDateString('ru-RU');
-const message = error => ({ consent_required: 'Обновите страницу, чтобы увидеть актуальные условия оплаты.', unauthorized: 'Войди в профиль заново.', invalid_email: 'Проверь адрес почты.',
-  payments_unavailable: 'Оплата пока не подключена.', already_active: 'У тебя уже есть действующая подписка.',
+const message = error => ({ consent_required: 'Обновите страницу, чтобы увидеть актуальные условия оплаты.', unauthorized: 'Войдите в профиль заново.', invalid_email: 'Проверьте адрес почты.',
+  payments_unavailable: 'Оплата пока не подключена.', already_active: 'У вас уже есть действующая подписка.',
   family_full: 'Все четыре места уже заняты или зарезервированы приглашениями.',
   invalid_invite: 'Приглашение истекло, уже использовано или отозвано.',
-  checkout_in_progress: 'Есть незавершённая оплата другого тарифа. Напиши в поддержку, если хочешь изменить выбор.' }[error.message]
-  || 'Не удалось связаться с сервером. Попробуй ещё раз.');
+  checkout_in_progress: 'Есть незавершённая оплата другого тарифа. Напишите в поддержку, если хотите изменить выбор.' }[error.message]
+  || 'Не удалось связаться с сервером. Попробуйте ещё раз.');
 
 export function offerMarkup({ completed = false } = {}) {
   return `<div class="subscription-offer">
@@ -48,8 +48,8 @@ export async function openSubscription(store, { plan: selected = null } = {}) {
         return;
       }
       if (sub.active) {
-        s.node.innerHTML = `<h3 class="sheet__title">${sub.plan === 'family' ? 'Семейная подписка' : 'Твоя подписка'}</h3>
-          <p class="sheet__text"><b>Доступ до ${date(sub.paid_until)}</b><br>${sub.family_member ? 'Твой доступ оплачен владельцем семейной подписки.'
+        s.node.innerHTML = `<h3 class="sheet__title">${sub.plan === 'family' ? 'Семейная подписка' : 'Ваша подписка'}</h3>
+          <p class="sheet__text"><b>Доступ до ${date(sub.paid_until)}</b><br>${sub.family_member ? 'Ваш доступ оплачен владельцем семейной подписки.'
             : sub.auto_renew ? `Следующее продление — ${sub.price} ₽ за месяц после окончания оплаченного периода.` : 'Автопродление отключено. Новых списаний не будет.'}</p>
           ${!sub.family_member && sub.auto_renew ? '<button class="btn btn--glass btn--block" data-cancel>Отключить автопродление</button>' : ''}
           ${sub.plan === 'family' && !sub.family_member ? '<div data-family></div>' : ''}
@@ -62,7 +62,7 @@ export async function openSubscription(store, { plan: selected = null } = {}) {
           try { await store.billing('cancel'); await refresh(); } catch (error) { errorText(message(error)); event.target.disabled = false; }
         });
         s.node.querySelector('[data-leave]')?.addEventListener('click', async () => {
-          if (!await confirmSheet({ title: 'Выйти из семьи?', text: 'Семейный доступ к тренировкам прекратится. Твои результаты сохранятся.', ok: 'Выйти' })) return;
+          if (!await confirmSheet({ title: 'Выйти из семьи?', text: 'Семейный доступ к тренировкам прекратится. Ваши результаты сохранятся.', ok: 'Выйти' })) return;
           try { await store.billing('family-leave'); selected = null; await refresh(); } catch (error) { errorText(message(error)); }
         });
         if (s.node.querySelector('[data-family]')) await drawFamily();
@@ -75,7 +75,7 @@ export async function openSubscription(store, { plan: selected = null } = {}) {
         <p class="subscription-price">${chosen.sale ? `<s>${money(chosen.oldPrice)} ₽</s> <span class="bf-checkout-badge">−50%</span><br>` : ''}<b>${money(chosen.price)} ₽</b> / месяц</p><p class="sheet__text">${chosen.detail}</p>
         ${sub.ready ? `<form data-checkout><label class="subscription-consent"><input type="checkbox" required name="consent"><span>Принимаю <a href="offer.html" target="_blank" rel="noopener">условия</a> и соглашаюсь на разовое списание ${money(chosen.price)} ₽ за один месяц доступа. Автоматических списаний не будет. Ознакомлен с <a href="privacy.html" target="_blank" rel="noopener">политикой обработки данных</a>.</span></label>
           <button class="btn btn--primary btn--lg btn--block" type="submit">Оплатить ${money(chosen.price)} ₽</button>
-          <p class="login__note">Оплата покрывает один месяц доступа. Чтобы продолжить пользоваться тренажёром, позже оформи новую оплату.</p></form>` : '<p class="sheet__text">Оплата готовится к запуску.</p>'}
+          <p class="login__note">Оплата покрывает один месяц доступа. Чтобы продолжить пользоваться тренажёром, позже оформите новую оплату.</p></form>` : '<p class="sheet__text">Оплата готовится к запуску.</p>'}
         <p class="login__err" role="alert" data-error></p><button class="link" data-close>Закрыть</button>`;
       trackAction(sub.ready ? 'checkout_form_' + selected : 'payments_unavailable');
       bindClose();
@@ -101,7 +101,7 @@ export async function openSubscription(store, { plan: selected = null } = {}) {
   async function drawFamily() {
     const info = await store.billing('family-info');
     const host = s.node.querySelector('[data-family]');
-    host.innerHTML = `<h4>Участники · ${info.members.length + 1} из 4</h4><p class="login__note">Ты — владелец. Каждый участник входит со своим логином и PIN; результаты хранятся отдельно.</p>
+    host.innerHTML = `<h4>Участники · ${info.members.length + 1} из 4</h4><p class="login__note">Вы — владелец. Каждый участник входит со своим логином и PIN; результаты хранятся отдельно.</p>
       ${info.members.map(member => `<div class="family-member"><span>${esc(member.name)}</span><button class="link" data-remove="${esc(member.key)}">Убрать</button></div>`).join('')}
       <button class="btn btn--glass btn--block" data-invite>Пригласить участника</button>
       <p class="login__note">Приглашение действует 7 дней и занимает одно место до использования или отзыва.</p>
@@ -110,7 +110,7 @@ export async function openSubscription(store, { plan: selected = null } = {}) {
       event.target.disabled = true;
       try { const invite = await store.billing('family-invite');
         const box = host.querySelector('[data-invite-link]');
-        box.innerHTML = '<label>Скопируй ссылку и отправь участнику</label><input class="input" readonly aria-label="Ссылка приглашения">';
+        box.innerHTML = '<label>Скопируйте ссылку и отправьте участнику</label><input class="input" readonly aria-label="Ссылка приглашения">';
         box.querySelector('input').value = invite.link;
         box.querySelector('input').select();
       } catch (error) { errorText(message(error)); }
@@ -158,7 +158,7 @@ export async function acceptFamilyInvite(store) {
   try {
     await store.billing('family-join', { invite }); sessionStorage.removeItem('nz.familyInvite');
     await store.refreshAccess();
-    const result = sheet('<h3 class="sheet__title">Добро пожаловать в семью!</h3><p class="sheet__text">Твой профиль подключён. Тренировки и твой личный прогресс доступны по семейной подписке.</p><button class="btn btn--primary btn--block">Продолжить</button>');
+    const result = sheet('<h3 class="sheet__title">Добро пожаловать в семью!</h3><p class="sheet__text">Ваш профиль подключён. Тренировки и ваш личный прогресс доступны по семейной подписке.</p><button class="btn btn--primary btn--block">Продолжить</button>');
     result.node.querySelector('button').onclick = result.close;
   } catch (error) {
     sessionStorage.removeItem('nz.familyInvite');
@@ -166,6 +166,7 @@ export async function acceptFamilyInvite(store) {
     result.node.querySelector('button').onclick = result.close;
   }
 }
+
 
 
 

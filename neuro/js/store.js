@@ -1,6 +1,6 @@
-import { CLOUD, BILLING } from './config.js?v=1.1.2';
-import { billingRequest } from './billing-api.js?v=1.1.2';
-import { dayStr, uid } from './util.js?v=1.1.2';
+import { CLOUD, BILLING } from './config.js?v=1.4.2';
+import { billingRequest } from './billing-api.js?v=1.4.2';
+import { dayStr, uid } from './util.js?v=1.4.2';
 
 const LS = {
   get(k, d = null) {
@@ -300,5 +300,6 @@ export const store = {
     return JSON.stringify({ name: this.session?.name, exported: new Date().toISOString(), results: this.results.map(({ s, ...r }) => r) }, null, 2);
   },
 };
+
 
 

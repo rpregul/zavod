@@ -1,5 +1,5 @@
-import { esc } from './util.js?v=1.1.2';
-import { QUESTIONS, selectedExercises, saveExercises } from './personalization.js?v=1.4.1';
+import { esc } from './util.js?v=1.4.2';
+import { QUESTIONS, selectedExercises, saveExercises } from './personalization.js?v=1.4.2';
 const ORDER=['sch_f','sch_r','dob','mem'];
 export function openRoutine({store,mount,onHome}){
  const root=document.createElement('section');root.className='routine-page';const selected=new Set(selectedExercises(store));
@@ -16,3 +16,4 @@ export function ownComparisonMarkup(recs,results){
  const pct=baseline>0?(current/baseline-1)*100:null;const value=pct===null?'':(pct>0?'+':pct<0?'−':'')+Math.abs(pct).toLocaleString('ru-RU',{maximumFractionDigits:1})+'%';
  return '<section class="summary-comparison glass"><h3>Сравнение с вашим стартом</h3><p>'+(pct===null?'Старт был нулевым: изменение — '+(current-baseline)+' баллов.':value+' к первоначальному результату')+'</p><p>Старт: <b>'+baseline+'</b> · Сейчас: <b>'+current+'</b> баллов</p><small>Сравниваются первые сохранённые попытки и эта тренировка по одинаковым '+ids.length+' упражнениям. Это динамика результатов игр.</small></section>';
 }
+

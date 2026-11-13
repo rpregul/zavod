@@ -1,4 +1,4 @@
-import { esc } from './util.js?v=1.1.2';
+import { esc } from './util.js?v=1.4.2';
 
 export const SUMMARY_AVERAGE = 61;
 export function comparisonMarkup(records) {
@@ -18,3 +18,4 @@ export function comparisonMarkup(records) {
     </div><small>Сумма баллов четырёх упражнений. Ориентир для сравнения — 61.</small>
   </section>`;
 }
+

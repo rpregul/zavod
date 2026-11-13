@@ -1,4 +1,4 @@
-import { addDays, dayStr, fmtShort, logicalNow, parseDay } from './util.js?v=1.1.1';
+import { addDays, dayStr, fmtShort, logicalNow, parseDay } from './util.js?v=1.4.2';
 
 let gid = 0;
 const NS = 'http://www.w3.org/2000/svg';
@@ -8,7 +8,7 @@ const NS = 'http://www.w3.org/2000/svg';
 export function lineChart(host, points, { color = '#ff7a45', color2 = '#ff4fa0', unit = '', lines = [] } = {}) {
   host.innerHTML = '';
   if (!points.length) {
-    host.innerHTML = `<div class="empty"><div class="empty__art">📈</div><b>Пока нет данных</b><span>Сделай первую зарядку: график появится здесь</span></div>`;
+    host.innerHTML = `<div class="empty"><div class="empty__art">📈</div><b>Пока нет данных</b><span>Сделайте первую зарядку: график появится здесь</span></div>`;
     return () => {};
   }
   const id = `c${++gid}`;
@@ -139,4 +139,5 @@ export function ringSvg(frac, { size = 96, stroke = 10, id = `r${++gid}`, c1 = '
 }
 
 export { NS };
+
 

@@ -1,7 +1,8 @@
-import { CLOUD } from './config.js?v=1.1.2';
-import { esc, plural } from './util.js?v=1.1.2';
-import { READING_TEXTS, randomReadingText } from './reading-texts.js?v=1.3.3';
-import { trackAction } from './analytics.js?v=1.4.0';
+import { openSubscription } from './subscription.js?v=1.4.2';
+import { CLOUD } from './config.js?v=1.4.2';
+import { esc, plural } from './util.js?v=1.4.2';
+import { READING_TEXTS, randomReadingText } from './reading-texts.js?v=1.4.2';
+import { trackAction } from './analytics.js?v=1.4.2';
 
 async function readingRequest(store, action, row = null) {
   const response = await fetch(CLOUD.url + '/rest/v1/rpc/nz_reading', {
@@ -9,10 +10,11 @@ async function readingRequest(store, action, row = null) {
     body: JSON.stringify({ p_token: store.session.token, p_action: action, p_row: row }),
     signal: AbortSignal.timeout(12000), cache: 'no-store',
   });
-  if (!response.ok) throw new Error('reading_unavailable');
+  if (!response.ok) { let detail; try { detail = await response.json(); } catch {} const error = new Error(detail?.message || detail?.error || 'reading_unavailable'); throw error; }
   return response.json();
 }
 
+export const readingAccess = store => readingRequest(store, 'status');
 export async function runReading({ store, mount, onHome, mode }) {
   const root = document.createElement('div');
   root.className = 'reading';
@@ -23,6 +25,11 @@ export async function runReading({ store, mount, onHome, mode }) {
   const pendingKey = 'nz.reading.pending.' + store.session.key + '.' + mode;
   const legacyPendingKey = 'nz.reading.pending.' + store.session.key;
   let history = [];
+  let access = { active: false, free_available: {} };
+  function locked() {
+    paint('<section class="reading-intro glass"><h1>'+modeTitle+'</h1><p>Ваш бесплатный замер уже сохранён. История остаётся доступной, следующие замеры — по подписке.</p><button class="btn btn--primary btn--block" data-reading-subscribe>Посмотреть подписку</button></section>'+historyMarkup());
+    root.querySelector('[data-reading-subscribe]').onclick = async () => { await openSubscription(store); onHome(); };
+  }
   let passage;
   let stage = 'intro';
   let elapsed = 0;
@@ -54,9 +61,11 @@ export async function runReading({ store, mount, onHome, mode }) {
     return `<section class="reading-history"><h3>Ваши замеры ${modeShort}</h3><div class="reading-history-table"><table><thead><tr><th>Дата</th><th>Слов/мин</th><th>Понимание</th></tr></thead><tbody>${history.slice(0,7).map(row => `<tr><td>${new Date(row.created_at).toLocaleDateString('ru-RU', {timeZone:'Europe/Moscow',day:'numeric',month:'short'})}<small>${measurementTime(row.created_at)}</small></td><td>${row.wpm}</td><td>${row.correct} из ${row.questions}</td></tr>`).join('')}</tbody></table></div></section>`;
   }
   function intro() {
-    stage = 'intro';
     const saved = pending();
-    paint(`<section class="reading-intro glass"><h1>${modeTitle}</h1><p>Прочитайте текст ${mode === 'aloud' ? 'вслух' : 'про себя'} в привычном темпе, затем ответьте на вопросы. Получите скорость в словах в минуту и отдельный результат понимания.</p><ol><li>Выберите уровень и нажмите «Начать чтение».</li><li>Прочитайте весь текст и нажмите «Я прочитал(а)».</li><li>Ответьте на вопросы по содержанию.</li></ol><label class="reading-select">Уровень<select data-reading-level><option value="1">Уровень 1 · 3 вопроса</option><option value="2">Уровень 2 · 4 вопроса</option></select></label><p class="reading-note">Текст выбирается случайно. При следующем замере того же уровня подряд будет другой текст. При уходе из вкладки таймер ставится на паузу.</p><button class="btn btn--primary btn--block" data-reading-start>Начать чтение</button>${saved ? '<p class="reading-note">Есть несохранённый замер' + (saved.mode ? '.' : ' прежней версии.') + '</p><button class="btn btn--glass btn--block" data-reading-restore>Сохранить предыдущий замер</button>' : ''}</section>${historyMarkup()}`);
+    if (!access.active && !access.free_available?.[mode] && !saved) return locked();
+    const canStart = access.active || access.free_available?.[mode];
+    stage = 'intro';
+    paint(`<section class="reading-intro glass"><h1>${modeTitle}</h1><p>Прочитайте текст ${mode === 'aloud' ? 'вслух' : 'про себя'} в привычном темпе, затем ответьте на вопросы. Получите скорость в словах в минуту и отдельный результат понимания.</p><ol><li>Выберите уровень и нажмите «Начать чтение».</li><li>Прочитайте весь текст и нажмите «Я прочитал(а)».</li><li>Ответьте на вопросы по содержанию.</li></ol><label class="reading-select">Уровень<select data-reading-level><option value="1">Уровень 1 · 3 вопроса</option><option value="2">Уровень 2 · 4 вопроса</option></select></label><p class="reading-note">Текст выбирается случайно. При следующем замере того же уровня подряд будет другой текст. При уходе из вкладки таймер ставится на паузу.</p><button class="btn btn--primary btn--block" data-reading-start ${canStart ? '' : 'disabled'}>${canStart ? 'Начать чтение' : 'Бесплатный замер использован'}</button>${saved ? '<p class="reading-note">Есть несохранённый замер' + (saved.mode ? '.' : ' прежней версии.') + '</p><button class="btn btn--glass btn--block" data-reading-restore>Сохранить предыдущий замер</button>' : ''}</section>${historyMarkup()}`);
     root.querySelector('[data-reading-start]').onclick = () => {
       const level = root.querySelector('[data-reading-level]').value;
       const lastKey = 'nz.reading.last.' + store.session.key + '.' + level;
@@ -125,19 +134,22 @@ export async function runReading({ store, mount, onHome, mode }) {
       const advice = result.correct === result.questions
         ? 'Вы ответили на все вопросы. В следующий раз попробуйте другой текст и сравните скорость при сохранении понимания.'
         : 'Попробуйте чуть более спокойный темп: после каждого абзаца коротко сформулируйте его основную мысль.';
-      paint(`<section class="reading-result glass"><h1>Ваш результат</h1><p class="reading-note">${result.mode ? (result.mode === 'aloud' ? 'ЧтВ · Чтение вслух' : 'ЧтП · Чтение про себя') : 'Замер прежней версии · режим не указан'}</p><div class="reading-score"><b>${result.wpm}</b><span>слов в минуту</span></div><p class="reading-comprehension">Понимание текста — <b>${result.correct} из ${result.questions}</b></p><p>${advice}</p><small>${result.words} слов за ${(result.elapsed_ms/1000).toFixed(1)} с. Скорость = число слов × 60 / время чтения.</small><button class="btn btn--primary btn--block" data-reading-again>Другой замер</button></section>${historyMarkup()}`);
-      root.querySelector('[data-reading-again]').onclick = intro;
-    } catch {
+      paint(`<section class="reading-result glass"><h1>Ваш результат</h1><p class="reading-note">${result.mode ? (result.mode === 'aloud' ? 'ЧтВ · Чтение вслух' : 'ЧтП · Чтение про себя') : 'Замер прежней версии · режим не указан'}</p><div class="reading-score"><b>${result.wpm}</b><span>слов в минуту</span></div><p class="reading-comprehension">Понимание текста — <b>${result.correct} из ${result.questions}</b></p><p>${advice}</p><small>${result.words} слов за ${(result.elapsed_ms/1000).toFixed(1)} с. Скорость = число слов × 60 / время чтения.</small><button class="btn btn--primary btn--block" data-reading-again>${access.active ? 'Другой замер' : 'Продолжить с подпиской'}</button></section>${historyMarkup()}`);
+      if (!access.active) access.free_available[mode] = false;
+      void readingAccess(store).then(value => { access = value; }).catch(() => {});
+      root.querySelector('[data-reading-again]')?.addEventListener('click', async () => { if (access.active) intro(); else { await openSubscription(store); onHome(); } });
+    } catch (error) {
       if (!root.isConnected) return;
-      paint('<section class="reading-intro glass"><h2>Не удалось сохранить замер</h2><p>Проверьте соединение и действующую подписку. Результат можно отправить повторно.</p><button class="btn btn--primary btn--block" data-reading-retry>Повторить сохранение</button></section>');
+      if (error.message.includes('subscription_required')) { access.free_available[mode] = false; return locked(); }
+      paint('<section class="reading-intro glass"><h2>Не удалось сохранить замер</h2><p>Проверьте соединение. Ваш результат сохранён на устройстве. Результат можно отправить повторно.</p><button class="btn btn--primary btn--block" data-reading-retry>Повторить сохранение</button></section>');
       root.querySelector('[data-reading-retry]').onclick = () => save(row);
     }
   }
   paint('<p role="status">Загружаем ваши замеры…</p>');
-  try { history = await rpc('history', {mode}); if (root.isConnected) intro(); }
+  try { [history, access] = await Promise.all([rpc('history', {mode}), readingAccess(store)]); if (root.isConnected) intro(); }
   catch {
     if (!root.isConnected) return;
-    paint('<section class="reading-intro glass"><h1>Замер скорости чтения</h1><p>Не удалось загрузить замеры. Проверьте соединение и подписку, затем откройте этот раздел ещё раз.</p></section>');
+    paint('<section class="reading-intro glass"><h1>Замер скорости чтения</h1><p>Не удалось загрузить замеры. Проверьте соединение, затем откройте этот раздел ещё раз.</p></section>');
   }
 }
 
@@ -228,3 +240,4 @@ export async function paintMeasurementStats(host, store) {
     host.querySelector('[data-measure-retry]').onclick = () => paintMeasurementStats(host,store);
   }
 }
+

@@ -1,5 +1,5 @@
-import { store } from './store.js?v=1.1.1';
-import { el } from './util.js?v=1.1.1';
+import { store } from './store.js?v=1.4.2';
+import { el } from './util.js?v=1.4.2';
 
 // ---------- вибрация и звук ----------
 export function haptic(pattern = 12) {
@@ -157,4 +157,5 @@ export function initRipple() {
     setTimeout(() => rip.remove(), 650);
   }, { passive: true });
 }
+
 

@@ -1,4 +1,4 @@
-import { addDays, dayStr, diffDays, logicalNow, parseDay } from './util.js?v=1.1.1';
+import { addDays, dayStr, diffDays, logicalNow, parseDay } from './util.js?v=1.4.2';
 
 export const EXS = ['sch_f', 'sch_r', 'dob', 'mem'];
 
@@ -134,4 +134,5 @@ export function overall(results) {
     progress: goalY > base ? Math.max(0, Math.min(1, (now.y - base) / (goalY - base))) : 1,
   };
 }
+
 

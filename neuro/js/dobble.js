@@ -1,6 +1,6 @@
-import { el, shuffle, mulberry32, sleep } from './util.js?v=1.1.1';
-import { makeHud, startTimer, countdown } from './ui.js?v=1.1.1';
-import { haptic, sfx, sparkle, floatText } from './fx.js?v=1.1.1';
+import { el, shuffle, mulberry32, sleep } from './util.js?v=1.4.2';
+import { makeHud, startTimer, countdown } from './ui.js?v=1.4.2';
+import { haptic, sfx, sparkle, floatText } from './fx.js?v=1.4.2';
 import { SYMBOLS, ensureSprite } from './symbols/index.js?v=1.1.1';
 
 export const DOBBLE_MS = 60000;
@@ -78,8 +78,8 @@ export function runDobble(ctx, { step = '' } = {}) {
     const stage = el('div', 'stage dob pre');
     stage.innerHTML = `
       <div class="dob__slot dob__slot--center"><span class="dob__tag">общая карта</span><div class="dob__holder"></div></div>
-      <div class="dob__slot dob__slot--mine"><span class="dob__tag">твоя карта</span><div class="dob__holder"></div></div>
-      <div class="dob__help">Найди одинаковый рисунок на двух картах и нажми на него</div>`;
+      <div class="dob__slot dob__slot--mine"><span class="dob__tag">ваша карта</span><div class="dob__holder"></div></div>
+      <div class="dob__help">Найдите одинаковый рисунок на двух картах и нажмите на него</div>`;
     root.appendChild(stage);
     const centerHolder = stage.querySelector('.dob__slot--center .dob__holder');
     const mineHolder = stage.querySelector('.dob__slot--mine .dob__holder');
@@ -115,8 +115,8 @@ export function runDobble(ctx, { step = '' } = {}) {
 
       await sleep(140);
       if (ctx.aborted) return;
-      // общая карта «забирается»: ложится на твою, из колоды открывается новая
-      // общая карта «забирается» на место твоей: считаем сдвиг по обеим осям (на компьютере карты лежат рядом)
+      // общая карта «забирается»: ложится на вашу, из колоды открывается новая
+      // общая карта «забирается» на место вашей: считаем сдвиг по обеим осям (на компьютере карты лежат рядом)
       const to = mineEl.getBoundingClientRect(), from = centerEl.getBoundingClientRect();
       const dx = to.left - from.left, dy = to.top - from.top;
       const moving = centerEl;
@@ -203,4 +203,5 @@ export function runDobble(ctx, { step = '' } = {}) {
 }
 
 export { SYMBOLS };
+
 

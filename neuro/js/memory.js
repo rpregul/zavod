@@ -1,8 +1,8 @@
-import { el, esc, sleep } from './util.js?v=1.1.1';
-import { makeHud, startTimer, countdown } from './ui.js?v=1.1.1';
-import { haptic, sfx } from './fx.js?v=1.1.1';
-import { pickWords } from './words.js?v=1.1.1';
-import { glyph } from './icons.js?v=1.1.1';
+import { el, esc, sleep } from './util.js?v=1.4.2';
+import { makeHud, startTimer, countdown } from './ui.js?v=1.4.2';
+import { haptic, sfx } from './fx.js?v=1.4.2';
+import { pickWords } from './words.js?v=1.4.2';
+import { glyph } from './icons.js?v=1.4.2';
 
 export const MEMORY_MS = 60000;
 
@@ -66,7 +66,7 @@ export function reviewHtml(ev, columns) {
   const cols = columns.map((col, c) => {
     const rows = ev.targets.filter((t) => t.c === c).map((t) => {
       if (t.state === 'ok') return `<div class="rw rw--ok"><i>${glyph.check}</i><span>${esc(t.w)}</span></div>`;
-      if (t.state === 'near') return `<div class="rw rw--near"><i>≈</i><span>${esc(t.w)}<small>ты: ${diffHtml(t.w, t.typed)}</small></span></div>`;
+      if (t.state === 'near') return `<div class="rw rw--near"><i>≈</i><span>${esc(t.w)}<small>Ваш ответ: ${diffHtml(t.w, t.typed)}</small></span></div>`;
       return `<div class="rw rw--miss"><i>${glyph.close}</i><span>${esc(t.w)}</span></div>`;
     }).join('');
     return `<div class="rcol">${rows}</div>`;
@@ -80,7 +80,7 @@ export function runMemory(ctx, { step = '' } = {}) {
     ctx.onAbort = () => resolve(null);
     const root = ctx.root;
     root.innerHTML = '';
-    const hud = makeHud(ctx, { label: 'Запоминай', step });
+    const hud = makeHud(ctx, { label: 'Запоминайте', step });
     root.appendChild(hud.node);
     const stage = el('div', 'stage mem');
     root.appendChild(stage);
@@ -97,7 +97,7 @@ export function runMemory(ctx, { step = '' } = {}) {
             ${col.map((w, r) => `<div class="w" style="animation-delay:${c * 90 + r * 45}ms"><i>${r + 1}</i><span>${esc(w)}</span></div>`).join('')}
           </div>`).join('')}
         </div>
-        <p class="mem__tip">Строй в голове цепочку: каждое слово связывай с соседним ярким образом</p>
+        <p class="mem__tip">Стройте в голове цепочку: каждое слово связывайте с соседним ярким образом</p>
         <button class="btn btn--glass mem__skip">Я запомнил, дальше</button>`;
       hud.setScore('30');
       let gone = false;
@@ -134,9 +134,9 @@ export function runMemory(ctx, { step = '' } = {}) {
       stage.innerHTML = `
         <div class="recall glass">
           <div class="chips"></div>
-          <input class="recall__in" type="text" inputmode="text" enterkeyhint="done" autocapitalize="none" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="пиши слово и жми пробел" aria-label="Слово">
+          <input class="recall__in" type="text" inputmode="text" enterkeyhint="done" autocapitalize="none" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="введите слово и нажмите пробел" aria-label="Слово">
         </div>
-        <p class="mem__tip">Пробел или Enter: следующее слово. Нажми на слово, чтобы убрать.</p>
+        <p class="mem__tip">Пробел или Enter: следующее слово. Нажмите на слово, чтобы убрать.</p>
         <button class="btn btn--primary btn--lg recall__done">Готово</button>`;
       const input = stage.querySelector('.recall__in');
       const chips = stage.querySelector('.chips');
@@ -222,10 +222,11 @@ export function runMemory(ctx, { step = '' } = {}) {
 
     (async () => {
       stage.className = 'stage mem pre';
-      await countdown(ctx, root, { text: ['3', '2', '1', 'Запоминай!'] });
+      await countdown(ctx, root, { text: ['3', '2', '1', 'Запоминайте!'] });
       if (ctx.aborted) return;
       showWords();
     })();
   });
 }
+
 

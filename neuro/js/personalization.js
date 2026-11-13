@@ -1,8 +1,8 @@
-import { CLOUD } from './config.js?v=1.1.2';
-import { esc } from './util.js?v=1.1.2';
-import { gi, glyph } from './icons.js?v=1.1.2';
-import { lineChart } from './charts.js?v=1.1.2';
-import { trackAction, trackExercise } from './analytics.js?v=1.4.0';
+import { CLOUD } from './config.js?v=1.4.2';
+import { esc } from './util.js?v=1.4.2';
+import { gi, glyph } from './icons.js?v=1.4.2';
+import { lineChart } from './charts.js?v=1.4.2';
+import { trackAction, trackExercise } from './analytics.js?v=1.4.2';
 
 export const QUESTIONS = {
  sch_f:{title:'Где вам хочется лучше удерживать внимание?',skill:'Внимание',exercise:'Шульте',icon:'eye',options:['Во время работы или учёбы','Когда читаю','В разговорах','Когда много повседневных дел','Просто проверяю себя'],tips:['Перед началом работы выберите одну конкретную задачу и на десять минут уберите уведомления.','После небольшого фрагмента закройте текст и сформулируйте три главные мысли. Затем проверьте себя.','В конце важного разговора коротко повторите договорённость своими словами.','Запишите все дела и выберите одно, к которому приступите сейчас. Остальные пока оставьте в списке.','Повторяйте упражнение в похожих условиях и сравнивайте свои результаты.']},
@@ -92,3 +92,4 @@ export async function paintPersonal({host,store,summary=false,recs=store.results
 
 export function selectedExercises(store){const all=Object.keys(QUESTIONS);const chosen=state(store).exercises;return Array.isArray(chosen)&&chosen.length?all.filter(ex=>chosen.includes(ex)):all;}
 export function saveExercises(store,exercises){state(store).exercises=exercises;queue(store,'routine',{exercises});}
+
