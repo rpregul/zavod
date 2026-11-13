@@ -115,7 +115,8 @@ export function heatmap(host, daysMap, weeks = 12) {
     let col = '';
     for (let r = 0; r < 7; r++) {
       const day = addDays(start, w * 7 + r);
-      const n = daysMap.get(day)?.size || 0;
+      const set = daysMap.get(day);
+      const n = ['sch_f','sch_r','dob','mem'].every(ex => set?.has(ex)) ? 4 : Math.min(3, set?.size || 0);
       const future = day > today;
       col += `<i class="hm hm--${future ? 'f' : n}${day === today ? ' hm--today' : ''}" style="animation-delay:${(w * 7 + r) * 6}ms" title="${fmtShort(day)}${n ? ` · ${n}/4` : ''}"></i>`;
     }

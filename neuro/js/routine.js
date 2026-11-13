@@ -1,5 +1,5 @@
 import { esc } from './util.js?v=1.5.0';
-import { QUESTIONS, selectedExercises, saveExercises } from './personalization.js?v=1.5.0';
+import { QUESTIONS, selectedExercises, saveExercises } from './personalization.js?v=1.6.0';
 const ORDER=['sch_f','sch_r','dob','mem'];
 export function openRoutine({store,mount,onHome}){
  const root=document.createElement('section');root.className='routine-page';const selected=new Set(selectedExercises(store));

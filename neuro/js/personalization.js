@@ -1,7 +1,7 @@
 import { CLOUD } from './config.js?v=1.5.0';
 import { esc } from './util.js?v=1.5.0';
 import { gi, glyph } from './icons.js?v=1.5.0';
-import { lineChart } from './charts.js?v=1.5.0';
+import { lineChart } from './charts.js?v=1.6.0';
 import { trackAction, trackExercise } from './analytics.js?v=1.5.0';
 
 export const QUESTIONS = {
@@ -35,6 +35,7 @@ s.answers={...remote.answers,...(localChanged?s.answers:{}),...Object.fromEntrie
 function queue(store,action,data){const s=state(store);s.revision=(s.revision||0)+1;s.pending.push({action,data});persist(store);void flushPersonalization(store);}
 export function firstResult(store,ex){return store.results.filter(row=>row.ex===ex).slice().sort((a,b)=>a.ts-b.ts||a.id.localeCompare(b.id))[0];}
 export async function askQuestion({store,mount,ex,force=false}){
+ if(!QUESTIONS[ex])return;
  await Promise.race([load(store),new Promise(resolve=>setTimeout(resolve,600))]);if(!force&&Object.hasOwn(state(store).answers,ex))return;
  const q=QUESTIONS[ex],root=document.createElement('section');root.className='personal-survey';let option=null,frequency=null;
  const start=performance.now();trackAction('survey_view_'+ex);

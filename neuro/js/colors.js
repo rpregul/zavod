@@ -1,0 +1,31 @@
+import { makeHud } from './ui.js?v=1.5.0';
+export const COLORS=[{name:'Красный',word:'КРАСНЫЙ',ink:'#bd2347'},{name:'Синий',word:'СИНИЙ',ink:'#245cbd'},{name:'Зелёный',word:'ЗЕЛЁНЫЙ',ink:'#157748'},{name:'Жёлтый',word:'ЖЁЛТЫЙ',ink:'#936300'}];
+export function median(values){if(!values.length)return null;const a=[...values].sort((x,y)=>x-y),i=Math.floor(a.length/2);return a.length%2?a[i]:(a[i-1]+a[i])/2;}
+export function nextColorCard(previous=null,random=Math.random){
+ const all=[];for(let ink=0;ink<4;ink++)for(let word=0;word<4;word++)if(!previous||ink!==previous.ink||word!==previous.word)all.push({ink,word});
+ const congruent=random()<.3;const pool=all.filter(c=>(c.ink===c.word)===congruent);return pool[Math.min(pool.length-1,Math.floor(random()*pool.length))];
+}
+export function runColors(ctx,{step=''}={}){
+ return new Promise(resolve=>{
+ const root=ctx.root;let finished=false,playing=false,paused=false,locked=false,current=null,raf=0,transition=0;
+ let elapsed=0,segmentAt=0,shownAt=0,correct=0,attempts=0,conflictCorrect=0,conflictAttempts=0;const times=[];
+ const buttons=()=>COLORS.map((c,i)=>'<button class="colors-answer" data-color="'+i+'">'+c.name+'</button>').join('');
+ function cleanup(){cancelAnimationFrame(raf);clearTimeout(transition);document.removeEventListener('visibilitychange',onVisibility);document.removeEventListener('keydown',onKey);}
+ ctx.onCleanup(cleanup);ctx.onAbort=()=>{if(finished)return;finished=true;cleanup();resolve(null);};
+ function finish(){if(finished)return;finished=true;playing=false;cleanup();const accuracy=attempts?Math.round(correct/attempts*100):0,rt=median(times);resolve({score:correct,meta:{attempts,errors:attempts-correct,accuracy,median_ms:rt===null?null:Math.round(rt),congruent_attempts:attempts-conflictAttempts,conflict_attempts:conflictAttempts,conflict_correct:conflictCorrect,duration_ms:60000},extra:[{label:'Правильные ответы',value:correct},{label:'Точность',value:accuracy+'%'},{label:'Медианное время ответа',value:rt===null?'—':(rt/1000).toFixed(2)+' с'}]});}
+ function elapsedNow(){return elapsed+(playing&&!paused?performance.now()-segmentAt:0);}
+ let hud,word,answers,status;
+ function showNext(){if(finished||paused)return;current=nextColorCard(current);word.textContent=COLORS[current.word].word;word.style.color=COLORS[current.ink].ink;answers.querySelectorAll('button').forEach(b=>{b.disabled=false;b.classList.remove('answer-correct','answer-wrong');});locked=false;status.textContent='';shownAt=performance.now();word.classList.remove('colors-change');void word.offsetWidth;word.classList.add('colors-change');}
+ function answer(index){if(!playing||paused||locked||finished)return;if(elapsedNow()>=60000)return finish();locked=true;attempts++;const conflict=current.ink!==current.word;if(conflict)conflictAttempts++;const ok=index===current.ink;
+ if(ok){correct++;if(conflict)conflictCorrect++;times.push(performance.now()-shownAt);hud.setScore(correct);}else{answers.querySelector('[data-color="'+index+'"]').classList.add('answer-wrong');answers.querySelector('[data-color="'+current.ink+'"]').classList.add('answer-correct');status.textContent='Цвет букв — '+COLORS[current.ink].name.toLowerCase()+'.';}
+ answers.querySelectorAll('button').forEach(b=>b.disabled=true);transition=setTimeout(showNext,ok?140:320);
+ }
+ function tick(){if(finished||paused)return;const used=elapsedNow();hud.setTime(Math.max(0,60000-used),Math.min(1,used/60000));if(used>=60000)return finish();raf=requestAnimationFrame(tick);}
+ function onVisibility(){if(!playing||paused||document.visibilityState!=='hidden')return;elapsed=elapsedNow();paused=true;cancelAnimationFrame(raf);clearTimeout(transition);root.querySelector('.colors-pause').hidden=false;answers.querySelectorAll('button').forEach(b=>b.disabled=true);}
+ function onKey(e){if(!e.repeat&&/^[1-4]$/.test(e.key)&&playing&&!paused){e.preventDefault();answer(Number(e.key)-1);}}
+ function start(){if(finished||ctx.aborted)return;root.innerHTML='';hud=makeHud(ctx,{label:'Правильно',step});root.append(hud.node);const stage=document.createElement('section');stage.className='colors-stage';stage.innerHTML='<div class="colors-stimulus" aria-live="off"></div><div class="colors-answers">'+buttons()+'</div><p class="colors-feedback" role="status"></p><div class="colors-pause" hidden><h2>Раунд на паузе</h2><p>Время вне вкладки не учитывается. Продолжим с новой карточки.</p><button class="btn btn--primary" data-colors-resume>Продолжить</button></div>';root.append(stage);word=stage.querySelector('.colors-stimulus');answers=stage.querySelector('.colors-answers');status=stage.querySelector('.colors-feedback');answers.onclick=e=>{const b=e.target.closest('[data-color]');if(b)answer(Number(b.dataset.color));};stage.querySelector('[data-colors-resume]').onclick=()=>{if(!paused||finished)return;paused=false;stage.querySelector('.colors-pause').hidden=true;segmentAt=performance.now();showNext();tick();};playing=true;segmentAt=performance.now();showNext();tick();}
+ root.innerHTML='<section class="colors-demo"><button class="link" data-colors-quit>Выйти</button><h2>Короткая проба</h2><p>Каким цветом написано слово?</p><div class="colors-stimulus" style="color:#245cbd">КРАСНЫЙ</div><div class="colors-answers">'+buttons()+'</div><p class="colors-feedback" role="status">Выберите цвет букв.</p><button class="btn btn--primary btn--block" data-colors-start disabled>Начать раунд · 60 секунд</button></section>';
+ root.querySelector('[data-colors-quit]').onclick=()=>ctx.requestQuit?ctx.requestQuit():ctx.abort();root.querySelector('.colors-answers').onclick=e=>{const b=e.target.closest('[data-color]');if(!b)return;if(Number(b.dataset.color)===1){root.querySelector('.colors-feedback').textContent='Верно: выбирайте цвет букв, а не значение слова';root.querySelectorAll('[data-color]').forEach(n=>n.disabled=true);root.querySelector('[data-colors-start]').disabled=false;}else{root.querySelector('.colors-feedback').textContent='Посмотрите на буквы: они синие. Выберите «Синий».';root.querySelector('[data-color="1"]').classList.add('answer-correct');}};
+ root.querySelector('[data-colors-start]').onclick=start;document.addEventListener('visibilitychange',onVisibility);document.addEventListener('keydown',onKey);
+ });
+}

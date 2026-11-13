@@ -58,7 +58,7 @@ export function streak(results) {
 
 export function fullDays(results) {
   let n = 0;
-  for (const set of daysMap(results).values()) if (set.size === EXS.length) n++;
+  for (const set of daysMap(results).values()) if (EXS.every(ex => set.has(ex))) n++;
   return n;
 }
 
@@ -89,7 +89,7 @@ export function weekStrip(results) {
   const names = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
   return names.map((label, i) => {
     const day = addDays(monday, i);
-    return { label, day, n: days.get(day)?.size || 0, today: day === today, future: day > today };
+    return { label, day, n: EXS.every(ex => days.get(day)?.has(ex)) ? 4 : Math.min(3, days.get(day)?.size || 0), today: day === today, future: day > today };
   });
 }
 

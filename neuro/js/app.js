@@ -1,15 +1,16 @@
+import { runColors } from './colors.js?v=1.6.0';
 import { initReminders, openReminders } from './reminders.js?v=1.5.0';
-import { openRoutine, ownComparisonMarkup } from './routine.js?v=1.5.0';
-import { askQuestion, completePersonalSurvey, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=1.5.0';
+import { openRoutine, ownComparisonMarkup } from './routine.js?v=1.6.0';
+import { askQuestion, completePersonalSurvey, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=1.6.0';
 import { runReading, paintMeasurementStats, readingAccess } from './reading.js?v=1.5.0';
 import { comparisonMarkup } from './summary-comparison.js?v=1.5.0';
 import { initAnalytics, openFunnel, trackScreen, trackExercise } from './analytics.js?v=1.5.0';
 import { store, cloudOn } from './store.js?v=1.5.0';
-import * as S from './stats.js?v=1.5.0';
+import * as S from './stats.js?v=1.6.0';
 import { el, esc, plural, dayStr, fmtLong, fmtShort, weekdayName, sleep, logicalDay } from './util.js?v=1.5.0';
 import { glyph, gi } from './icons.js?v=1.5.0';
 import { initFx, initRipple, confetti, haptic, sfx, countUp, toast } from './fx.js?v=1.5.0';
-import { lineChart, heatmap, ringSvg } from './charts.js?v=1.5.0';
+import { lineChart, heatmap, ringSvg } from './charts.js?v=1.6.0';
 import { makeCtx, sheet, confirmSheet } from './ui.js?v=1.5.0';
 import { runSchulte } from './schulte.js?v=1.5.0';
 import { runDobble } from './dobble.js?v=1.5.0';
@@ -52,9 +53,11 @@ export const EX = {
     rules: ['Минуту смотрите на 3 столбика по 10 слов', 'В голове стройте цепочку образов: слово за словом', 'Потом минуту записывайте слова в точности, с окончаниями'],
     run: (ctx, o) => runMemory(ctx, o),
   },
+  colors: { id: 'colors', title: 'Цвета', sub: 'Цвет букв · тестовая игра', icon: 'cards', color: 'violet', unit: 'ответов', c1: '#9955ce', c2: '#4f7cff', lead: 'Концентрация и переключение правила', skill: 'Удерживать правило: отвечать на цвет букв, подавляя привычное чтение слова. Переключать внимание между значением и визуальным признаком.', everyday: 'Такая практика помогает исследовать, как вы удерживаете инструкцию при отвлекающей информации. В игре следите за скоростью вместе с точностью.', rules: ['Выбирайте цвет букв, а не значение слова', 'Кнопки остаются на своих местах весь раунд', 'После короткой демонстрации — 60 секунд. При ошибке увидите правильный ответ'], run: runColors },
 };
 const ORDER = ['sch_f', 'sch_r', 'dob', 'mem'];
 // Future exercises are paid-only unless explicitly added to this trial whitelist.
+const GAME_LIST = [...ORDER, 'colors'];
 const TRIAL_ORDER = ['sch_f', 'sch_r', 'dob', 'mem'];
 
 // ---------------------------------------------------------------- каркас экранов
@@ -232,9 +235,9 @@ function renderLogin({ restore = false } = {}) {
 }
 
 // ---------------------------------------------------------------- главная (дашборд)
-const CHART_TABS = ['all', ...ORDER];
+const CHART_TABS = ['all', ...GAME_LIST];
 let chartEx = (() => { try { const v = sessionStorage.getItem('nz.chartEx'); return CHART_TABS.includes(v) ? v : 'all'; } catch { return 'all'; } })();
-const TAB_LABEL = { all: 'Общий', sch_f: 'Шульте', sch_r: 'Шульте ↕', dob: 'Совпадения', mem: 'Память' };
+const TAB_LABEL = { all: 'Общий', sch_f: 'Шульте', sch_r: 'Шульте ↕', dob: 'Совпадения', mem: 'Память', colors: 'Цвета' };
 
 function renderHome({ quiet = false } = {}) {
   if (!store.session) return guestWelcome();
@@ -252,7 +255,7 @@ function renderHome({ quiet = false } = {}) {
   const startedCount = routine.filter(id => done.has(id)).length;
 
   const node = el('div', 'home');
-  const tileHtml = ORDER.map((id, i) => {
+  const tileHtml = GAME_LIST.map((id, i) => {
     const e = EX[id];
     const b = S.best(res, id);
     const today = res.filter((r) => r.ex === id && r.day === dayStr()).reduce((m, r) => Math.max(m, r.score), -1);
@@ -320,7 +323,7 @@ function renderHome({ quiet = false } = {}) {
     <section class="sec" style="--i:4">
       <h3 class="sec__t">Постоянство</h3>
       <div class="consistency glass">
-        <div class="week">${week.map((d) => `<div class="wd${d.today ? ' today' : ''}${d.future ? ' future' : ''}"><i class="wd__c wd__c--${d.n}">${d.n === 4 ? glyph.check : d.n ? d.n : ''}</i><small>${d.label}</small></div>`).join('')}</div>
+        <div class="week">${week.map((d) => `<div class="wd${d.today ? ' today' : ''}${d.future ? ' future' : ''}"><i class="wd__c wd__c--${Math.min(4,d.n)}">${d.n >= 4 ? glyph.check : d.n ? d.n : ''}</i><small>${d.label}</small></div>`).join('')}</div>
         <div class="heat" data-heat></div>
       </div>
     </section>
@@ -343,14 +346,14 @@ function renderHome({ quiet = false } = {}) {
     node.querySelector('.hero__txt p').textContent = completed ? 'Ваша точка отсчёта сохранена' : 'Выработайте новую полезную привычку развития своего мозга';
     node.querySelector('.hero__cta span').textContent = completed ? 'Мой персональный итог' : 'Начать тренировку';
     node.querySelector('.chips-row').hidden = true;
-    node.querySelectorAll('.tiles .tile__best,.tiles .tile__badge,.tiles .tile__new').forEach(x => { x.textContent = 'В первой тренировке'; });
+    node.querySelectorAll('.tiles [data-ex]:not([data-ex=colors]) .tile__best,.tiles [data-ex]:not([data-ex=colors]) .tile__badge,.tiles [data-ex]:not([data-ex=colors]) .tile__new').forEach(x => { x.textContent = 'В первой тренировке'; });
     node.querySelectorAll('.home__col')[1].innerHTML = `<section class="sec"><div class="progress glass subscription-locked"><h3>Ваш следующий шаг</h3><p>Доступны после прохождения первой тренировки:</p><ul class="guest-benefit-pills"><li>Персональные подсказки</li><li>Динамика прогресса</li><li>Статистика</li><li>Дополнительные упражнения</li></ul><small>Расширенная статистика и дополнительные упражнения — по подписке.</small>${completed ? '<button class="btn btn--primary btn--block" data-act="subscribe">Продолжить с подпиской</button>' : '<p class="login__note">Сначала пройдите бесплатную тренировку — она станет вашей точкой отсчёта.</p>'}</div></section>`;
     if (completed) {
       const offer = el('section', 'sec home-offer', offerMarkup({ completed: true }));
       node.querySelector('header').after(offer);
       node.querySelectorAll('.home__col')[1].hidden = true;
       node.querySelector('.home__cols').classList.add('home__cols--single');
-      node.querySelectorAll('.tiles .tile__best,.tiles .tile__badge,.tiles .tile__new').forEach(x => { x.textContent = 'По подписке'; });
+      node.querySelectorAll('.tiles [data-ex]:not([data-ex=colors]) .tile__best,.tiles [data-ex]:not([data-ex=colors]) .tile__badge,.tiles [data-ex]:not([data-ex=colors]) .tile__new').forEach(x => { x.textContent = 'По подписке'; });
     }
   } else {
     paintChart(node);
