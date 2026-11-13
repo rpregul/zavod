@@ -1,5 +1,5 @@
-import { openRoutine, ownComparisonMarkup } from './routine.js?v=1.4.0';
-import { askQuestion, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=1.4.0';
+import { openRoutine, ownComparisonMarkup } from './routine.js?v=1.4.1';
+import { askQuestion, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=1.4.1';
 import { runReading, paintMeasurementStats } from './reading.js?v=1.4.0';
 import { comparisonMarkup } from './summary-comparison.js?v=1.3.0';
 import { initAnalytics, openFunnel, trackScreen, trackExercise } from './analytics.js?v=1.4.0';
@@ -14,7 +14,7 @@ import { runSchulte } from './schulte.js?v=1.1.2';
 import { runDobble } from './dobble.js?v=1.1.2';
 import { runMemory } from './memory.js?v=1.1.2';
 import { BILLING } from './config.js?v=1.1.2';
-import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.4.0';
+import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.4.1';
 import { recommendations, exerciseReport } from './recommendations.js?v=1.3.0';
 
 // ---------------------------------------------------------------- упражнения
@@ -349,7 +349,7 @@ function renderHome({ quiet = false } = {}) {
     node.querySelector('.hero__cta span').textContent = completed ? 'Выбрать подписку' : 'Начать тренировку';
     node.querySelector('.chips-row').hidden = true;
     node.querySelectorAll('.tiles .tile__best,.tiles .tile__badge,.tiles .tile__new').forEach(x => { x.textContent = 'В первой тренировке'; });
-    node.querySelectorAll('.home__col')[1].innerHTML = `<section class="sec"><div class="progress glass subscription-locked"><h3>Твой следующий шаг</h3><p>Персональные подсказки, история и динамика результатов доступны по подписке.</p>${completed ? '<button class="btn btn--primary btn--block" data-act="subscribe">Продолжить с подпиской</button>' : '<p class="login__note">Сначала пройди бесплатную тренировку — она станет твоей точкой отсчёта.</p>'}</div></section>`;
+    node.querySelectorAll('.home__col')[1].innerHTML = `<section class="sec"><div class="progress glass subscription-locked"><h3>Ваш следующий шаг</h3><p>Доступны после прохождения первой тренировки:</p><ul class="guest-benefit-pills"><li>Персональные подсказки</li><li>Динамика прогресса</li><li>Статистика</li><li>Дополнительные упражнения</li></ul><small>Расширенная статистика и дополнительные упражнения — по подписке.</small>${completed ? '<button class="btn btn--primary btn--block" data-act="subscribe">Продолжить с подпиской</button>' : '<p class="login__note">Сначала пройдите бесплатную тренировку — она станет вашей точкой отсчёта.</p>'}</div></section>`;
     if (completed) {
       const offer = el('section', 'sec home-offer', offerMarkup({ completed: true }));
       node.querySelector('header').after(offer);

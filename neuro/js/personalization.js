@@ -52,12 +52,12 @@ export async function askQuestion({store,mount,ex,force=false}){
 function goalGraph(host,store,goal){
  const rows=store.results.filter(r=>r.ex===goal.ex&&r.ts>=(firstResult(store,goal.ex)?.ts||0));const days=new Map();for(const r of rows)days.set(r.day,Math.max(days.get(r.day)||0,r.score));
  const points=[...days].sort(([a],[b])=>a.localeCompare(b)).slice(-30).map(([day,y])=>({day,y}));
- lineChart(host,points,{color:'#8439b3',color2:'#bd58d4',unit:'баллов',lines:[{y:goal.baseline,label:'Старт: '+goal.baseline,color:'#736481',below:true},{y:goal.target,label:'Цель: '+goal.target+(goal.percent?' (+'+goal.percent+'%)':''),color:'#8439b3'}]});
+ lineChart(host,points,{color:'#8439b3',color2:'#bd58d4',unit:'баллов',lines:[{y:goal.baseline,label:'Старт: '+goal.baseline,color:'#736481',below:true},{y:goal.target,label:'Цель: '+goal.target+(goal.percent?' ('+(goal.percent===100?'200% от старта':'+'+goal.percent+'%')+')':''),color:'#8439b3'}]});
 }
 export function drawGoal(host,store){
  const goal=state(store).goal;if(!goal){host.innerHTML='';return;}
  const q=QUESTIONS[goal.ex];const rows=store.results.filter(r=>r.ex===goal.ex).sort((a,b)=>b.ts-a.ts);const current=rows[0]?.score??goal.baseline;
- host.innerHTML='<h3>Ваша цель · '+q.exercise+'</h3><p class="personal-goal-values">Старт <b>'+goal.baseline+'</b><span aria-hidden="true"> → </span>Цель <b>'+goal.target+'</b>'+(goal.percent?' <span>(+'+goal.percent+'%)</span>':'')+'</p><p>Последняя попытка: <b>'+current+'</b> баллов'+(current>=goal.target?' · Цель достигнута!':'')+'</p><div class="personal-goal-chart"></div><small>Это личный ориентир в упражнении. Сравнивайте попытки в похожих условиях; срок достижения не задан.</small>';
+ host.innerHTML='<h3>Ваша цель · '+q.exercise+'</h3><p class="personal-goal-values">Старт <b>'+goal.baseline+'</b><span aria-hidden="true"> → </span>Цель <b>'+goal.target+'</b>'+(goal.percent?' <span>('+(goal.percent===100?'200% от старта':'+'+goal.percent+'%')+')</span>':'')+'</p><p>Последняя попытка: <b>'+current+'</b> баллов'+(current>=goal.target?' · Цель достигнута!':'')+'</p><div class="personal-goal-chart"></div><small>Это личный ориентир в упражнении. Сравнивайте попытки в похожих условиях; срок достижения не задан.</small>';
  goalGraph(host.querySelector('.personal-goal-chart'),store,goal);
 }
 export async function paintPersonal({host,store,summary=false,recs=store.results,onEditAnswers=null}){
@@ -77,7 +77,7 @@ export async function paintPersonal({host,store,summary=false,recs=store.results
   else{
    const baseline=firstResult(store,chosen);const zero=baseline.score===0;
    edit.innerHTML='<h3>Выберите ориентир для '+q.exercise+'</h3><p>Ваш старт — <b>'+baseline.score+' баллов</b>. Он сохранится после обновления страницы.</p>'
-    +(zero?'<label class="personal-custom">Цель в баллах<input type="number" min="1" max="1000" value="10" data-goal-absolute></label>':'<div class="personal-targets" role="group" aria-label="Рост относительно старта">'+[10,20,30].map(n=>'<button class="btn btn--glass" aria-pressed="'+(n===20)+'" data-goal-percent="'+n+'">+'+n+'%</button>').join('')+'</div><label class="personal-custom">Своя цель, %<input type="number" min="1" max="100" value="20" data-goal-custom></label>')
+    +(zero?'<label class="personal-custom">Цель в баллах<input type="number" min="1" max="1000" value="10" data-goal-absolute></label>':'<div class="personal-targets" role="group" aria-label="Рост относительно старта">'+[10,20,30,100].map(n=>'<button class="btn btn--glass" aria-pressed="'+(n===20)+'" data-goal-percent="'+n+'">'+(n===100?'200% от старта':'+'+n+'%')+'</button>').join('')+'</div><label class="personal-custom">Своя цель, %<input type="number" min="1" max="100" value="20" data-goal-custom></label>')
     +'<p data-target-preview role="status"></p><p class="login__err" data-goal-error role="alert"></p><button class="btn btn--primary btn--block" data-save-goal>Сохранить цель</button><small>Выбирайте комфортный ориентир. Это цель, а не прогноз результата.</small>';
    const input=edit.querySelector('input');const preview=()=>{const n=Number(input.value);const valid=input.value!==''&&Number.isInteger(n)&&n>=1&&n<=(zero?1000:100);edit.querySelector('[data-save-goal]').disabled=!valid;edit.querySelector('[data-target-preview]').textContent=valid?'На графике появится цель: '+(zero?n:Math.ceil(baseline.score*(1+n/100)))+' баллов.':'Введите целое число от 1 до '+(zero?1000:100)+'.';edit.querySelectorAll('[data-goal-percent]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.goalPercent)===n)));};
    input.oninput=preview;edit.querySelectorAll('[data-goal-percent]').forEach(button=>button.onclick=()=>{input.value=button.dataset.goalPercent;preview();});preview();

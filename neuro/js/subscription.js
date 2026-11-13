@@ -3,9 +3,11 @@ import { BILLING } from './config.js?v=1.1.2';
 import { sheet, confirmSheet } from './ui.js?v=1.1.2';
 import { esc } from './util.js?v=1.1.2';
 
+export const saleActive = (now = Date.now()) => now >= Date.parse('2026-11-13T00:00:00+03:00') && now < Date.parse('2026-11-14T00:00:00+03:00');
+export const money = value => Number(value).toLocaleString('ru-RU', { minimumFractionDigits: Number.isInteger(value) ? 0 : 2, maximumFractionDigits: 2 });
 export const PLANS = {
-  individual: { title: 'Для себя', price: 399, detail: 'Один профиль' },
-  family: { title: 'Для семьи', price: 999, detail: 'До 4 человек · отдельный прогресс каждого' },
+  individual: { title: 'Для себя', oldPrice: 399, get price() { return saleActive() ? 199.5 : 399; }, detail: 'Один профиль' },
+  family: { title: 'Для семьи', oldPrice: 999, get price() { return saleActive() ? 499.5 : 999; }, detail: 'До 4 человек · отдельный прогресс каждого' },
 };
 const date = value => new Date(value).toLocaleDateString('ru-RU');
 const message = error => ({ consent_required: 'Обновите страницу, чтобы увидеть актуальные условия оплаты.', unauthorized: 'Войди в профиль заново.', invalid_email: 'Проверь адрес почты.',
@@ -20,9 +22,9 @@ export function offerMarkup({ completed = false } = {}) {
     <h2>${completed ? 'Ваша точка отсчёта готова' : 'Сделайте тренировку привычкой'}</h2>
     <p>Продолжайте тренировать функции мозга и отслеживайте результаты в удобных графиках, узнайте, как далеко вы сможете продвинуться!</p>
     <ul class="subscription-benefits"><li>Получите персональный разбор ваших результатов</li><li>Практические советы для повседневной жизни</li><li>Новые упражнения, уровни сложности</li><li>Замеры скорости чтения</li></ul>
-    <div class="subscription-plans">${Object.entries(PLANS).map(([id, plan]) => `<button class="subscription-plan glass${id === 'individual' ? ' subscription-plan--primary' : ''}" data-plan="${id}">
-      <b>${plan.title}</b><span class="subscription-plan__price">${plan.price} <small>₽/месяц</small></span><span>${plan.detail}</span>
-      ${id === 'family' ? '<small>Около 250 ₽ на человека, если вас четверо</small>' : ''}<strong>Выбрать</strong></button>`).join('')}</div>
+    ${saleActive() ? '<div class="bf-heading"><b>Чёрная пятница</b><span>−50%</span><p>13 ноября · до 23:59 МСК</p></div>' : ''}<div class="subscription-plans${saleActive() ? ' black-friday' : ''}">${Object.entries(PLANS).map(([id, plan]) => `<button class="subscription-plan glass${id === 'individual' ? ' subscription-plan--primary' : ''}" data-plan="${id}">
+      <b>${plan.title}</b>${saleActive() ? `<span class="bf-old"><s>${money(plan.oldPrice)} ₽</s><strong>−50%</strong></span>` : ''}<span class="subscription-plan__price">${money(plan.price)} <small>₽/месяц</small></span><span>${plan.detail}</span>
+      ${id === 'family' ? `<small>Около ${Math.ceil(plan.price/4)} ₽ на человека, если вас четверо</small>` : ''}<strong>Выбрать</strong></button>`).join('')}</div>
     <p class="login__note">Разовая оплата за один месяц. Для следующего месяца нужно оформить оплату заново.</p>
   </div>`;
 }
@@ -66,12 +68,13 @@ export async function openSubscription(store, { plan: selected = null } = {}) {
         if (s.node.querySelector('[data-family]')) await drawFamily();
         return;
       }
-      const chosen = PLANS[selected];
+      const promo = saleActive();
+      const chosen = PLANS[selected] ? { ...PLANS[selected], price: promo ? PLANS[selected].oldPrice / 2 : PLANS[selected].oldPrice, consentVersion: promo ? 'black-friday-2026-v1' : 'monthly-plans-v4-once', sale: promo } : null;
       if (!chosen) { selected = null; return draw(); }
       s.node.innerHTML = `<button class="link" data-back>← Другой тариф</button><h3 class="sheet__title">${chosen.title}</h3>
-        <p class="subscription-price"><b>${chosen.price} ₽</b> / месяц</p><p class="sheet__text">${chosen.detail}</p>
-        ${sub.ready ? `<form data-checkout><label class="subscription-consent"><input type="checkbox" required name="consent"><span>Принимаю <a href="offer.html" target="_blank" rel="noopener">условия</a> и соглашаюсь на разовое списание ${chosen.price} ₽ за один месяц доступа. Автоматических списаний не будет. Ознакомлен с <a href="privacy.html" target="_blank" rel="noopener">политикой обработки данных</a>.</span></label>
-          <button class="btn btn--primary btn--lg btn--block" type="submit">Оплатить ${chosen.price} ₽</button>
+        <p class="subscription-price">${chosen.sale ? `<s>${money(chosen.oldPrice)} ₽</s> <span class="bf-checkout-badge">−50%</span><br>` : ''}<b>${money(chosen.price)} ₽</b> / месяц</p><p class="sheet__text">${chosen.detail}</p>
+        ${sub.ready ? `<form data-checkout><label class="subscription-consent"><input type="checkbox" required name="consent"><span>Принимаю <a href="offer.html" target="_blank" rel="noopener">условия</a> и соглашаюсь на разовое списание ${money(chosen.price)} ₽ за один месяц доступа. Автоматических списаний не будет. Ознакомлен с <a href="privacy.html" target="_blank" rel="noopener">политикой обработки данных</a>.</span></label>
+          <button class="btn btn--primary btn--lg btn--block" type="submit">Оплатить ${money(chosen.price)} ₽</button>
           <p class="login__note">Оплата покрывает один месяц доступа. Чтобы продолжить пользоваться тренажёром, позже оформи новую оплату.</p></form>` : '<p class="sheet__text">Оплата готовится к запуску.</p>'}
         <p class="login__err" role="alert" data-error></p><button class="link" data-close>Закрыть</button>`;
       trackAction(sub.ready ? 'checkout_form_' + selected : 'payments_unavailable');
@@ -83,11 +86,11 @@ export async function openSubscription(store, { plan: selected = null } = {}) {
         trackAction('checkout_submit_' + selected);
         try {
           const result = await store.billing('checkout', { 
-            consent: form.elements.consent.checked, consent_version: 'monthly-plans-v4-once', plan: selected });
+            consent: form.elements.consent.checked, consent_version: chosen.consentVersion, plan: selected });
           if (result.confirmation_url) { trackAction('checkout_redirect'); await flushAnalytics(); location.assign(result.confirmation_url); }
           else { trackAction('checkout_processing'); errorText('Платёж обрабатывается. Доступ появится после подтверждения оплаты.'); }
         } catch (error) { trackAction('checkout_error'); errorText(message(error)); }
-        finally { button.disabled = false; button.textContent = `Оплатить ${chosen.price} ₽`; }
+        finally { button.disabled = false; button.textContent = `Оплатить ${money(chosen.price)} ₽`; }
       });
     } catch (error) {
       s.node.innerHTML = `<h3 class="sheet__title">Подписка</h3><p class="sheet__text" role="alert">${message(error)}</p><button class="btn btn--glass" data-retry>Повторить</button><button class="link" data-close>Закрыть</button>`;
