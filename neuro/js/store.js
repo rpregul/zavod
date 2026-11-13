@@ -76,6 +76,8 @@ export const store = {
     const key = normName(name);
     const status = await rpc('nz_claim_guest', { p_token: this.session.token, p_name: name, p_key: key, p_hash: await sha256(key + ':' + pin + ':nz1') });
     if (status === 'ok') {
+      const personal = LS.get('nz.personal.' + this.session.key);
+      if (personal) LS.set('nz.personal.' + key, personal);
       this.session = { key, name, token: this.session.token };
       LS.set('nz.session', this.session);
       this.persist();
@@ -211,6 +213,9 @@ export const store = {
         const errors = [];
         try {
           const pulled = await this.billing('pull');
+          if (!Array.isArray(pulled.rows)) throw new Error('invalid_history');
+          const serverIds = new Set(pulled.rows.map(row => row.id));
+          this.results = this.results.filter(row => !row.s || serverIds.has(row.id));
           const byId = new Map(this.results.map(r => [r.id, r]));
           for (const row of pulled.rows || []) {
             const mine = byId.get(row.id);

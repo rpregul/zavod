@@ -84,6 +84,10 @@ export async function openFunnel(store) {
       + data.trials.map(t => '<li>' + esc(t.name) + ' — ' + (t.completed_at ? '4 результата сохранены' : 'в процессе, ' + t.exercises + ' из 4')
         + '<br><small>Начало: ' + date(t.started_at) + '</small></li>').join('') + '</ul>';
     try {
+      const personal = await rpc('nz_personalization', { p_token: store.session.token, p_action: 'report', p_data: {} });
+      if (host.isConnected) renderPersonalReport(host, personal);
+    } catch { if (host.isConnected) host.insertAdjacentHTML('beforeend', '<p>Опрос: не удалось загрузить сводку.</p>'); }
+    try {
       const behavior = await rpc('nz_behavior_report', { p_token: store.session.token, p_days: 30 });
       if (host.isConnected) renderBehavior(host, behavior);
     } catch { host.insertAdjacentHTML('beforeend','<hr><p>Не удалось загрузить события поведения. Откройте статистику повторно.</p>'); }
@@ -226,3 +230,9 @@ function renderBehavior(host, data) {
   host.append(sec);
 }
 
+
+function renderPersonalReport(host,data) {
+ const labels={sch_f:['Работа / учёба','Чтение','Разговоры','Повседневные дела','Проверяю себя'],sch_r:['Включение после перерыва','Переключение','Новые правила','Точность в спешке','Просто пробую'],dob:['Поиск нужного','Замечать ошибки','Похожие варианты','Точность в спешке','Интересная игра'],mem:['Прочитанное','Имена','Договорённости','Новая информация','Развиваю память']};
+ const names={sch_f:'Внимание',sch_r:'Переключение',dob:'Поиск и точность',mem:'Память'};
+ host.insertAdjacentHTML('beforeend','<hr><h3>Цели аудитории</h3><p>Участников опроса: '+Number(data.profiles)+' · выбрали цель: '+Number(data.goals)+'</p><small>Все участники с начала опроса. Владелец и тесты исключены. Один человек может ответить на несколько вопросов; строки нельзя складывать как число людей.</small>'+(data.answers.length?'<ul>'+data.answers.map(row=>'<li><b>'+esc(names[row.ex]||row.ex)+' · '+esc(row.option===-1?'Пропущено':labels[row.ex]?.[row.option]||'Без ответа')+'</b><br>Ответов: '+Number(row.count)+' · завершили пробную: '+Number(row.completed)+' · реальных покупателей: '+Number(row.buyers)+'</li>').join('')+'</ul>':'<p>Ответов пока нет.</p>'));
+}

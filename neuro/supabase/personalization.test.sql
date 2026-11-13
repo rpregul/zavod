@@ -1,0 +1,32 @@
+begin;
+do $$
+declare suffix text:=replace(gen_random_uuid()::text,'-',''); a text; b text; ta text:=gen_random_uuid()::text; tb text:=gen_random_uuid()::text; result jsonb;
+begin
+ a:='__qa_personal_a_'||suffix;b:='__qa_personal_b_'||suffix;
+ insert into public.nz_users(key,name,hash) values(a,a,repeat('a',64)),(b,b,repeat('b',64));
+ insert into public.nz_sessions(user_key,token_hash) values(a,encode(sha256(convert_to(ta,'UTF8')),'hex')),(b,encode(sha256(convert_to(tb,'UTF8')),'hex'));
+ insert into public.nz_results(id,user_key,ex,score,day,ts) values(gen_random_uuid(),a,'sch_f',10,'2026-11-13',100),(gen_random_uuid(),a,'sch_f',30,'2026-11-13',200),(gen_random_uuid(),a,'mem',0,'2026-11-13',300);
+ set local role anon;
+ result:=public.nz_personalization(ta,'answer','{"ex":"sch_f","option":1,"frequency":2}');
+ assert result#>>'{answers,sch_f,option}'='1';
+ assert public.nz_personalization(tb,'get')->'answers'='{}'::jsonb,'cross-profile leak';
+ result:=public.nz_personalization(ta,'goal','{"ex":"sch_f","percent":20,"baseline":900,"target":999}');
+ assert result#>>'{goal,baseline}'='10','baseline must come from first server result';
+ assert result#>>'{goal,target}'='12','target must be computed on server';
+ result:=public.nz_personalization(ta,'goal','{"ex":"sch_f","percent":30}');
+ assert result#>>'{goal,baseline}'='10' and result#>>'{goal,target}'='13','baseline changed on editing';
+ result:=public.nz_personalization(ta,'goal','{"ex":"mem","target":5}');
+ assert result#>>'{goal,target}'='5' and result#>'{goal,percent}'='null'::jsonb,'zero baseline';
+ result:=public.nz_personalization(ta,'answer','{"ex":"dob","option":-1,"frequency":3}');
+ assert result#>'{answers,dob,frequency}'='null'::jsonb,'skip retained frequency';
+ begin perform public.nz_personalization('invalid','get');raise exception 'token accepted';exception when others then if sqlerrm<>'unauthorized' then raise;end if;end;
+ begin perform public.nz_personalization(ta,'report');raise exception 'report leaked';exception when others then if sqlerrm<>'forbidden' then raise;end if;end;
+ begin perform public.nz_personalization(ta,'answer','{"ex":"mem","option":99}');raise exception 'answer accepted';exception when others then if sqlerrm<>'invalid_answer' then raise;end if;end;
+ begin perform public.nz_personalization(ta,'goal','{"ex":"sch_f","percent":0}');raise exception 'goal accepted';exception when others then if sqlerrm<>'invalid_goal' then raise;end if;end;
+ begin perform public.nz_personalization(tb,'goal','{"ex":"sch_f","percent":20}');raise exception 'invented baseline accepted';exception when others then if sqlerrm<>'result_required' then raise;end if;end;
+ assert not has_table_privilege('anon','nz_metrics.personalization','select');
+ assert not has_table_privilege('authenticated','nz_metrics.personalization','select');
+ reset role;
+end $$;
+select 'PASS isolated answers, owner-only report, immutable server baseline, validated goals and zero baseline; rolled back' as result;
+rollback;

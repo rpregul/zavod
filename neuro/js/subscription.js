@@ -1,4 +1,4 @@
-import { trackAction, flushAnalytics } from './analytics.js?v=1.2.2';
+import { trackAction, flushAnalytics } from './analytics.js?v=1.4.0';
 import { BILLING } from './config.js?v=1.1.2';
 import { sheet, confirmSheet } from './ui.js?v=1.1.2';
 import { esc } from './util.js?v=1.1.2';

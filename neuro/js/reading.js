@@ -1,7 +1,7 @@
 import { CLOUD } from './config.js?v=1.1.2';
 import { esc, plural } from './util.js?v=1.1.2';
 import { READING_TEXTS, randomReadingText } from './reading-texts.js?v=1.3.3';
-import { trackAction } from './analytics.js?v=1.2.2';
+import { trackAction } from './analytics.js?v=1.4.0';
 
 async function readingRequest(store, action, row = null) {
   const response = await fetch(CLOUD.url + '/rest/v1/rpc/nz_reading', {

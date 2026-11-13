@@ -1,7 +1,9 @@
-import { runReading, paintMeasurementStats } from './reading.js?v=1.3.3';
+import { openRoutine, ownComparisonMarkup } from './routine.js?v=1.4.0';
+import { askQuestion, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=1.4.0';
+import { runReading, paintMeasurementStats } from './reading.js?v=1.4.0';
 import { comparisonMarkup } from './summary-comparison.js?v=1.3.0';
-import { initAnalytics, openFunnel, trackScreen, trackExercise } from './analytics.js?v=1.2.2';
-import { store, cloudOn } from './store.js?v=1.3.2';
+import { initAnalytics, openFunnel, trackScreen, trackExercise } from './analytics.js?v=1.4.0';
+import { store, cloudOn } from './store.js?v=1.4.0';
 import * as S from './stats.js?v=1.1.2';
 import { el, esc, plural, dayStr, fmtLong, fmtShort, weekdayName, sleep, logicalDay } from './util.js?v=1.1.2';
 import { glyph, gi } from './icons.js?v=1.1.2';
@@ -12,7 +14,7 @@ import { runSchulte } from './schulte.js?v=1.1.2';
 import { runDobble } from './dobble.js?v=1.1.2';
 import { runMemory } from './memory.js?v=1.1.2';
 import { BILLING } from './config.js?v=1.1.2';
-import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.3.0';
+import { openSubscription, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.4.0';
 import { recommendations, exerciseReport } from './recommendations.js?v=1.3.0';
 
 // ---------------------------------------------------------------- упражнения
@@ -243,9 +245,10 @@ function renderHome({ quiet = false } = {}) {
   const full = S.fullDays(res);
   const week = S.weekStrip(res);
   const name = /^g_[a-f0-9]{32}$/.test(store.session.key) ? 'Гость' : store.session.name;
-  const left = ORDER.filter((id) => !done.has(id));
+  const routine = premium ? selectedExercises(store) : ORDER;
+  const left = routine.filter((id) => !done.has(id));
   const allDone = left.length === 0;
-  const startedCount = done.size;
+  const startedCount = routine.filter(id => done.has(id)).length;
 
   const node = el('div', 'home');
   const tileHtml = ORDER.map((id, i) => {
@@ -264,21 +267,22 @@ function renderHome({ quiet = false } = {}) {
 
   node.innerHTML = `
     <header class="top">
-      <div class="top__hello"><small>${weekdayName()}, ${fmtLong()}</small><h1>${greeting()},<br><span class="grad">${esc(name)}</span></h1></div>
+      <div class="top__hello"><h1>${greeting()},<br><span class="grad">${esc(name)}</span></h1></div>
       <button class="avatar glass-btn" data-act="settings" aria-label="Настройки">${esc(name.trim()[0]?.toUpperCase() || '?')}<i class="sync-dot" data-sync></i></button>
     </header>
 
     <div class="home__cols">
     <div class="home__col">
     <section class="hero glass" style="--i:0">
-      <div class="hero__ring">${ringSvg(startedCount / 4, { size: 104, stroke: 11, inner: `<b>${startedCount}</b><small>из 4</small>` })}</div>
+      <div class="hero__ring">${ringSvg(startedCount / routine.length, { size: 104, stroke: 11, inner: `<b>${startedCount}</b><small>из ${routine.length}</small>` })}</div>
       <div class="hero__txt">
         <h2>${allDone ? 'Зарядка сделана!' : startedCount ? 'Продолжим зарядку' : 'Утренняя зарядка'}</h2>
-        <p>${allDone ? 'Мозг разогрет. Можно повторить и побить рекорд.' : 'Четыре упражнения, около 8 минут'}</p>
+        <p>${allDone ? 'Мозг разогрет. Можно повторить и побить рекорд.' : routine.length + ' ' + plural(routine.length, 'упражнение', 'упражнения', 'упражнений')}</p>
       </div>
       <button class="btn btn--primary btn--lg btn--shine hero__cta" data-act="session">${glyph.play}<span>${allDone ? 'Ещё раз' : startedCount ? 'Продолжить' : 'Начать зарядку'}</span></button>
     </section>
 
+    ${premium ? '<button class="link routine-link" data-act="routine">Изменить упражнения</button>' : ''}
     <section class="chips-row" style="--i:1">
       <div class="stat glass">${gi('flame', 'orange', 'sm')}<span><b>${streak}</b><small>${plural(streak, 'день', 'дня', 'дней')} подряд</small></span></div>
       <div class="stat glass">${gi('trophy', 'lime', 'sm')}<span><b>${full}</b><small>${plural(full, 'полная зарядка', 'полные зарядки', 'полных зарядок')}</small></span></div>
@@ -331,6 +335,7 @@ function renderHome({ quiet = false } = {}) {
     </div>
     <div data-install></div>
     ${store.session?.key === 'рома' ? '<button type="button" class="btn btn--glass analytics-launch" data-act="funnel">Статистика сайта</button>' : ''}
+    <section class="habit-advice glass"><h3>Как сделать зарядку привычкой</h3><p>Регулярность помогает замечать динамику. Выберите посильную нагрузку и старайтесь заниматься понемногу каждый день.</p><p>Чтобы начать было проще, <button class="link inline-link" data-act="routine">сократите число упражнений</button>. Можно временно исключить самое сложное или нелюбимое: небольшой устойчивый ритм полезнее нагрузки, которую постоянно откладываете.</p><p>Свяжите тренировку с привычным ритуалом: например, несколько минут утром за чашкой кофе вместо прокрутки ленты. Наблюдайте, какой режим удобнее именно вам.</p></section>
     <footer class="foot">Нейро-зарядка · данные ${cloudOn() ? 'синхронизируются между устройствами' : 'хранятся на этом устройстве'}</footer>`;
 
   mount(node, 'home', { quiet });
@@ -365,6 +370,10 @@ function renderHome({ quiet = false } = {}) {
     void a.getBoundingClientRect();
     requestAnimationFrame(() => { a.style.strokeDashoffset = a.style.getPropertyValue('--to'); });
   });
+  const personalHost = document.createElement('div');
+  personalHost.className = 'personal-home';
+  node.querySelector('header').after(personalHost);
+  void paintPersonal({ host: personalHost, store, onEditAnswers: async () => { for (const ex of ORDER) await askQuestion({ store, mount, ex, force: true }); renderHome(); } });
   paintInstallHint(node);
   if (premium) paintMeasurementStats(node.querySelector('[data-measurement-stats]'),store);
   paintSync();
@@ -387,6 +396,7 @@ function renderHome({ quiet = false } = {}) {
     }
     if (t.dataset.act === 'sync-retry') return store.sync();
     if (t.dataset.act === 'sync-login') return renderLogin({ restore: true });
+    if (t.dataset.act === 'routine') return openRoutine({ store, mount, onHome: renderHome });
     if (t.dataset.act === 'session') return runSession();
     if (t.dataset.act === 'funnel') return openFunnel(store);
     if (t.dataset.act === 'settings') return openSettings();
@@ -467,11 +477,11 @@ function paintHistory(node) {
   const host = node.querySelector('[data-history]');
   const last = store.results.slice().sort((a, b) => b.ts - a.ts).slice(0, 8);
   if (!last.length) { host.innerHTML = ''; return; }
-  host.innerHTML = `<h3 class="sec__t">Последние попытки</h3><div class="history glass">${last.map((r) => {
+  host.innerHTML = `<details class="history-disclosure"><summary class="sec__t">Последние попытки</summary><div class="history glass">${last.map((r) => {
     const e = EX[r.ex];
     if (!e) return '';
     return `<div class="h-row">${gi(e.icon, e.color, 'xs')}<span class="h-row__t"><b>${e.title}</b><small>${fmtTime(r.ts)}</small></span><span class="h-row__v"><b>${r.score}</b><small>${e.unit.split(' ')[0]}</small></span></div>`;
-  }).join('')}</div>`;
+  }).join('')}</div></details>`;
 }
 
 function paintInstallHint(node) {
@@ -586,14 +596,14 @@ function openSettings() {
 }
 
 // ---------------------------------------------------------------- прохождение упражнения
-function introScreen(id, { guided, idx }) {
+function introScreen(id, { guided, idx, sessionOrder = ORDER }) {
   return new Promise((resolve) => {
     const e = EX[id];
     const node = el('div', 'intro');
     node.innerHTML = `
       <div class="intro__top">
         <button class="glass-btn" data-r="back" aria-label="Назад">${glyph.back}</button>
-        ${guided ? `<div class="steps">${ORDER.map((_, i) => `<i class="${i < idx ? 'done' : i === idx ? 'now' : ''}"></i>`).join('')}</div><span class="steps__n">${idx + 1} / 4</span>` : ''}
+        ${guided ? `<div class="steps">${sessionOrder.map((_, i) => `<i class="${i < idx ? 'done' : i === idx ? 'now' : ''}"></i>`).join('')}</div><span class="steps__n">${idx + 1} / ${sessionOrder.length}</span>` : ''}
       </div>
       <div class="intro__hero">
         <div class="intro__icon">${gi(e.icon, e.color, 'xxl')}</div>
@@ -613,7 +623,7 @@ function introScreen(id, { guided, idx }) {
   });
 }
 
-function resultScreen(id, rec, res, { guided, idx, isLast, trial = false }) {
+function resultScreen(id, rec, res, { guided, idx, isLast, trial = false, sessionOrder = ORDER }) {
   return new Promise((resolve) => {
     const e = EX[id];
     const all = store.results;
@@ -628,7 +638,7 @@ function resultScreen(id, rec, res, { guided, idx, isLast, trial = false }) {
       const d = rec.score - prev.score;
       chip = d > 0 ? `<span class="delta delta--up">↑ ${sign(d)} к прошлой попытке</span>` : d < 0 ? `<span class="delta delta--down">↓ ${sign(d)} к прошлой попытке</span>` : '<span class="delta">Как в прошлый раз</span>';
     }
-    const next = guided && !isLast ? EX[ORDER[idx + 1]] : null;
+    const next = guided && !isLast ? EX[sessionOrder[idx + 1]] : null;
     const report = exerciseReport(id, rec, store.results);
     const node = el('div', 'result');
     node.innerHTML = `
@@ -663,10 +673,10 @@ function resultScreen(id, rec, res, { guided, idx, isLast, trial = false }) {
 }
 
 // возвращает {rec, action} либо null, если вышли
-async function playOne(id, { guided = false, idx = 0, trial = null } = {}) {
+async function playOne(id, { guided = false, idx = 0, trial = null, sessionOrder = ORDER } = {}) {
   for (;;) {
     trackExercise('intro', id);
-    const go = await introScreen(id, { guided, idx });
+    const go = await introScreen(id, { guided, idx, sessionOrder });
     if (go === 'back') return null;
     for (;;) {
       const root = el('div', 'play');
@@ -679,7 +689,7 @@ async function playOne(id, { guided = false, idx = 0, trial = null } = {}) {
       await keepAwake(true);
       const exerciseStart = performance.now();
       trackExercise('start', id);
-      const res = await EX[id].run(ctx, { step: guided ? `${idx + 1} / 4` : '' });
+      const res = await EX[id].run(ctx, { step: guided ? `${idx + 1} / ${sessionOrder.length}` : '' });
       await keepAwake(false);
       trackExercise(res ? 'complete' : 'quit', id, performance.now() - exerciseStart);
       if (!res) return null;
@@ -690,8 +700,9 @@ async function playOne(id, { guided = false, idx = 0, trial = null } = {}) {
           catch { if (!await confirmSheet({ title: 'Сохраним результат?', text: 'Сервер временно недоступен. Результат сохранён на этом устройстве; попробуем отправить ещё раз.', ok: 'Повторить', cancel: 'Позже' })) return null; }
         }
       }
-      const action = await resultScreen(id, rec, res, { guided, idx, isLast: idx === ORDER.length - 1, trial: !!trial });
+      const action = await resultScreen(id, rec, res, { guided, idx, isLast: idx === sessionOrder.length - 1, trial: !!trial, sessionOrder });
       if (action === 'again') continue;
+      if (trial && guided && action === 'next') await askQuestion({ store, mount, ex: id });
       return { rec, action };
     }
   }
@@ -721,11 +732,11 @@ async function runSession() {
       }
     } catch { return openSubscription(store); }
   }
-  const order = trial ? TRIAL_ORDER : ORDER;
+  const order = trial ? TRIAL_ORDER : selectedExercises(store);
   const startIdx = trial?.next_index || 0;
   const recs = trial ? store.results.filter(r => r.meta?.trial_id === trial.trial_id).sort((a, b) => order.indexOf(a.ex) - order.indexOf(b.ex)) : [];
   for (let i = startIdx; i < order.length; i++) {
-    const r = await playOne(order[i], { guided: true, idx: i, trial });
+    const r = await playOne(order[i], { guided: true, idx: i, trial, sessionOrder: order });
     if (!r) { renderHome(); return; }
     recs.push(r.rec);
   }
@@ -749,6 +760,7 @@ function summaryScreen(recs, { trial = false } = {}) {
         <h2>Зарядка завершена!</h2>
         <p>${records ? `Рекордов за сегодня: ${records}. Отличный старт дня.` : 'Мозг разогрет, день начат без рилсов. Это уже победа.'}</p>
       </div>
+      <div class="summary__streak glass">${gi('flame', 'orange', 'sm')}<span><b>${streak} ${plural(streak, 'день', 'дня', 'дней')} подряд</b><small>Приходите завтра утром, не сбрасывайте серию</small></span></div>
       <div class="sum-list glass">${recs.map((r, i) => {
         const e = EX[r.ex];
         const prev = S.lastBefore(store.results, r.ex, r.ts);
@@ -757,11 +769,14 @@ function summaryScreen(recs, { trial = false } = {}) {
         const rec = pb !== null && r.score > pb;
         return `<div class="sum-row" style="--i:${i}">${gi(e.icon, e.color, 'sm')}<span class="sum-row__t"><b>${e.title}</b><small>${d === null ? 'первая попытка' : d === 0 ? 'как в прошлый раз' : `${sign(d)} к прошлой`}</small></span><span class="sum-row__v">${rec ? '<i class="star">★</i>' : ''}<b>${r.score}</b></span></div>`;
       }).join('')}</div>
-      ${comparisonMarkup(recs)}
-      <div class="summary__streak glass">${gi('flame', 'orange', 'sm')}<span><b>${streak} ${plural(streak, 'день', 'дня', 'дней')} подряд</b><small>Приходите завтра утром, не сбрасывайте серию</small></span></div>
+      ${new Set(recs.map(r => r.ex)).size === 4 ? comparisonMarkup(recs) : '<p class="reading-note">Сравнение со средним результатом доступно после тренировки из всех четырёх упражнений.</p>'}
+      ${ownComparisonMarkup(recs, store.results)}
+      <div data-personal-summary></div>
+
       <div data-install></div>
-      ${trial ? offerMarkup({ completed: true }) + '<button class="link" data-r="home">Позже</button>' : `<button class="btn btn--primary btn--lg btn--block btn--shine" data-r="home">К моему дашборду ${glyph.arrow}</button>`}`;
+      ${trial ? offerMarkup({ completed: true }) + '<button class="link" data-r="home">Позже</button>' : `<button class="btn btn--primary btn--lg btn--block btn--shine" data-r="home">На главную ${glyph.arrow}</button>`}`;
     mount(node, 'summary');
+    void paintPersonal({ host: node.querySelector('[data-personal-summary]'), store, summary: true, recs });
     paintInstallHint(node);
     setTimeout(() => { confetti({ count: 180 }); setTimeout(() => confetti({ count: 120, x: innerWidth * 0.2 }), 250); setTimeout(() => confetti({ count: 120, x: innerWidth * 0.8 }), 450); sfx('done'); haptic([20, 40, 20, 40, 40]); }, 300);
     node.querySelector('[data-r]').addEventListener('click', () => resolve());
@@ -775,6 +790,7 @@ function boot() {
   initRipple();
   store.load();
   initAnalytics(store);
+  if (store.session) initPersonalization(store);
   // перерисовываем главную, если изменилось содержимое результатов (в т.ч. дата у существующих), а не только их число
   const sig = () => store.results.map((r) => `${r.id}${r.day}${r.score}`).join('|') + JSON.stringify(store.access);
   let lastSig = sig();
@@ -793,7 +809,8 @@ function boot() {
       if (screen === 'home' && app.dataset.day !== dayStr()) { app.dataset.day = dayStr(); renderHome({ quiet: true }); }
     }
   });
-  window.addEventListener('online', () => { if (store.session) store.sync(); });
+  window.addEventListener('online', () => { if (store.session) { store.sync(); void flushPersonalization(store); } });
+  window.addEventListener('nz-routine-updated', () => { if (screen === 'home') renderHome({ quiet: true }); });
   app.dataset.day = dayStr();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('sw.js').catch(() => {});
