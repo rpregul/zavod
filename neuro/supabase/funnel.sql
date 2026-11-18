@@ -32,16 +32,19 @@ begin
     where i.first_seen>=cohort_start
   ), events as materialized (
     select coalesce(e.user_key,v.user_key,'anonymous:'||e.visitor_id::text) identity,
-      e.event,e.target,e.created_at
+      max(e.created_at) filter (where e.event='screen' and e.target='summary') summary_at,
+      max(e.created_at) filter (where e.event='impression' and e.target in ('offer','plan_individual','plan_family')) offer_at,
+      max(e.created_at) filter (where e.event='click' and e.target in ('plan_individual','plan_family')) plan_at,
+      max(e.created_at) filter (where e.event='commerce' and e.target in ('checkout_submit_individual','checkout_submit_family')) checkout_at
     from nz_metrics.events e join nz_metrics.visitors v on v.id=e.visitor_id
     where not v.excluded and e.created_at>=cohort_start
+      and e.event in ('screen','impression','click','commerce')
+    group by 1
   ), stages as (
-    select p.*,
-      exists(select 1 from events e where e.identity=p.identity and e.event='screen' and e.target='summary' and e.created_at>=p.completed_at) summary_seen,
-      exists(select 1 from events e where e.identity=p.identity and e.event='impression' and e.target in ('offer','plan_individual','plan_family') and e.created_at>=p.completed_at) offer_seen,
-      exists(select 1 from events e where e.identity=p.identity and e.event='click' and e.target in ('plan_individual','plan_family') and e.created_at>=p.completed_at) plan_selected,
-      exists(select 1 from events e where e.identity=p.identity and e.event='commerce' and e.target in ('checkout_submit_individual','checkout_submit_family') and e.created_at>=p.completed_at) checkout_submitted
-    from people p
+    select p.*, e.summary_at>=p.completed_at summary_seen,
+      e.offer_at>=p.completed_at offer_seen, e.plan_at>=p.completed_at plan_selected,
+      e.checkout_at>=p.completed_at checkout_submitted
+    from people p left join events e on e.identity=p.identity
   )
   select jsonb_build_object(
     'visitors',count(*),
