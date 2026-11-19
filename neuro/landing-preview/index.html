@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Нейро-зарядка — тренировки внимания и памяти</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="landing.css">
+<script src="landing.js" defer></script>
+</head>
+<body>
+<header class="wrap top"><a class="brand" href="./">Нейро<span>зарядка</span></a><a class="top-link" href="../">Открыть тренажёр</a></header>
+<main>
+<section class="hero wrap">
+<div><h1>Пять минут<br>для <em>внимания<br>и памяти.</em></h1>
+<p class="lead">Четыре коротких упражнения. Узнайте свой стартовый результат и сравнивайте с ним следующие тренировки.</p>
+<a class="button" href="../">Начать бесплатную тренировку</a><p class="note">Первая тренировка без карты и регистрации</p></div>
+<div class="game panel">
+<div class="game-head"><div><small>Мини-демо · таблица Шульте</small><h2>Найдите числа по порядку</h2></div><output id="time" aria-label="Время">00:00</output></div>
+<p id="hint" role="status">Начните с числа 1</p>
+<div class="tiles" aria-label="Числа от 1 до 9">
+<button type="button">6</button><button type="button">1</button><button type="button">8</button><button type="button">3</button><button type="button">9</button><button type="button">4</button><button type="button">7</button><button type="button">2</button><button type="button">5</button>
+</div>
+<button type="button" id="reset" class="quiet">Начать заново</button>
+</div>
+</section>
+<section class="wrap routine" aria-labelledby="routine-title">
+<h2 id="routine-title">Ваш ритм тренировок</h2>
+<ol><li><b>Найдите свой старт</b><p>Пройдите все четыре упражнения.</p></li><li><b>Повторите занятие</b><p>Выберите удобные пять минут в течение дня.</p></li><li><b>Сравните попытки</b><p>Посмотрите, что изменилось в каждом упражнении.</p></li></ol>
+</section>
+<section class="wrap progress">
+<div><h2>Сравнивайте себя<br>с собой</h2><p class="lead">Один результат — точка отсчёта. История попыток помогает увидеть, как меняются ваши показатели.</p><p class="note">Показатели относятся к упражнениям тренажёра.</p></div>
+<div class="panel chart">
+<small>Пример · демонстрационные данные</small>
+<div class="switch" role="group" aria-label="Показатель"><button data-metric="attention" aria-pressed="true">Внимание</button><button data-metric="memory" aria-pressed="false">Память</button></div>
+<h3 id="metric-name">Время в таблице Шульте</h3>
+<div class="bars" id="bars" aria-label="Результаты по попыткам"></div>
+<p class="note" id="metric-caption" aria-live="polite"></p>
+</div>
+</section>
+<section class="wrap bottom">
+<h2>Начните со своего результата</h2>
+<p>Первая полная тренировка бесплатна. Месяц занятий для одного — 399 ₽, для семьи до четырёх человек — 999 ₽. Оплата разовая.</p>
+<a class="button" href="../">Попробовать бесплатно</a>
+</section>
+</main>
+<footer class="wrap"><a href="../offer.html">Условия</a><a href="../privacy.html">Персональные данные</a></footer>
+</body>
+</html>
