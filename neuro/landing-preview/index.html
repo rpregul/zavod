@@ -8,17 +8,23 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="landing.css">
-<script src="landing.js" defer></script>
+<link rel="stylesheet" href="landing.css?v=2">
+<script src="landing.js?v=2" defer></script>
 </head>
 <body>
-<header class="wrap top"><a class="brand" href="./">Нейро<span>зарядка</span></a><a class="top-link" href="../">Открыть тренажёр</a></header>
+<header class="wrap top"><a class="brand" href="./">Нейро<span>зарядка</span></a><nav aria-label="Разделы"><a href="#inside">Что внутри</a><a href="#price">Доступ</a></nav><a class="top-link" href="../">В тренажёр</a></header>
 <main>
 <section class="hero wrap">
-<div><h1>Пять минут<br>для <em>внимания<br>и памяти.</em></h1>
-<p class="lead">Четыре коротких упражнения. Узнайте свой стартовый результат и сравнивайте с ним следующие тренировки.</p>
-<a class="button" href="../">Начать бесплатную тренировку</a><p class="note">Первая тренировка без карты и регистрации</p></div>
-<div class="game panel">
+<div class="hero-copy"><p class="eyebrow">Ежедневный тренажёр для мозга</p><h1>Внимание, память<br>и <em>скорость чтения</em></h1>
+<p class="lead">Короткие упражнения на каждый день. После занятия вы увидите свои результаты, а с подпиской получите их разбор и рекомендации для следующих тренировок.</p>
+<a class="button" href="../">Попробовать бесплатно</a><p class="note">Первая тренировка без карты и регистрации</p></div>
+<figure class="hero-visual" aria-label="Пример результатов чтения">
+<img src="../assets/reading-character.webp" alt="" width="480" height="480" fetchpriority="high">
+<figcaption class="scorecard"><small>Пример замера чтения</small><div><span><b>248</b> слов/мин</span><span><b>4 из 5</b> по тексту</span></div></figcaption>
+</figure>
+</section>
+<section id="inside" class="wrap lab"><div class="section-intro"><p class="eyebrow">Попробуйте прямо здесь</p><h2>С чего начнётся ваша тренировка</h2><p class="lead">Попробуйте мини-таблицу. В полной тренировке четыре упражнения на внимание и память. Скорость чтения можно измерить отдельно.</p></div>
+<div class="lab-grid"><div class="game panel">
 <div class="game-head"><div><small>Мини-демо · таблица Шульте</small><h2>Найдите числа по порядку</h2></div><output id="time" aria-label="Время">00:00</output></div>
 <p id="hint" role="status">Начните с числа 1</p>
 <div class="tiles" aria-label="Числа от 1 до 9">
@@ -26,27 +32,17 @@
 </div>
 <button type="button" id="reset" class="quiet">Начать заново</button>
 </div>
-</section>
-<section class="wrap routine" aria-labelledby="routine-title">
-<h2 id="routine-title">Ваш ритм тренировок</h2>
-<ol><li><b>Найдите свой старт</b><p>Пройдите все четыре упражнения.</p></li><li><b>Повторите занятие</b><p>Выберите удобные пять минут в течение дня.</p></li><li><b>Сравните попытки</b><p>Посмотрите, что изменилось в каждом упражнении.</p></li></ol>
-</section>
-<section class="wrap progress">
-<div><h2>Сравнивайте себя<br>с собой</h2><p class="lead">Один результат — точка отсчёта. История попыток помогает увидеть, как меняются ваши показатели.</p><p class="note">Показатели относятся к упражнениям тренажёра.</p></div>
+<div class="demo-notes"><h3>Что можно отслеживать</h3><div><b>Внимание</b><p>Сколько чисел вы находите за отведённое время.</p></div><div><b>Память</b><p>Сколько слов удаётся вспомнить после показа.</p></div><div><b>Чтение</b><p>Сколько слов в минуту вы читаете и на сколько вопросов по тексту отвечаете правильно.</p></div></div></div></section>
+<section class="wrap progress"><div><p class="eyebrow">История занятий</p><h2>Что меняется от попытки к попытке</h2><p class="lead">Сравнивайте новые результаты со своим стартом. Для чтения смотрите на темп вместе с пониманием текста.</p></div>
 <div class="panel chart">
 <small>Пример · демонстрационные данные</small>
-<div class="switch" role="group" aria-label="Показатель"><button data-metric="attention" aria-pressed="true">Внимание</button><button data-metric="memory" aria-pressed="false">Память</button></div>
+<div class="switch" role="group" aria-label="Показатель"><button data-metric="attention" aria-pressed="true">Внимание</button><button data-metric="memory" aria-pressed="false">Память</button><button data-metric="reading" aria-pressed="false">Чтение</button></div>
 <h3 id="metric-name">Время в таблице Шульте</h3>
 <div class="bars" id="bars" aria-label="Результаты по попыткам"></div>
 <p class="note" id="metric-caption" aria-live="polite"></p>
-</div>
-</section>
-<section class="wrap bottom">
-<h2>Начните со своего результата</h2>
-<p>Первая полная тренировка бесплатна. Месяц занятий для одного — 399 ₽, для семьи до четырёх человек — 999 ₽. Оплата разовая.</p>
-<a class="button" href="../">Попробовать бесплатно</a>
-</section>
+</div></section>
+<section class="wrap insight"><p class="eyebrow">Пример разбора</p><h2>Что попробовать на следующей тренировке</h2><div class="insight-grid"><div class="example-score"><b>8 из 30</b><span>слов удалось вспомнить</span></div><div><h3>Свяжите слова в историю</h3><p>Представьте, как каждое слово связано со следующим. В новой попытке сравните, сколько слов вспомнили с этим приёмом.</p></div></div></section>
+<section class="wrap review"><span class="eyebrow">Отзыв участницы</span><blockquote>«Читать стало проще, меньше отвлекаюсь и больше текста запоминаю».</blockquote><p>Участница также рассказала, что короткая тренировка вошла у неё в утреннюю привычку. Это её личный опыт.</p></section>
+<section class="wrap bottom" id="price"><div><p class="eyebrow">Месяц тренировок</p><h2>Продолжайте со своим результатом</h2><ul><li>Ежедневные занятия и история прогресса</li><li>Персональный разбор, подсказки и рекомендации</li><li>Новые упражнения и уровни сложности</li><li>Повторные замеры скорости и понимания чтения</li></ul></div><div class="price"><b>399 ₽</b><span>за месяц для одного</span><p>Разовая оплата</p><a class="button" href="../">Начать с бесплатной тренировки</a></div></section>
 </main>
-<footer class="wrap"><a href="../offer.html">Условия</a><a href="../privacy.html">Персональные данные</a></footer>
-</body>
-</html>
+<footer class="wrap"><a href="../offer.html">Условия</a><a href="../privacy.html">Персональные данные</a></footer></body></html>

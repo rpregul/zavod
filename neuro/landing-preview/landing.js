@@ -49,6 +49,7 @@ document.querySelector('#reset').addEventListener('click', () => {
   tiles[0].focus();
 });
 const metrics = {
+  reading: { title: 'Скорость чтения', unit: 'слов/мин', values: [210, 228, 221, 248], caption: 'Понимание по попыткам: 4 из 5, 4 из 5, 3 из 5, 4 из 5.' },
   attention: { title: 'Найдено чисел в таблице Шульте', unit: 'чисел', values: [18, 22, 21, 26], caption: 'Сравнивайте число найденных чисел за одинаковое время.' },
   memory: { title: 'Сколько слов удалось вспомнить', unit: 'слов', values: [8, 10, 9, 12], caption: 'Каждый столбец — отдельная попытка.' }
 };
