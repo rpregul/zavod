@@ -1,48 +1,23 @@
-<!doctype html>
-<html lang="ru">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex,nofollow">
-<title>Нейро-зарядка — тренировки внимания и памяти</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="landing.css?v=2">
-<script src="landing.js?v=2" defer></script>
-</head>
-<body>
-<header class="wrap top"><a class="brand" href="./">Нейро<span>зарядка</span></a><nav aria-label="Разделы"><a href="#inside">Что внутри</a><a href="#price">Доступ</a></nav><a class="top-link" href="../">В тренажёр</a></header>
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Нейро-зарядка — внимание, память и чтение</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="landing.css?v=3"><script defer src="landing.js?v=3"></script></head>
+<body><header class="wrap top"><a class="brand" href="./">Нейро<span>зарядка</span></a><a href="../">Открыть тренажёр</a></header>
 <main>
-<section class="hero wrap">
-<div class="hero-copy"><p class="eyebrow">Ежедневный тренажёр для мозга</p><h1>Внимание, память<br>и <em>скорость чтения</em></h1>
-<p class="lead">Короткие упражнения на каждый день. После занятия вы увидите свои результаты, а с подпиской получите их разбор и рекомендации для следующих тренировок.</p>
-<a class="button" href="../">Попробовать бесплатно</a><p class="note">Первая тренировка без карты и регистрации</p></div>
-<figure class="hero-visual" aria-label="Пример результатов чтения">
-<img src="../assets/reading-character.webp" alt="" width="480" height="480" fetchpriority="high">
-<figcaption class="scorecard"><small>Пример замера чтения</small><div><span><b>248</b> слов/мин</span><span><b>4 из 5</b> по тексту</span></div></figcaption>
-</figure>
+<section class="wrap hero">
+<div><p class="eyebrow">Тренажёр внимания, памяти и чтения</p><h1>Эффект<br>от занятий</h1><p class="lead">В основе тренажёра — упражнения на внимание, рабочую память и чтение. Евгения Киргизова, эксперт проекта, использует такие упражнения в своей практике.</p></div>
+<div class="effects" aria-label="Что можно тренировать и отслеживать">
+<article><i class="shape focus" aria-hidden="true"></i><h2>Внимание</h2><p>Находите числа по порядку.</p></article>
+<article><i class="shape target" aria-hidden="true"></i><h2>Концентрация</h2><p>Удерживайте правило в ходе задания.</p></article>
+<article><i class="shape detail" aria-hidden="true"><b></b><b></b><b></b><b></b></i><h2>Внимание к деталям</h2><p>Замечайте совпадения среди символов.</p></article>
+<article><i class="shape memory" aria-hidden="true"></i><h2>Память</h2><p>Запоминайте и воспроизводите слова.</p></article>
+</div>
+<div class="hero-action"><a class="cta" href="../">Начать тренироваться</a><p class="fine">Первая тренировка бесплатно, без карты</p></div>
 </section>
-<section id="inside" class="wrap lab"><div class="section-intro"><p class="eyebrow">Попробуйте прямо здесь</p><h2>С чего начнётся ваша тренировка</h2><p class="lead">Попробуйте мини-таблицу. В полной тренировке четыре упражнения на внимание и память. Скорость чтения можно измерить отдельно.</p></div>
-<div class="lab-grid"><div class="game panel">
-<div class="game-head"><div><small>Мини-демо · таблица Шульте</small><h2>Найдите числа по порядку</h2></div><output id="time" aria-label="Время">00:00</output></div>
-<p id="hint" role="status">Начните с числа 1</p>
-<div class="tiles" aria-label="Числа от 1 до 9">
-<button type="button">6</button><button type="button">1</button><button type="button">8</button><button type="button">3</button><button type="button">9</button><button type="button">4</button><button type="button">7</button><button type="button">2</button><button type="button">5</button>
-</div>
-<button type="button" id="reset" class="quiet">Начать заново</button>
-</div>
-<div class="demo-notes"><h3>Что можно отслеживать</h3><div><b>Внимание</b><p>Сколько чисел вы находите за отведённое время.</p></div><div><b>Память</b><p>Сколько слов удаётся вспомнить после показа.</p></div><div><b>Чтение</b><p>Сколько слов в минуту вы читаете и на сколько вопросов по тексту отвечаете правильно.</p></div></div></div></section>
-<section class="wrap progress"><div><p class="eyebrow">История занятий</p><h2>Что меняется от попытки к попытке</h2><p class="lead">Сравнивайте новые результаты со своим стартом. Для чтения смотрите на темп вместе с пониманием текста.</p></div>
-<div class="panel chart">
-<small>Пример · демонстрационные данные</small>
-<div class="switch" role="group" aria-label="Показатель"><button data-metric="attention" aria-pressed="true">Внимание</button><button data-metric="memory" aria-pressed="false">Память</button><button data-metric="reading" aria-pressed="false">Чтение</button></div>
-<h3 id="metric-name">Время в таблице Шульте</h3>
-<div class="bars" id="bars" aria-label="Результаты по попыткам"></div>
-<p class="note" id="metric-caption" aria-live="polite"></p>
-</div></section>
-<section class="wrap insight"><p class="eyebrow">Пример разбора</p><h2>Что попробовать на следующей тренировке</h2><div class="insight-grid"><div class="example-score"><b>8 из 30</b><span>слов удалось вспомнить</span></div><div><h3>Свяжите слова в историю</h3><p>Представьте, как каждое слово связано со следующим. В новой попытке сравните, сколько слов вспомнили с этим приёмом.</p></div></div></section>
-<section class="wrap review"><span class="eyebrow">Отзыв участницы</span><blockquote>«Читать стало проще, меньше отвлекаюсь и больше текста запоминаю».</blockquote><p>Участница также рассказала, что короткая тренировка вошла у неё в утреннюю привычку. Это её личный опыт.</p></section>
-<section class="wrap bottom" id="price"><div><p class="eyebrow">Месяц тренировок</p><h2>Продолжайте со своим результатом</h2><ul><li>Ежедневные занятия и история прогресса</li><li>Персональный разбор, подсказки и рекомендации</li><li>Новые упражнения и уровни сложности</li><li>Повторные замеры скорости и понимания чтения</li></ul></div><div class="price"><b>399 ₽</b><span>за месяц для одного</span><p>Разовая оплата</p><a class="button" href="../">Начать с бесплатной тренировки</a></div></section>
-</main>
-<footer class="wrap"><a href="../offer.html">Условия</a><a href="../privacy.html">Персональные данные</a></footer></body></html>
+<section class="wrap section audience"><div class="section-head"><h2>Кому полезен тренажёр?</h2><p>Выберите возраст, чтобы посмотреть примеры занятий.</p></div>
+<div class="audience-grid"><div><div class="switch" role="group" aria-label="Возрастная группа"><button data-age="young" aria-pressed="false">Младший</button><button data-age="adult" aria-pressed="true">Средний</button><button data-age="senior" aria-pressed="false">Пожилой</button></div><div class="age-copy" aria-live="polite"><h3 id="age-title">Зарядка перед рабочим днём</h3><ul id="age-list"><li>Потренироваться замечать детали.</li><li>Практиковать концентрацию в коротких заданиях.</li><li>Замерить скорость чтения и понимание текста.</li></ul></div></div>
+<div class="age-picture" aria-hidden="true"><div class="orbit"></div><div class="age-icon" id="age-icon">◎</div><div class="satellite s1"></div><div class="satellite s2"></div></div></div></section>
+<section class="synapse"><div class="wrap syn-grid"><div><p class="eyebrow">Нейропластичность</p><h2>Как мозг меняется, когда мы учимся</h2><p class="lead">Синапс — место, через которое один нейрон передаёт сигнал другому. Во время обучения сила некоторых связей может меняться.</p><p class="callout">Практика даёт возможность повторять навык и сравнивать свои результаты от занятия к занятию.</p><a class="cta" href="../">Начать тренироваться</a></div>
+<figure><svg viewBox="0 0 520 300" role="img" aria-label="Схема: сигнал проходит от первого нейрона через синапс ко второму">
+<defs><linearGradient id="wire"><stop stop-color="#f897d0"/><stop offset="1" stop-color="#b6a0ff"/></linearGradient><radialGradient id="cell"><stop stop-color="#ffe0f5"/><stop offset="1" stop-color="#ee6fbd"/></radialGradient></defs>
+<g fill="none" stroke="url(#wire)" stroke-linecap="round"><path d="M120 146Q65 124 46 67m55 72Q53 151 28 193m87-39q-15 67-60 83m60-99q-5-56 18-87M129 150C173 115 196 169 248 149m35 0c33 15 67-29 109-1m1 0Q439 121 466 71m-75 73q48 6 94 42m-94-38q10 56 50 89m-48-96q-4-51 21-90" stroke-width="7"/><path d="M241 131l12 18-12 19m48-35-12 16 12 18" stroke-width="5"/></g><circle cx="119" cy="148" r="22" fill="url(#cell)"/><circle cx="394" cy="148" r="22" fill="#b6a0ff"/><circle class="pulse" cx="118" cy="148" r="8" fill="#fff6bc"/><path d="M265 176v39" stroke="#cfbaf5" stroke-dasharray="4 5"/><text x="265" y="239" text-anchor="middle" fill="#f4eaff" font-size="19">Синапс</text></svg><button type="button" id="signal">Запустить сигнал</button><figcaption>Упрощённая схема передачи сигнала</figcaption></figure></div></section>
+<section class="wrap section how"><div class="section-head"><h2>Как тренироваться</h2></div><ol><li><div class="step-art" aria-hidden="true">◎</div><h3>Получите стартовый результат</h3><p>Пройдите вводную тренировку и узнайте, как справились с заданиями на внимание и память.</p></li><li><div class="step-art" aria-hidden="true">◷</div><h3>Тренируйтесь каждый день</h3><p>Выделите 5–7 минут на упражнения. По подписке доступны разборы, рекомендации и новые задания.</p></li><li><div class="step-art chart-art" aria-hidden="true"><i></i><i></i><i></i><i></i></div><h3>Сравнивайте попытки</h3><p>Смотрите историю занятий. Скорость чтения можно измерить отдельно и сравнить вместе с пониманием текста.</p></li></ol><a class="cta" href="../">Начать тренировку</a></section>
+<section class="wrap section reviews"><div><h2>Отзывы о нашем тренажёре</h2><p class="lead">Как короткая тренировка стала частью утра одной из участниц.</p></div><a class="review-pic" href="review.jpg" aria-label="Открыть скриншот отзыва в полном размере"><img src="review.jpg" width="1284" height="914" loading="lazy" alt="Скриншот отзыва: участница рассказывает Евгении о внимании, памяти и привычке тренироваться каждое утро"></a><div class="review-action"><a class="cta" href="../">Присоединиться к результатам</a><p class="fine">После пробной — 399 ₽ за месяц, разовая оплата</p></div></section>
+</main><footer class="wrap"><a href="../offer.html">Условия доступа</a><a href="../privacy.html">Персональные данные</a></footer></body></html>
