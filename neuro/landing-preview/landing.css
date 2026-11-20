@@ -32,7 +32,6 @@ h3 { font-size: 1.3rem; }
   align-items: center;
   padding: clamp(24px, 5vw, 68px) 0 clamp(58px, 9vw, 118px);
 }
-.eyebrow { color: var(--accent); font-weight: 800; margin-bottom: 14px; }
 h1 { font-size: clamp(3rem, 6.75vw, 6.2rem); font-weight: 800; letter-spacing: -.077em; line-height: .99; }
 h1 em { color: var(--accent); font-style: normal; white-space: nowrap; }
 .lead { font-size: clamp(1rem, 1.8vw, 1.2rem); color: var(--muted); margin-top: 18px; max-width: 42ch; }
@@ -102,7 +101,17 @@ h1 em { color: var(--accent); font-style: normal; white-space: nowrap; }
 .demo-footer button { min-height: 44px; border: 0; background: transparent; color: var(--accent); font-size: .85rem; font-weight: 800; text-decoration: underline; }
 .section { margin-bottom: clamp(60px, 10vw, 126px); }
 .section-head { margin-bottom: 24px; }
-.section-head p, .effects p, .how li p { color: var(--muted); margin-top: 8px; }
+.section-head p, .effect-stat {
+  display: flex;
+  align-items: center;
+  min-height: 49px;
+  margin-bottom: 22px;
+  color: var(--accent);
+  font-size: clamp(1.45rem, 3.3vw, 2.15rem);
+  font-weight: 800;
+  letter-spacing: -.055em;
+}
+.effects p, .how li p { color: var(--muted); margin-top: 8px; }
 .effects, .how ol { display: grid; gap: 12px; }
 .effects { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .effects article, .how li { padding: clamp(17px, 2.5vw, 28px); border-radius: 24px; min-width: 0; }
@@ -110,14 +119,12 @@ h1 em { color: var(--accent); font-style: normal; white-space: nowrap; }
 .effects article:nth-child(2) { background: #f9e7e3; }
 .effects article:nth-child(3) { background: #e8f0e8; }
 .effects article:nth-child(4) { background: #f8eeda; }
-.effects h2 { font-size: clamp(.98rem, 2vw, 1.25rem); text-wrap: initial; }
+.effects h2, .effects h3 { font-size: clamp(.98rem, 2vw, 1.25rem); text-wrap: initial; }
 .effects p, .how li p { font-size: .95rem; }
 .shape, .step-art { display: grid; place-items: center; width: 49px; height: 49px; margin-bottom: 22px; color: var(--accent); border-radius: 15px; background: #fffc; font-style: normal; font-size: 1.7rem; }
 .focus::before { content: '✦'; }
 .target::before { content: '◎'; }
 .memory::before { content: '◇'; }
-.detail { grid-template: repeat(2, 6px) / repeat(2, 6px); gap: 4px; place-content: center; }
-.detail b { width: 6px; height: 6px; border-radius: 2px; background: currentColor; }
 .audience-grid {
   display: grid;
   grid-template-columns: 1.2fr .8fr;
