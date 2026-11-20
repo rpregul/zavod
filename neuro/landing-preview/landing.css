@@ -292,3 +292,15 @@ footer a { display: inline-flex; align-items: center; min-height: 44px; text-und
 @media (max-width: 760px) {
   .final-training { grid-template-columns: minmax(0, 1fr); }
 }
+
+.purchase-faq { margin-top: clamp(44px, 7vw, 82px); margin-bottom: 32px; }
+.purchase-faq-list {
+  margin: 18px 0 0;
+  padding: 4px clamp(16px, 4vw, 32px);
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--white);
+}
+.purchase-faq-list li { padding: 13px 0; font-weight: 700; }
+.purchase-faq-list li + li { border-top: 1px solid var(--border); }
