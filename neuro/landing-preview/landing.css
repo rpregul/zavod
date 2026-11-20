@@ -101,7 +101,8 @@ h1 em { color: var(--accent); font-style: normal; white-space: nowrap; }
 .demo-footer button { min-height: 44px; border: 0; background: transparent; color: var(--accent); font-size: .85rem; font-weight: 800; text-decoration: underline; }
 .section { margin-bottom: clamp(60px, 10vw, 126px); }
 .section-head { margin-bottom: 24px; }
-.section-head p, .effect-stat {
+.section-head p { margin-top: 8px; color: var(--muted); }
+.effect-stat {
   display: flex;
   align-items: center;
   min-height: 49px;
@@ -132,12 +133,10 @@ h1 em { color: var(--accent); font-style: normal; white-space: nowrap; }
   border-radius: 28px;
   background: #f2eaf8;
 }
-.reading-example figcaption p { margin-top: 5px; color: var(--muted); font-size: .9rem; }
 .reading-comparison {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-  margin-top: 20px;
 }
 .reading-case {
   padding: clamp(14px, 2.4vw, 24px);

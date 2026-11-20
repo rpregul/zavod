@@ -22,7 +22,13 @@
   try {
     const saved = JSON.parse(localStorage.getItem(changeKey) || '[]');
     for (const {index, original, value} of saved) {
-      if (source[index] === original && typeof value === 'string') draft.set(index, value);
+      if (typeof value !== 'string') continue;
+      if (source[index] === original) {
+        draft.set(index, value);
+      } else {
+        const match = source.indexOf(original);
+        if (match !== -1 && match === source.lastIndexOf(original)) draft.set(match, value);
+      }
     }
   } catch {
     // The editor also works without persistent browser storage.
