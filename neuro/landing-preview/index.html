@@ -1,4 +1,4 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Нейро-зарядка — внимание, память и чтение</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="landing.css?v=10"><script defer src="landing.js?v=4"></script></head>
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Нейро-зарядка — внимание, память и чтение</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="landing.css?v=10"><link rel="stylesheet" href="reading-demo.css?v=1"><script defer src="reading-demo.js?v=1"></script><script defer src="landing.js?v=4"></script></head>
 <body><header class="wrap top"><a class="brand" href="./">Нейро<span>тренажёр</span></a><a href="../">Открыть тренажёр</a></header>
 <main>
 <section class="wrap hero">
@@ -56,6 +56,54 @@
 <g fill="none" stroke="url(#wire)" stroke-linecap="round"><path d="M120 146Q65 124 46 67m55 72Q53 151 28 193m87-39q-15 67-60 83m60-99q-5-56 18-87M129 150C173 115 196 169 248 149m35 0c33 15 67-29 109-1m1 0Q439 121 466 71m-75 73q48 6 94 42m-94-38q10 56 50 89m-48-96q-4-51 21-90" stroke-width="7"/><path d="M241 131l12 18-12 19m48-35-12 16 12 18" stroke-width="5"/></g><circle cx="119" cy="148" r="22" fill="url(#cell)"/><circle cx="394" cy="148" r="22" fill="#b6a0ff"/><circle class="pulse" cx="118" cy="148" r="8" fill="#fff6bc"/><path d="M265 176v39" stroke="#cfbaf5" stroke-dasharray="4 5"/><text x="265" y="239" text-anchor="middle" fill="#ded2f1" font-size="19">Синапс</text></svg><button type="button" id="signal">Запустить сигнал</button><figcaption>Упрощённая схема передачи сигнала</figcaption></figure></div></section>
 <section class="wrap section how"><div class="section-head"><h2>Как тренироваться</h2></div><ol><li><div class="step-art" aria-hidden="true">◎</div><h3>Получите стартовый результат</h3><p>Пройдите вводную тренировку и узнайте, как справились с заданиями на внимание и память.</p></li><li><div class="step-art" aria-hidden="true">◷</div><h3>Тренируйтесь каждый день</h3><p>Выделите 5–7 минут на упражнения. По подписке доступны разборы, рекомендации и новые задания.</p></li><li><div class="step-art chart-art" aria-hidden="true"><i></i><i></i><i></i><i></i></div><h3>Сравнивайте попытки</h3><p>Смотрите историю занятий. Скорость чтения можно измерить отдельно и сравнить вместе с пониманием текста.</p></li></ol><a class="cta" href="../">Начать тренировку</a></section>
 <section class="wrap section reviews"><div><h2>Как тренировка вошла в привычку</h2><p class="lead">Отзыв участницы о первых занятиях.</p></div><a class="review-pic" href="review.jpg" aria-label="Открыть скриншот отзыва в полном размере"><img src="review.jpg" width="1284" height="914" loading="lazy" alt="Скриншот отзыва: участница рассказывает Евгении о внимании, памяти и привычке тренироваться каждое утро"></a><div class="review-action"><a class="cta" href="../">Попробовать тренировку <span aria-hidden="true">↗</span></a><p class="fine">После пробной — 399 ₽ за месяц, разовая оплата</p></div></section>
+<section class="wrap section reading-demo" aria-labelledby="reading-demo-title">
+  <div class="section-head">
+    <h2 id="reading-demo-title">Вы можете читать быстрее уже прямо сейчас</h2>
+    <p>Сравните два способа чтения и подберите темп, в котором успеваете понимать текст.</p>
+  </div>
+  <div class="reading-demo-card">
+    <div class="reading-tabs" role="tablist" aria-label="Способ чтения">
+      <button id="tab-reading-usual" type="button" role="tab" aria-controls="reading-usual" aria-selected="true">Как вы читаете сейчас</button>
+      <button id="tab-reading-focus" type="button" role="tab" aria-controls="reading-focus" aria-selected="false" tabindex="-1">Концентрированное чтение</button>
+    </div>
+    <div id="reading-usual" role="tabpanel" aria-labelledby="tab-reading-usual" tabindex="0">
+      <p class="reading-demo-note">150 слов/мин. Красным отмечен возврат к уже прочитанным словам.</p>
+      <div class="reading-simulation">
+        <p id="reading-usual-text">Вы начинаете читать статью. Через пару абзацев замечаете, что потеряли нить, и возвращаетесь к началу. Тут загорается экран телефона, и вы отвлекаетесь на сообщение. Когда снова смотрите в текст, приходится искать, где остановились. К вечеру от статьи остаётся только смутное впечатление. А длинный документ, который требует сосредоточиться, так и ждёт своего часа.</p>
+        <p id="reading-highlighted" aria-hidden="true" hidden></p>
+      </div>
+      <button class="cta" id="reading-usual-play" type="button">Показать, как это выглядит</button>
+      <p class="reading-sr" id="reading-usual-status" role="status"></p>
+    </div>
+    <div id="reading-focus" role="tabpanel" aria-labelledby="tab-reading-focus" tabindex="0" hidden>
+      <p class="reading-demo-note">Смотрите на выделенную букву в центре. Подберите скорость, на которой успеваете следить за мыслью.</p>
+      <div class="reading-word" aria-hidden="true"><span id="reading-word-before"></span><span id="reading-word-pivot">•</span><span id="reading-word-after"></span></div>
+      <div class="reading-controls">
+        <div class="reading-speed-label"><label for="reading-speed">Скорость</label><output for="reading-speed" id="reading-speed-value">250 слов/мин</output></div>
+        <input id="reading-speed" type="range" min="150" max="700" step="10" value="250">
+        <div class="reading-speed-ends" aria-hidden="true"><span>150</span><span>700</span></div>
+        <button class="cta" id="reading-focus-play" type="button">Читать</button>
+        <p class="reading-demo-note" id="reading-focus-status" role="status"></p>
+      </div>
+      <details class="reading-transcript">
+        <summary>Текст упражнения</summary>
+        <p id="reading-focus-text">Что мешает читать быстрее? Отвлечения сбивают с мысли: после уведомления приходится заново искать место в тексте. Возвраты тоже отнимают время, особенно когда взгляд снова и снова цепляется за одну и ту же строчку. А одинаковый темп для всех текстов мешает подстроиться под задачу: знакомый материал можно читать быстрее, а на сложной мысли полезно задержаться. В упражнениях можно тренировать темп и отдельно проверять понимание. Так вы сможете читать быстрее и лучше улавливать смысл. В нейротренажёре виден прогресс по упражнениям, а повторные замеры помогают отслеживать, как меняются скорость чтения и понимание.</p>
+      </details>
+      <div class="reading-reference">
+        <h3>Ориентиры скорости чтения про себя</h3>
+        <dl>
+          <div><dt>7 класс</dt><dd>280–300</dd></div>
+          <div><dt>9 класс</dt><dd>340–400</dd></div>
+          <div><dt>11 класс</dt><dd>440–480</dd></div>
+          <div><dt>Студенты</dt><dd>480–500</dd></div>
+          <div><dt>Взрослые</dt><dd>500–600</dd></div>
+        </dl>
+        <p class="reading-demo-note">В словах в минуту, по материалам Евгении Киргизовой.</p>
+        <p>При регулярной практике можно поставить цель <strong>600 слов/мин</strong>. Скорость чтения преподавателя Евгении Киргизовой — <strong>1 200 слов/мин</strong>.</p>
+      </div>
+    </div>
+  </div>
+</section>
 </main><footer class="wrap"><a href="../offer.html">Условия доступа</a><a href="../privacy.html">Персональные данные</a></footer>
 <script>
   if (new URLSearchParams(location.search).get('edit') === '1') {
