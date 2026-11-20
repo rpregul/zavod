@@ -1,0 +1,39 @@
+.edit-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 10px max(16px, calc((100% - 1120px) / 2));
+  background: #30253a;
+  color: #fff;
+}
+.edit-toolbar-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; }
+.edit-toolbar button, .edit-toolbar a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 4px 10px;
+  border: 1px solid #d6c8e1;
+  border-radius: 8px;
+  color: #30253a;
+  background: #fffaf5;
+  font-size: .85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.edit-toolbar button:disabled { opacity: .65; cursor: default; }
+.edit-toolbar p { margin-top: 6px; font-size: .85rem; }
+.edit-text[contenteditable="plaintext-only"] {
+  cursor: text;
+  min-inline-size: .65em;
+  outline: 1px dashed #9460c9;
+  outline-offset: 2px;
+  border-radius: 2px;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.edit-text[contenteditable="plaintext-only"]:empty { display: inline-block; }
+.edit-text[contenteditable="plaintext-only"]:focus {
+  outline: 2px solid #9460c9;
+  background: #f3e8ff;
+  color: #30253a;
+}
