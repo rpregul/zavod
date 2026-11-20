@@ -21,3 +21,37 @@ document.querySelector('#signal').addEventListener('click', () => {
   void pulse.getBoundingClientRect();
   pulse.classList.add('firing');
 });
+
+const tiles = [...document.querySelectorAll('[data-number]')];
+const demoStatus = document.querySelector('#demo-status');
+const resetDemo = document.querySelector('#demo-reset');
+let nextNumber = 1;
+
+tiles.forEach((tile, index) => tile.addEventListener('click', () => {
+  if (tile.disabled) return;
+  if (Number(tile.dataset.number) !== nextNumber) {
+    demoStatus.textContent = `Сначала найдите число ${nextNumber}`;
+    return;
+  }
+
+  tile.disabled = true;
+  nextNumber += 1;
+  if (nextNumber > tiles.length) {
+    demoStatus.textContent = 'Готово! Все числа на месте.';
+    resetDemo.hidden = false;
+    resetDemo.focus();
+    return;
+  }
+
+  demoStatus.textContent = `Теперь найдите число ${nextNumber}`;
+  const remaining = [...tiles.slice(index + 1), ...tiles.slice(0, index)];
+  remaining.find(candidate => !candidate.disabled).focus();
+}));
+
+resetDemo.addEventListener('click', () => {
+  nextNumber = 1;
+  tiles.forEach(tile => { tile.disabled = false; });
+  demoStatus.textContent = 'Найдите число 1';
+  resetDemo.hidden = true;
+  tiles[0].focus();
+});
