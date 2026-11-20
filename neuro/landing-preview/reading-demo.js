@@ -12,6 +12,7 @@
   const pivot = get('reading-word-pivot');
   const after = get('reading-word-after');
   const status = get('reading-focus-status');
+  const report = (target, speed) => document.dispatchEvent(new CustomEvent('nz-landing-exercise',{detail:{target,speed}}));
   let usualTimer, focusTimer, usualObserver;
   let tokens = [], words = [], marked = [];
   let cursor = 0, wordIndex = 0, lastRollback = 0;
@@ -76,6 +77,7 @@
 
   function tickUsual() {
     if (cursor >= tokens.length) {
+      report('land_usual_complete',200);
       highlighted.hidden = true;
       usual.classList.remove('reading-source-active');
       get('reading-usual-status').textContent = 'Демонстрация завершена.';
@@ -96,7 +98,7 @@
 
   const splitWords = text => text.trim().match(/\S+/g) || [];
 
-  function toggleUsual() {
+  function toggleUsual(automatic = false) {
     usualObserver?.disconnect();
     if (usualTimer !== undefined) {
       stopUsual('Продолжить');
@@ -113,6 +115,7 @@
       usual.classList.add('reading-source-active');
       highlighted.hidden = false;
       lastRollback = 0;
+      report(automatic === true ? 'land_usual_auto' : 'land_usual_manual',200);
     }
     get('reading-usual-status').textContent = '';
     usualPlay.textContent = 'Пауза';
@@ -123,7 +126,7 @@
   const isEditor = new URLSearchParams(location.search).get('edit') === '1';
   if (!isEditor && !matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
     usualObserver = new IntersectionObserver(entries => {
-      if (entries.some(entry => entry.isIntersecting)) toggleUsual();
+      if (entries.some(entry => entry.isIntersecting)) toggleUsual(true);
     }, { rootMargin: '0px 0px -15% 0px' });
     usualObserver.observe(highlighted.parentElement);
   }
@@ -140,6 +143,7 @@
   const delay = () => 60000 / Number(speed.value);
   function tickFocus() {
     if (wordIndex >= words.length) {
+      report('land_focus_complete',Number(speed.value));
       wordIndex = 0;
       status.textContent = 'Текст закончился. Сформулируйте его главную мысль.';
       stopFocus('Читать снова');
@@ -163,7 +167,10 @@
       stopFocus('Продолжить');
       return;
     }
-    if (wordIndex === 0) words = splitWords(transcript.textContent);
+    if (wordIndex === 0) {
+      words = splitWords(transcript.textContent);
+      if (words.length) report('land_focus_start',Number(speed.value));
+    }
     if (words.length === 0) return;
     status.textContent = '';
     focusPlay.textContent = 'Пауза';

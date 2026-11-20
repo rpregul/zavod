@@ -1,11 +1,11 @@
-import { openFunnel } from './traffic.js?v=1.8.0';
+import { openFunnel } from './traffic.js?v=1.9.0';
 import { runColors } from './colors.js?v=1.7.0';
 import { initReminders, openReminders } from './reminders.js?v=1.5.0';
 import { openRoutine, ownComparisonMarkup } from './routine.js?v=1.6.0';
 import { askQuestion, completePersonalSurvey, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=1.6.0';
 import { runReading, paintMeasurementStats, readingAccess } from './reading.js?v=1.5.0';
 import { comparisonMarkup } from './summary-comparison.js?v=1.5.0';
-import { initAnalytics, trackScreen, trackExercise } from './analytics.js?v=1.5.0';
+import { initAnalytics, trackScreen, trackExercise, trackAction } from './analytics.js?v=1.5.0';
 import { store, cloudOn } from './store.js?v=1.5.0';
 import * as S from './stats.js?v=1.6.0';
 import { el, esc, plural, dayStr, fmtLong, fmtShort, weekdayName, sleep, logicalDay } from './util.js?v=1.5.0';
@@ -806,6 +806,8 @@ function boot() {
   initSaleCountdown();
   store.load();
   initAnalytics(store);
+  const entry = new URLSearchParams(location.search).get('land_from');
+  if (/^(header|hero|synapse|how|review|final)$/.test(entry || '')) trackAction('land_from_'+entry);
   initReminders(store,{onOpen:()=>{if(screen!=='play')renderHome();else toast('Продолжите текущую тренировку.');}});
   if (store.session) initPersonalization(store);
   // перерисовываем главную, если изменилось содержимое результатов (в т.ч. дата у существующих), а не только их число

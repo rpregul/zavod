@@ -26,6 +26,7 @@ const tiles = [...document.querySelectorAll('[data-number]')];
 const demoStatus = document.querySelector('#demo-status');
 const resetDemo = document.querySelector('#demo-reset');
 let nextNumber = 1;
+const warmupEvent = name => document.dispatchEvent(new CustomEvent('nz-landing-exercise',{detail:{target:'land_warmup_'+name}}));
 
 tiles.forEach((tile, index) => tile.addEventListener('click', () => {
   if (tile.disabled) return;
@@ -34,9 +35,11 @@ tiles.forEach((tile, index) => tile.addEventListener('click', () => {
     return;
   }
 
+  if (nextNumber === 1) warmupEvent('start');
   tile.disabled = true;
   nextNumber += 1;
   if (nextNumber > tiles.length) {
+    warmupEvent('complete');
     demoStatus.textContent = 'Готово! Все числа на месте.';
     resetDemo.hidden = false;
     resetDemo.focus();
