@@ -12,7 +12,7 @@
   const pivot = get('reading-word-pivot');
   const after = get('reading-word-after');
   const status = get('reading-focus-status');
-  let usualTimer, focusTimer;
+  let usualTimer, focusTimer, usualObserver;
   let tokens = [], words = [], marked = [];
   let cursor = 0, wordIndex = 0, lastRollback = 0;
 
@@ -91,12 +91,13 @@
     showPair(cursor, Boolean(boundary));
     const count = marked.length;
     cursor += count;
-    usualTimer = setTimeout(tickUsual, count * 60000 / 150);
+    usualTimer = setTimeout(tickUsual, count * 60000 / 200);
   }
 
   const splitWords = text => text.trim().match(/\S+/g) || [];
 
-  usualPlay.addEventListener('click', () => {
+  function toggleUsual() {
+    usualObserver?.disconnect();
     if (usualTimer !== undefined) {
       stopUsual('Продолжить');
       return;
@@ -116,7 +117,16 @@
     get('reading-usual-status').textContent = '';
     usualPlay.textContent = 'Пауза';
     tickUsual();
-  });
+  }
+
+  usualPlay.addEventListener('click', toggleUsual);
+  const isEditor = new URLSearchParams(location.search).get('edit') === '1';
+  if (!isEditor && !matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
+    usualObserver = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) toggleUsual();
+    }, { rootMargin: '0px 0px -15% 0px' });
+    usualObserver.observe(highlighted.parentElement);
+  }
 
   function showWord(word) {
     const letters = [...word];

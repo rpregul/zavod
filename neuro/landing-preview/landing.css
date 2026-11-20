@@ -213,7 +213,6 @@ h1 em { color: var(--accent); font-style: normal; white-space: nowrap; }
 .callout { margin: 16px 0 22px; color: var(--accent); font-weight: 800; }
 .syn-grid figure { padding: 10px 12px 14px; border-radius: 24px; text-align: center; background: #3d2c50; }
 .syn-grid svg { display: block; width: 100%; height: auto; }
-.syn-grid figcaption { margin-top: 7px; color: #f0e8f7; font-size: .8rem; }
 .pulse { opacity: 0; }
 .pulse.firing { animation: signal 1.1s ease-in-out; }
 @keyframes signal {

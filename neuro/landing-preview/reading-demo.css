@@ -61,9 +61,6 @@
 .reading-speed-ends { margin-top: -5px; color: var(--muted); font-size: .82rem; }
 .reading-controls .cta { margin-top: 12px; }
 .reading-controls .reading-demo-note:not(:empty) { margin-top: 8px; }
-.reading-transcript { margin-top: 16px; }
-.reading-transcript summary { display: list-item; min-height: 44px; padding-block: 8px; color: var(--accent); cursor: pointer; font-weight: 800; }
-.reading-transcript p { max-width: 68ch; }
 .reading-reference { margin-top: 20px; padding-top: 20px; border-top: 1px solid #d9cae4; }
 .reading-reference dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 120px), 1fr)); gap: 8px; margin-block: 12px 8px; }
 .reading-reference dl div { padding: 8px 12px; border-radius: 12px; background: var(--white); }
