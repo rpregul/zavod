@@ -6,7 +6,7 @@ self.addEventListener('install', (e) => { self.skipWaiting(); });
 self.addEventListener('activate', (e) => {
   e.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)));
+    await Promise.all(keys.filter((k) => k.startsWith('nz-') && k !== CACHE).map((k) => caches.delete(k)));
     await self.clients.claim();
   })());
 });
@@ -27,12 +27,52 @@ self.addEventListener('fetch', (e) => {
     } catch {
       const hit = await caches.match(req, { ignoreSearch: true });
       if (hit) return hit;
-      if (req.mode === 'navigate') { const idx = await caches.match('./'); if (idx) return idx; }
+      if (req.mode === 'navigate' && url.pathname === new URL('./', self.registration.scope).pathname) {
+        const landing = await caches.match(new URL('./', self.registration.scope).href);
+        if (landing) return landing;
+      }
       throw new Error('offline');
     }
   })());
 });
 
 
-self.addEventListener('push',event=>{let data={};try{data=event.data?.json()||{};}catch{}const target=new URL(data.url||'./',self.registration.scope);if(target.origin!==self.location.origin)target.href=self.registration.scope;event.waitUntil(self.registration.showNotification(data.title||'Нейро-зарядка',{body:data.body||'Несколько минут для себя. Начнём зарядку?',icon:'icons/icon-192.png',badge:'icons/icon-192.png',tag:data.tag||'neuro-training',data:{url:target.href,kind:data.kind||'daily'}}));});
-self.addEventListener('notificationclick',event=>{event.notification.close();const url=event.notification.data?.url||self.registration.scope;event.waitUntil((async()=>{const tabs=await self.clients.matchAll({type:'window',includeUncontrolled:true});for(const tab of tabs){if(new URL(tab.url).origin===self.location.origin&&new URL(tab.url).pathname.startsWith(new URL(self.registration.scope).pathname)){tab.postMessage({type:'neuro-reminder-open',kind:event.notification.data?.kind||'daily'});return tab.focus();}}return self.clients.openWindow(url);})());});
+const trainingUrl = new URL('training.html', self.registration.scope);
+
+function reminderTarget(value) {
+  const scope = new URL(self.registration.scope);
+  const target = new URL(value || './', scope);
+  if (target.origin !== scope.origin) return trainingUrl;
+  if (target.pathname === scope.pathname || target.pathname === scope.pathname + 'index.html') {
+    target.pathname = trainingUrl.pathname;
+  }
+  return target;
+}
+
+self.addEventListener('push', event => {
+  let data = {};
+  try { data = event.data?.json() || {}; } catch {}
+  event.waitUntil(self.registration.showNotification(data.title || 'Нейро-зарядка', {
+    body: data.body || 'Несколько минут для себя. Начнём зарядку?',
+    icon: 'icons/icon-192.png',
+    badge: 'icons/icon-192.png',
+    tag: data.tag || 'neuro-training',
+    data: { url: reminderTarget(data.url).href, kind: data.kind || 'daily' }
+  }));
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const target = reminderTarget(event.notification.data?.url);
+  event.waitUntil((async () => {
+    const tabs = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const tab of tabs) {
+      const url = new URL(tab.url);
+      if (url.origin === trainingUrl.origin && url.pathname === trainingUrl.pathname) {
+        tab.postMessage({ type: 'neuro-reminder-open', kind: event.notification.data?.kind || 'daily' });
+        return tab.focus();
+      }
+    }
+    return self.clients.openWindow(target.href);
+  })());
+});
