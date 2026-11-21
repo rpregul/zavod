@@ -160,6 +160,7 @@ export function createHandler({ env, fetch: request = globalThis.fetch, crypto =
         return reply({ link: ORIGIN + '/neuro/#family=' + invite });
       }
       const data = { token_hash, ...(action === 'push' ? { rows: body.rows } : {}),
+        ...(action === 'trial-start' && body.order_version === 2 ? { order_version: 2 } : {}),
         ...(action === 'trial-result' ? { trial_id: body.trial_id, row: body.row } : {}),
         ...(action === 'family-join' ? { invite_hash: await hash(String(body.invite || '')) } : {}),
         ...(action === 'family-remove' ? { member_key: String(body.member_key || '') } : {}),
@@ -172,4 +173,3 @@ export function createHandler({ env, fetch: request = globalThis.fetch, crypto =
     }
   };
 }
-

@@ -7,10 +7,10 @@ import { trackAction, trackExercise } from './analytics.js?v=1.5.0';
 export const QUESTIONS = {
  sch_f:{title:'Где вам хочется лучше удерживать внимание?',skill:'Внимание',exercise:'Шульте',icon:'eye',options:['Во время работы или учёбы','Когда читаю','В разговорах','Когда много повседневных дел','Просто проверяю себя'],tips:['Перед началом работы выберите одну конкретную задачу и на десять минут уберите уведомления.','После небольшого фрагмента закройте текст и сформулируйте три главные мысли. Затем проверьте себя.','В конце важного разговора коротко повторите договорённость своими словами.','Запишите все дела и выберите одно, к которому приступите сейчас. Остальные пока оставьте в списке.','Повторяйте упражнение в похожих условиях и сравнивайте свои результаты.']},
  sch_r:{title:'Что вам хотелось бы делать легче?',skill:'Переключение',exercise:'Шульте вверх ногами',icon:'grid',options:['Включаться в задачу после перерыва','Переключаться между задачами','Разбираться в новых правилах','Меньше ошибаться в спешке','Пока просто пробую'],tips:['Перед перерывом оставьте себе одну строку: с какого конкретного действия продолжить.','Прежде чем переключиться, запишите, на чём остановились и какой следующий шаг.','Перескажите новое правило своими словами и проверьте его на одном простом примере.','Перед завершением задачи выделите короткую паузу для проверки самого важного.','В следующей попытке сначала удерживайте правильный порядок, затем увеличивайте темп.']},
+ colors:{title:'Где вам хочется меньше отвлекаться?',skill:'Концентрация',exercise:'Цвета',icon:'cards',options:['Когда вокруг шумно','Когда приходят уведомления','Когда несколько дел одновременно','Когда выполняю однообразную задачу','Пока просто пробую'],tips:['Попробуйте начать задачу в более тихом месте.','Отключите уведомления на время одного задания.','Запишите остальные задачи и выберите одну для начала.','Разбейте задачу на короткие отрезки и отмечайте каждый законченный шаг.','Сравните скорость и точность в двух попытках.']},
  dob:{title:'Где вам особенно пригодится внимание к деталям?',skill:'Поиск и точность',exercise:'Совпадения',icon:'eye',options:['Быстрее искать нужное','Замечать ошибки до переделки','Различать похожие варианты','Действовать точнее в спешке','Для меня это интересная игра'],tips:['До поиска сформулируйте один отличительный признак нужного элемента.','Проверяйте работу отдельным проходом: сначала числа, затем имена и даты.','Выберите два признака, по которым отличаются варианты, и сравните их по очереди.','Сначала определите, что именно нужно найти, а уже затем ускоряйте поиск.','Попробуйте улучшить личный результат, сохраняя точность ответов.']},
  mem:{title:'Что вы хотите лучше запоминать?',skill:'Память',exercise:'Запоминание слов',icon:'brain',options:['Прочитанное и изученное','Имена людей','Договорённости и повседневные дела','Новую информацию','Просто развиваю память'],tips:['После изучения материала попробуйте вспомнить главное без подсказок, затем сверьтесь с источником.','При знакомстве повторите имя в разговоре и свяжите его с запоминающейся деталью встречи.','Сразу фиксируйте договорённость вместе с датой и следующим действием.','Разделите новую информацию на небольшие смысловые группы и попробуйте пересказать их.','В упражнении объединяйте слова в связную историю и проверяйте, что удалось вспомнить.']},
 };
-const FREQUENCY=['Редко','Иногда','Часто','Почти каждый день'];
 const memory=new Map(),loaded=new Set(),loading=new Map(),flushing=new Map();
 function key(store){return store.session?.key;}
 function state(store){const k=key(store);if(!memory.has(k)){let value;try{value=JSON.parse(localStorage.getItem('nz.personal.'+k));}catch{}memory.set(k,value||{answers:{},goal:null,pending:[]});}return memory.get(k);}
@@ -37,16 +37,19 @@ export function firstResult(store,ex){return store.results.filter(row=>row.ex===
 export async function askQuestion({store,mount,ex,force=false}){
  if(!QUESTIONS[ex])return;
  await Promise.race([load(store),new Promise(resolve=>setTimeout(resolve,600))]);if(!force&&Object.hasOwn(state(store).answers,ex))return;
- const q=QUESTIONS[ex],root=document.createElement('section');root.className='personal-survey';let option=null,frequency=null;
+ const q=QUESTIONS[ex],root=document.createElement('section');root.className='personal-survey';let option=null;
  const start=performance.now();trackAction('survey_view_'+ex);
  await new Promise(resolve=>{
  root.innerHTML='<div class="survey-heading">'+gi(q.icon,'violet','lg')+'<h1>'+q.title+'</h1><p>Подберём полезную подсказку под вашу цель. Ответ необязателен.</p></div>'
   +'<fieldset class="survey-choices"><legend class="sr-only">Выберите один ответ</legend>'+q.options.map((text,i)=>'<label class="survey-option"><input type="radio" name="survey-option" value="'+i+'"><span>'+esc(text)+'</span><i aria-hidden="true">'+glyph.check+'</i></label>').join('')+'</fieldset>'
-  +'<fieldset class="survey-frequency" hidden><legend>Как часто это мешает?</legend><div>'+FREQUENCY.map((label,i)=>'<label><input type="radio" name="survey-frequency" value="'+i+'"><span>'+label+'</span></label>').join('')+'</div><small>Можно оставить без ответа.</small></fieldset>'
   +'<button class="btn btn--primary btn--lg btn--block" data-survey-next disabled>Продолжить</button><button class="link" data-survey-skip>Пропустить вопрос</button>';
  mount(root,'survey_'+ex);
- root.addEventListener('change',event=>{if(event.target.name==='survey-option'){option=Number(event.target.value);root.querySelector('[data-survey-next]').disabled=false;root.querySelector('.survey-frequency').hidden=option===4;if(option===4){frequency=null;root.querySelectorAll('[name=survey-frequency]').forEach(input=>input.checked=false);}}if(event.target.name==='survey-frequency')frequency=Number(event.target.value);});
- function finish(skipped){const answer={option:skipped?-1:option,frequency:skipped||option===4?null:frequency};state(store).answers[ex]=answer;queue(store,'answer',{ex,...answer});trackAction((skipped?'survey_skip_':'survey_answer_')+ex);trackExercise('survey',ex,performance.now()-start);resolve();}
+ root.addEventListener('change',event=>{
+  if(event.target.name!=='survey-option')return;
+  option=Number(event.target.value);
+  root.querySelector('[data-survey-next]').disabled=false;
+ });
+ function finish(skipped){const answer={option:skipped?-1:option,frequency:null};state(store).answers[ex]=answer;queue(store,'answer',{ex,...answer});trackAction((skipped?'survey_skip_':'survey_answer_')+ex);trackExercise('survey',ex,performance.now()-start);resolve();}
  root.querySelector('[data-survey-next]').onclick=()=>finish(false);root.querySelector('[data-survey-skip]').onclick=()=>finish(true);
  });
 }

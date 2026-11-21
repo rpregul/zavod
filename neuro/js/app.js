@@ -2,11 +2,11 @@ import { openFunnel } from './traffic.js?v=1.9.0';
 import { runColors } from './colors.js?v=1.7.0';
 import { initReminders, openReminders } from './reminders.js?v=1.5.0';
 import { openRoutine, ownComparisonMarkup } from './routine.js?v=1.6.0';
-import { askQuestion, completePersonalSurvey, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=1.6.0';
+import { askQuestion, completePersonalSurvey, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=1.11.0';
 import { runReading, paintMeasurementStats, readingAccess } from './reading.js?v=1.5.0';
 import { comparisonMarkup } from './summary-comparison.js?v=1.5.0';
 import { initAnalytics, trackScreen, trackExercise, trackAction } from './analytics.js?v=1.5.0';
-import { store, cloudOn } from './store.js?v=1.5.0';
+import { store, cloudOn } from './store.js?v=1.11.0';
 import * as S from './stats.js?v=1.6.0';
 import { el, esc, plural, dayStr, fmtLong, fmtShort, weekdayName, sleep, logicalDay } from './util.js?v=1.5.0';
 import { glyph, gi } from './icons.js?v=1.5.0';
@@ -59,7 +59,7 @@ export const EX = {
 const ORDER = ['sch_f', 'sch_r', 'dob', 'mem'];
 // Future exercises are paid-only unless explicitly added to this trial whitelist.
 const GAME_LIST = [...ORDER, 'colors'];
-const TRIAL_ORDER = ['sch_f', 'sch_r', 'dob', 'mem'];
+const TRIAL_ORDER = ['sch_f', 'colors', 'dob', 'mem'];
 
 // ---------------------------------------------------------------- каркас экранов
 const app = document.getElementById('app');
@@ -100,8 +100,9 @@ async function guestWelcome({ startTraining = false } = {}) {
   const node = el('div', 'login');
   node.innerHTML = '<p role="status">Загружаем упражнения…</p><button class="btn btn--glass" hidden>Повторить</button>';
   mount(node, 'welcome');
+  let result;
   try {
-    const result = await store.startGuest();
+    result = await store.startGuest({ syncOnLogin: !startTraining });
     if (!['created', 'ok'].includes(result.status)) throw new Error('guest_unavailable');
   } catch {
     node.querySelector('[role="status"]').textContent = 'Не удалось загрузить упражнения. Проверьте соединение.';
@@ -110,7 +111,7 @@ async function guestWelcome({ startTraining = false } = {}) {
     button.onclick = () => guestWelcome({ startTraining });
     return;
   }
-  if (startTraining) return runSession({ fromLanding: true });
+  if (startTraining) return runSession({ fromLanding: true, freshGuest: result.status === 'created' });
   renderHome();
   store.sync();
 }
@@ -375,7 +376,9 @@ function renderHome({ quiet = false } = {}) {
   const personalHost = document.createElement('div');
   personalHost.className = 'personal-home';
   node.querySelector('header').after(personalHost);
-  void paintPersonal({ host: personalHost, store, onEditAnswers: async () => { for (const ex of ORDER) await askQuestion({ store, mount, ex, force: true }); renderHome(); } });
+  void paintPersonal({ host: personalHost, store, onEditAnswers: async () => { for (const ex of GAME_LIST) {
+    if (ex !== 'colors' || store.results.some(row => row.ex === 'colors')) await askQuestion({ store, mount, ex, force: true });
+  } renderHome(); } });
   paintInstallHint(node);
   if (premium) paintMeasurementStats(node.querySelector('[data-measurement-stats]'),store);
   void readingAccess(store).then(access => {
@@ -708,8 +711,16 @@ async function playOne(id, { guided = false, idx = 0, trial = null, sessionOrder
       const rec = store.add(id, res.score, { ...res.meta, ...(trial ? { trial_id: trial.trial_id } : {}) });
       if (trial) {
         for (;;) {
-          try { await store.billing('trial-result', { trial_id: trial.trial_id, row: rec }); rec.s = 1; store.persist(); break; }
-          catch { if (!await confirmSheet({ title: 'Сохраним результат?', text: 'Сервер временно недоступен. Результат сохранён на этом устройстве; попробуем отправить ещё раз.', ok: 'Повторить', cancel: 'Позже' })) return null; }
+          try {
+            await store.billing('trial-result', { trial_id: trial.trial_id, row: rec });
+            rec.s = 1;
+            store.persist();
+            trackExercise('saved', id);
+            break;
+          }
+          catch {
+            trackExercise('save_error', id);
+            if (!await confirmSheet({ title: 'Сохраним результат?', text: 'Сервер временно недоступен. Результат сохранён на этом устройстве; попробуем отправить ещё раз.', ok: 'Повторить', cancel: 'Позже' })) return null; }
         }
       }
       const action = await resultScreen(id, rec, res, { guided, idx, isLast: idx === sessionOrder.length - 1, trial: !!trial, sessionOrder });
@@ -731,7 +742,7 @@ async function runSingle(id) {
   if (r && r.action === 'home') return;
 }
 
-async function runSession({ fromLanding = false } = {}) {
+async function runSession({ fromLanding = false, freshGuest = false } = {}) {
   if (fromLanding) {
     const node = el('div', 'login');
     node.innerHTML = '<p role="status">Готовим тренировку…</p>';
@@ -740,19 +751,24 @@ async function runSession({ fromLanding = false } = {}) {
   let trial = null;
   if (BILLING.enabled) {
     try {
-      await store.sync();
-      const access = await store.refreshAccess();
-      if (fromLanding && access.active && /^g_[a-f0-9]{32}$/.test(store.session.key)) return paidProfile();
-      if (!access.active) {
-        if (access.trial?.completed) {
-          if (fromLanding) return renderHome();
-          const recs=store.results.filter(r=>r.meta?.trial_id);
-          await completePersonalSurvey({store,mount,recs});
-          const plan=await summaryScreen(recs,{trial:true});renderHome();if(plan)await openSubscription(store,{plan});return;
-        }
-        trial = await store.billing('trial-start');
-        if (trial.paid) trial = null;
+      if (freshGuest) {
+        trial = await store.billing('trial-start', { order_version: 2 });
       }
+      if (!trial || trial.paid) {
+        await store.sync();
+        const access = await store.refreshAccess();
+        if (fromLanding && access.active && /^g_[a-f0-9]{32}$/.test(store.session.key)) return paidProfile();
+        if (!access.active) {
+          if (access.trial?.completed) {
+            if (fromLanding) return renderHome();
+            const recs=store.results.filter(r=>r.meta?.trial_id);
+            await completePersonalSurvey({store,mount,recs});
+            const plan=await summaryScreen(recs,{trial:true});renderHome();if(plan)await openSubscription(store,{plan});return;
+          }
+          trial = await store.billing('trial-start', { order_version: 2 });
+        }
+      }
+      if (trial?.paid) trial = null;
     } catch {
       if (!fromLanding) return openSubscription(store);
       renderHome();
@@ -760,9 +776,10 @@ async function runSession({ fromLanding = false } = {}) {
       return;
     }
   }
-  const order = trial ? TRIAL_ORDER : selectedExercises(store);
+  const order = trial ? (trial.order_version === 2 ? TRIAL_ORDER : ORDER) : selectedExercises(store);
   const startIdx = trial?.next_index || 0;
   const recs = trial ? store.results.filter(r => r.meta?.trial_id === trial.trial_id).sort((a, b) => order.indexOf(a.ex) - order.indexOf(b.ex)) : [];
+  if (fromLanding && order[startIdx]) trackExercise('ready', 'landing_intro', performance.now());
   for (let i = startIdx; i < order.length; i++) {
     const r = await playOne(order[i], { guided: true, idx: i, trial, sessionOrder: order });
     if (!r) { renderHome(); return; }
@@ -799,7 +816,7 @@ function summaryScreen(recs, { trial = false } = {}) {
         const rec = pb !== null && r.score > pb;
         return `<div class="sum-row" style="--i:${i}">${gi(e.icon, e.color, 'sm')}<span class="sum-row__t"><b>${e.title}</b><small>${d === null ? 'первая попытка' : d === 0 ? 'как в прошлый раз' : `${sign(d)} к прошлой`}</small></span><span class="sum-row__v">${rec ? '<i class="star">★</i>' : ''}<b>${r.score}</b></span></div>`;
       }).join('')}</div>
-      ${new Set(recs.map(r => r.ex)).size === 4 ? comparisonMarkup(recs) : '<p class="reading-note">Сравнение со средним результатом доступно после тренировки из всех четырёх упражнений.</p>'}
+      ${ORDER.every(id => recs.some(row => row.ex === id)) ? comparisonMarkup(recs) : ''}
       ${ownComparisonMarkup(recs, store.results)}
       <div data-personal-summary></div>
 

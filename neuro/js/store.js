@@ -63,13 +63,13 @@ export const store = {
   status: 'idle', // idle | syncing | ok | offline | authfail
   access: null,
 
-  async startGuest() {
+  async startGuest({ syncOnLogin = true } = {}) {
     let entry = LS.get('nz.guest');
     if (!entry) {
       entry = { key: 'g_' + crypto.randomUUID().replaceAll('-', ''), secret: crypto.randomUUID() };
       LS.set('nz.guest', entry);
     }
-    return this.login(entry.key, entry.secret, { create: true });
+    return this.login(entry.key, entry.secret, { create: true, syncOnLogin });
   },
   async claimGuest(name, pin) {
     name = name.trim().replace(/\s+/g, ' ');
@@ -129,7 +129,7 @@ export const store = {
   },
 
   // status: ok | created | no_user | bad_pin | locked | offline | invalid
-  async login(name, pin, { create = false } = {}) {
+  async login(name, pin, { create = false, syncOnLogin = true } = {}) {
     const key = normName(name);
     const cleanName = name.trim().replace(/\s+/g, ' ');
     if (!key || key.length > 40) return { status: 'invalid' };
@@ -143,7 +143,7 @@ export const store = {
           this.access = null;
           this.load();
           this.emit();
-          this.sync();
+          if (syncOnLogin) this.sync();
         }
         return result;
       } catch { return { status: 'offline' }; }
