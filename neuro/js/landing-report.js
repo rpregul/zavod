@@ -7,7 +7,7 @@ const buttons = {
 };
 const steps = [
   ['visitors','Посетили'],['clicked','Нажали кнопку тренажёра'],['arrived','Открыли тренажёр'],
-  ['trial_started','Начали пробную'],['trial_completed','Сохранили 4 результата'],
+  ['trial_started','Начали пробную'],['trial_completed','Сохранили все результаты'],
   ['summary_seen','Открыли итоги'],['offer_seen','Увидели тарифы'],
   ['plan_selected','Выбрали тариф'],['checkout_submitted','Нажали оплатить'],
   ['buyers','Оплатили'],['profile_created_after_payment','Создали профиль после оплаты']

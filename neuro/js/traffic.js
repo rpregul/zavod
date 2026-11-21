@@ -1,7 +1,7 @@
 import { openFunnel as openOriginal } from './analytics.js?v=1.5.0';
 import { CLOUD } from './config.js?v=1.5.0';
 import { esc } from './util.js?v=1.5.0';
-import { loadLandingReport } from './landing-report.js?v=1';
+import { loadLandingReport } from './landing-report.js?v=2';
 export async function openFunnel(store){
  await openOriginal(store);
  const overlay=document.querySelector('.analytics-overlay'),host=overlay?.querySelector('[data-report]');if(!host)return;

@@ -58,7 +58,7 @@ export async function openFunnel(store) {
     const steps = [
       ['Посетили', f.visitors],
       ['Начали пробную', f.trial_started],
-      ['Сохранили все 4 результата', f.trial_completed],
+      ['Сохранили все результаты', f.trial_completed],
       ['Открыли общие итоги', f.summary_seen],
       ['Увидели тарифы', f.offer_seen],
       ['Выбрали тариф', f.plan_selected],
@@ -75,13 +75,13 @@ export async function openFunnel(store) {
       + '<p>С ' + date(data.cohort_start) + ' по ' + date(data.measured_at) + ' (МСК).</p>'
       + '<small>Каждый человек учитывается один раз на шаге. Доли рассчитаны от посетителей этой группы. Это текущий срез, участники ещё могут продолжить.</small>'
       + '<dl>' + rows + '</dl>'
-      + '<small>Четвёртый результат сохраняется до открытия общих итогов. Просмотр тарифа фиксируется, когда хотя бы половина карточки тарифа или блока предложения видна одну секунду. Пропуски событий возможны из-за сети, блокировщиков и закрытия вкладки. Покупка подтверждается сервером независимо от событий браузера.</small>'
+      + '<small>Последний результат сохраняется до открытия общих итогов. Просмотр тарифа фиксируется, когда хотя бы половина карточки тарифа или блока предложения видна одну секунду. Пропуски событий возможны из-за сети, блокировщиков и закрытия вкладки. Покупка подтверждается сервером независимо от событий браузера.</small>'
       + '<hr><b>Вся история участников</b><p>Профилей с именем и PIN: ' + data.totals.registrations
       + ' · гостевых профилей: ' + data.totals.guests + '</p><p>Начали пробную: ' + data.totals.trial_started
-      + ' · сохранили 4 результата: ' + data.totals.trial_completed + ' · покупателей: ' + data.totals.buyers + '</p>'
+      + ' · сохранили все результаты: ' + data.totals.trial_completed + ' · покупателей: ' + data.totals.buyers + '</p>'
       + '<small>Именные профили включают регистрации до переноса. Гостевой профиль создаётся автоматически. Владелец и тестовые аккаунты исключены. До входа учитываются браузеры, после входа устройства объединяются по профилю.</small>'
       + '<hr><b>Пробные тренировки</b><ul>'
-      + data.trials.map(t => '<li>' + esc(t.name) + ' — ' + (t.completed_at ? '4 результата сохранены' : 'в процессе, ' + t.exercises + ' из 4')
+      + data.trials.map(t => '<li>' + esc(t.name) + ' — ' + (t.completed_at ? 'все результаты сохранены' : 'в процессе, результатов: ' + t.exercises)
         + '<br><small>Начало: ' + date(t.started_at) + '</small></li>').join('') + '</ul>';
     try {
       const personal = await rpc('nz_personalization', { p_token: store.session.token, p_action: 'report', p_data: {} });
@@ -218,9 +218,9 @@ function targetLabel(id) {
  if (targetNames[id]) return targetNames[id];
  if (id.startsWith('tap_')) return 'Касание области ('+id.slice(4)+')';
  if (id.startsWith('field_')) return 'Поле: '+({email:'почта',checkbox:'согласие',password:'PIN',text:'ввод'}[id.slice(6)] || 'ввод');
- const ex = {sch_f:'Шульте',sch_r:'Шульте вверх ногами',dob:'Совпадения',mem:'Запоминание слов'};
+ const ex = {sch_f:'Шульте',sch_r:'Шульте вверх ногами',dob:'Совпадения',mem:'Запоминание слов',colors:'Цвета',percent:'Проценты'};
  for (const [key,title] of Object.entries(ex)) {
-  for (const [prefix,stage] of Object.entries({intro:'Инструкция',start:'Начато',complete:'Завершено',quit:'Прервано',ex:'Выбор упражнения',chart:'График'})) if (id === prefix+'_'+key) return stage+': '+title;
+  for (const [prefix,stage] of Object.entries({intro:'Инструкция',start:'Начато',complete:'Завершено',quit:'Прервано',saved:'Сохранено',save_error:'Ошибка сохранения',ex:'Выбор упражнения',chart:'График'})) if (id === prefix+'_'+key) return stage+': '+title;
  }
  return id;
 }

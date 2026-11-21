@@ -1,5 +1,6 @@
-import { openFunnel } from './traffic.js?v=1.9.0';
+import { openFunnel } from './traffic.js?v=1.13.0';
 import { runColors } from './colors.js?v=1.7.0';
+import { runPercent } from './percent.js?v=1';
 import { initReminders, openReminders } from './reminders.js?v=1.5.0';
 import { openRoutine, ownComparisonMarkup } from './routine.js?v=1.6.0';
 import { askQuestion, completePersonalSurvey, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=1.11.1';
@@ -55,11 +56,24 @@ export const EX = {
     run: (ctx, o) => runMemory(ctx, o),
   },
   colors: { id: 'colors', title: 'Цвета', sub: 'Цвет букв · тестовая игра', icon: 'cards', color: 'violet', unit: 'ответов', c1: '#9955ce', c2: '#4f7cff', lead: 'Концентрация и переключение правила', skill: 'Удерживать правило: отвечать на цвет букв, подавляя привычное чтение слова. Переключать внимание между значением и визуальным признаком.', everyday: 'Такая практика помогает исследовать, как вы удерживаете инструкцию при отвлекающей информации. В игре следите за скоростью вместе с точностью.', rules: ['Выбирайте цвет букв, а не значение слова', 'Раунд длится 60 секунд. При ошибке увидите правильный ответ'], run: runColors },
+  percent: {
+    id: 'percent', title: 'Проценты', sub: 'Устный счёт · 3 уровня', icon: 'grid', color: 'violet',
+    unit: 'ответов', c1: '#7643bd', c2: '#d281cb', lead: 'Сколько будет 10% от 100?',
+    skill: 'Устный счёт и переключение между задачами разной сложности.',
+    everyday: 'Попрактикуйтесь считать скидки и доли в уме.',
+    rules: ['Введите ответ на цифровой клавиатуре и нажмите ↵.', 'Примеры станут сложнее по ходу раунда.', 'Если ошибётесь, увидите ответ и решение.'],
+    run: runPercent,
+  },
 };
 const ORDER = ['sch_f', 'sch_r', 'dob', 'mem'];
 // Future exercises are paid-only unless explicitly added to this trial whitelist.
-const GAME_LIST = [...ORDER, 'colors'];
-const TRIAL_ORDER = ['sch_f', 'colors', 'dob', 'mem'];
+const GAME_LIST = [...ORDER, 'colors', 'percent'];
+const TRIAL_ORDERS = {
+  1: ORDER,
+  2: ['sch_f', 'colors', 'dob', 'mem'],
+  3: ['sch_f', 'colors', 'dob', 'mem', 'percent'],
+};
+const CURRENT_TRIAL_ORDER = 3;
 
 // ---------------------------------------------------------------- каркас экранов
 const app = document.getElementById('app');
@@ -147,7 +161,7 @@ function renderLogin({ restore = false, signInOnly = false } = {}) {
         <div class="login__hero">
           <div class="login__logo">${gi('brain', 'orange', 'xl')}</div>
           <h1>Нейро-<span class="grad">зарядка</span></h1>
-          <p>${signInOnly ? 'Войдите, чтобы открыть свой кабинет и результаты.' : 'Утро без рилсов. Четыре упражнения на 5 минут, и день начат осознанно.'}</p>
+          <p>${signInOnly ? 'Войдите, чтобы открыть свой кабинет и результаты.' : 'Упражнения для внимания, памяти и устного счёта.'}</p>
         </div>
         <form class="login__card glass" autocomplete="off">
           <label for="nm">${BILLING.enabled ? 'Ваш уникальный логин' : 'Как к вам обращаться?'}</label>
@@ -248,7 +262,7 @@ function renderLogin({ restore = false, signInOnly = false } = {}) {
 // ---------------------------------------------------------------- главная (дашборд)
 const CHART_TABS = ['all', ...GAME_LIST];
 let chartEx = (() => { try { const v = sessionStorage.getItem('nz.chartEx'); return CHART_TABS.includes(v) ? v : 'all'; } catch { return 'all'; } })();
-const TAB_LABEL = { all: 'Общий', sch_f: 'Шульте', sch_r: 'Шульте ↕', dob: 'Совпадения', mem: 'Память', colors: 'Цвета' };
+const TAB_LABEL = { all: 'Общий', sch_f: 'Шульте', sch_r: 'Шульте ↕', dob: 'Совпадения', mem: 'Память', colors: 'Цвета', percent: 'Проценты' };
 
 function renderHome({ quiet = false } = {}) {
   if (!store.session) return guestWelcome();
@@ -261,7 +275,7 @@ function renderHome({ quiet = false } = {}) {
   const full = S.fullDays(res);
   const week = S.weekStrip(res);
   const name = guest ? 'Гость' : store.session.name;
-  const trialOrder = store.access?.trial?.order_version === 1 ? ORDER : TRIAL_ORDER;
+  const trialOrder = TRIAL_ORDERS[store.access?.trial?.order_version ?? CURRENT_TRIAL_ORDER] || ORDER;
   const routine = premium ? selectedExercises(store) : trialOrder;
   const left = routine.filter((id) => !done.has(id));
   const allDone = left.length === 0;
@@ -625,7 +639,7 @@ function openSettings() {
 }
 
 // ---------------------------------------------------------------- прохождение упражнения
-function introScreen(id, { guided, idx, sessionOrder = ORDER }) {
+function introScreen(id, { guided, idx, trial, sessionOrder = ORDER }) {
   return new Promise((resolve) => {
     const e = EX[id];
     const node = el('div', 'intro');
@@ -641,7 +655,7 @@ function introScreen(id, { guided, idx, sessionOrder = ORDER }) {
       </div>
       <ol class="rules glass">${e.rules.map((r, i) => `<li style="--i:${i}"><b>${i + 1}</b><span>${r}</span></li>`).join('')}</ol>
       <div class="intro__benefit"><p><b>Что тренирует.</b> ${esc(e.skill)}</p><p><b>В жизни.</b> ${esc(e.everyday)}</p><small>Прогресс в игре не гарантирует такого же улучшения в повседневной жизни.</small></div>
-      <div class="intro__time">${glyph.clock}<span>${id === 'mem' ? '1 минута запоминаем + 1 минута пишем' : '1 минута'}</span></div>
+      <div class="intro__time">${glyph.clock}<span>${id === 'mem' ? '1 минута запоминаем + 1 минута пишем' : id === 'percent' && trial ? '30 секунд' : '1 минута'}</span></div>
       <button class="btn btn--primary btn--lg btn--block btn--shine" data-r="go">${glyph.play}<span>Поехали</span></button>`;
     mount(node, 'intro');
     node.addEventListener('click', (ev) => {
@@ -705,7 +719,7 @@ function resultScreen(id, rec, res, { guided, idx, isLast, trial = false, sessio
 async function playOne(id, { guided = false, idx = 0, trial = null, sessionOrder = ORDER } = {}) {
   for (;;) {
     trackExercise('intro', id);
-    const go = await introScreen(id, { guided, idx, sessionOrder });
+    const go = await introScreen(id, { guided, idx, trial, sessionOrder });
     if (go === 'back') return null;
     for (;;) {
       const root = el('div', 'play');
@@ -718,7 +732,7 @@ async function playOne(id, { guided = false, idx = 0, trial = null, sessionOrder
       await keepAwake(true);
       const exerciseStart = performance.now();
       trackExercise('start', id);
-      const res = await EX[id].run(ctx, { step: guided ? `${idx + 1} / ${sessionOrder.length}` : '' });
+      const res = await EX[id].run(ctx, { trial: Boolean(trial), step: guided ? `${idx + 1} / ${sessionOrder.length}` : '' });
       await keepAwake(false);
       trackExercise(res ? 'complete' : 'quit', id, performance.now() - exerciseStart);
       if (!res) return null;
@@ -747,7 +761,7 @@ async function playOne(id, { guided = false, idx = 0, trial = null, sessionOrder
 
 async function runSingle(id) {
   if (BILLING.enabled) {
-    try { if (!(await store.refreshAccess()).active) return TRIAL_ORDER.includes(id) ? runSession() : openSubscription(store); }
+    try { if (!(await store.refreshAccess()).active) return (TRIAL_ORDERS[store.access?.trial?.order_version ?? CURRENT_TRIAL_ORDER] || ORDER).includes(id) ? runSession() : openSubscription(store); }
     catch { return openSubscription(store); }
   }
   if (!await requireSubscription(store)) return;
@@ -766,7 +780,7 @@ async function runSession({ fromLanding = false, freshGuest = false } = {}) {
   if (BILLING.enabled) {
     try {
       if (freshGuest) {
-        trial = await store.billing('trial-start', { order_version: 2 });
+        trial = await store.billing('trial-start', { order_version: CURRENT_TRIAL_ORDER });
       }
       if (!trial || trial.paid) {
         await store.sync();
@@ -779,7 +793,7 @@ async function runSession({ fromLanding = false, freshGuest = false } = {}) {
             await completePersonalSurvey({store,mount,recs});
             const plan=await summaryScreen(recs,{trial:true});renderHome();if(plan)await openSubscription(store,{plan});return;
           }
-          trial = await store.billing('trial-start', { order_version: 2 });
+          trial = await store.billing('trial-start', { order_version: CURRENT_TRIAL_ORDER });
         }
       }
       if (trial?.paid) trial = null;
@@ -790,7 +804,7 @@ async function runSession({ fromLanding = false, freshGuest = false } = {}) {
       return;
     }
   }
-  const order = trial ? (trial.order_version === 2 ? TRIAL_ORDER : ORDER) : selectedExercises(store);
+  const order = trial ? (TRIAL_ORDERS[trial.order_version] || ORDER) : selectedExercises(store);
   const startIdx = trial?.next_index || 0;
   const recs = trial ? store.results.filter(r => r.meta?.trial_id === trial.trial_id).sort((a, b) => order.indexOf(a.ex) - order.indexOf(b.ex)) : [];
   if (fromLanding && order[startIdx]) trackExercise('ready', 'landing_intro', performance.now());
