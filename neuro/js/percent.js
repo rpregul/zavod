@@ -102,7 +102,7 @@ export function runPercent(ctx, { step = '', trial = false } = {}) {
           haptic(12);
           feedback.textContent = 'Верно!';
         } else {
-          feedback.textContent = `Ответ: ${answer}. Как посчитать: ${base} × ${percent} ÷ 100 = ${answer}.`;
+          feedback.textContent = `Ответ: ${answer}. Сначала делим ${base} на 100, затем умножаем на ${percent}: (${base} ÷ 100) × ${percent} = ${answer}.`;
           submitKey.setAttribute('aria-label','Следующий пример');
         }
         delay = setTimeout(next,correct ? 220 : 2800);
