@@ -24,7 +24,13 @@ h3 { font-size: 1.3rem; }
 .top a, .cta { text-decoration: none; }
 .brand { font-size: 1.3rem; font-weight: 800; letter-spacing: -.055em; }
 .brand span { color: var(--accent); }
-.top > a:last-child { display: grid; place-items: center; min-height: 44px; font-size: .875rem; font-weight: 800; color: var(--accent); }
+.top-actions { display: flex; align-items: center; gap: clamp(8px, 2.5vw, 24px); }
+.top-actions a { display: grid; place-items: center; min-height: 44px; font-size: .875rem; font-weight: 800; line-height: 1.2; color: var(--accent); }
+.top-actions .top-login { padding-inline: 13px; border: 1px solid var(--border); border-radius: 999px; background: var(--white); }
+@media (max-width: 400px) {
+  .top .brand { font-size: 1.05rem; }
+  .top-actions a { font-size: .8rem; }
+}
 .hero {
   display: grid;
   grid-template-columns: 1fr .93fr;

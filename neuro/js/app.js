@@ -134,7 +134,7 @@ function paidProfile() {
   mount(node,'paid_profile');
 }
 
-function renderLogin({ restore = false } = {}) {
+function renderLogin({ restore = false, signInOnly = false } = {}) {
   const node = el('div', 'login');
   let step = restore ? 'pin' : 'name', name = restore ? store.session.name : '', pin = '', first = '', msg = '', busy = false;
 
@@ -147,7 +147,7 @@ function renderLogin({ restore = false } = {}) {
         <div class="login__hero">
           <div class="login__logo">${gi('brain', 'orange', 'xl')}</div>
           <h1>Нейро-<span class="grad">зарядка</span></h1>
-          <p>Утро без рилсов. Четыре упражнения на 5 минут, и день начат осознанно.</p>
+          <p>${signInOnly ? 'Войдите, чтобы открыть свой кабинет и результаты.' : 'Утро без рилсов. Четыре упражнения на 5 минут, и день начат осознанно.'}</p>
         </div>
         <form class="login__card glass" autocomplete="off">
           <label for="nm">${BILLING.enabled ? 'Ваш уникальный логин' : 'Как к вам обращаться?'}</label>
@@ -155,6 +155,7 @@ function renderLogin({ restore = false } = {}) {
           <div class="login__err" role="alert">${msg}</div>
           <button class="btn btn--primary btn--lg btn--block" type="submit">Дальше ${glyph.arrow}</button>
         </form>
+        ${signInOnly ? '<p class="login__note"><a href="./">Вернуться на главную</a></p>' : ''}
         ${BILLING.enabled ? '<p class="login__note"><a href="privacy.html">Персональные данные</a> · <a href="mailto:plotnikov.csh@gmail.com">Поддержка</a></p>' : ''}`;
       const input = node.querySelector('#nm');
       node.querySelector('form').addEventListener('submit', (e) => {
@@ -188,6 +189,7 @@ function renderLogin({ restore = false } = {}) {
       if (step === 'pin') {
         const r = await store.login(name, pin);
         if (r.status === 'ok') return done();
+        if (r.status === 'no_user' && signInOnly) return fail('Профиль не найден. Проверьте логин.');
         if (r.status === 'no_user' && !restore) { first = pin; pin = ''; step = 'confirm'; msg = ''; return draw(); }
         fail({ bad_pin: 'Неверный PIN. Попробуйте ещё раз', locked: 'Слишком много попыток. Подождите 10 минут', offline: 'Нет связи, а этого имени ещё нет на этом телефоне', invalid: 'Что-то не так с именем' }[r.status] || 'Не получилось войти');
       } else {
@@ -205,6 +207,11 @@ function renderLogin({ restore = false } = {}) {
     node.querySelector('.pin-dots')?.classList.add('shake');
   }
   function done(isNew) {
+    if (signInOnly) {
+      const url = new URL(location.href);
+      url.searchParams.delete('login');
+      history.replaceState(history.state, '', url);
+    }
     haptic([12, 30, 12]);
     renderHome();
     if (BILLING.enabled) { store.refreshAccess().catch(() => {}); acceptFamilyInvite(store); }
@@ -229,7 +236,7 @@ function renderLogin({ restore = false } = {}) {
     if (e.target.closest('[data-act="other"]')) { step = 'name'; pin = ''; first = ''; msg = ''; draw(); }
   });
   const onKey = (e) => {
-    if (screen !== 'login' || step === 'name') return;
+    if (screen !== 'login' || !node.isConnected || step === 'name') return;
     if (/^\d$/.test(e.key)) press(e.key);
     else if (e.key === 'Backspace') press('x');
   };
@@ -843,8 +850,10 @@ function boot() {
   const url = new URL(location.href);
   const entry = url.searchParams.get('land_from');
   const paymentReturn = url.searchParams.get('payment') === 'return';
-  const startTraining = url.searchParams.get('start') === '1' && !paymentReturn &&
-    !url.searchParams.has('notification') && !new URLSearchParams(url.hash.slice(1)).has('family');
+  const allowEntry = !paymentReturn && !url.searchParams.has('notification') &&
+    !new URLSearchParams(url.hash.slice(1)).has('family');
+  const signIn = allowEntry && url.searchParams.get('login') === '1';
+  const startTraining = allowEntry && !signIn && url.searchParams.get('start') === '1';
   if (startTraining) {
     url.searchParams.delete('start');
     history.replaceState(history.state, '', url);
@@ -863,7 +872,8 @@ function boot() {
     lastSig = now;
     if (screen === 'home' && changed) renderHome({ quiet: true });
   });
-  if (!store.session) void guestWelcome({ startTraining });
+  if (signIn) renderLogin({ signInOnly: true });
+  else if (!store.session) void guestWelcome({ startTraining });
   else if (startTraining) void runSession({ fromLanding: true });
   else { renderHome(); store.sync(); }
   if (BILLING.enabled) acceptFamilyInvite(store);
