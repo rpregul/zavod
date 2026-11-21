@@ -62,7 +62,8 @@ export function runPercent(ctx, { step = '', trial = false } = {}) {
     function next() {
       if (finished || paused) return;
       if (used() >= duration) return finish();
-      const level = Math.min(2,Math.floor(used()*3/duration));
+      const progress = used()/duration;
+      const level = progress < 1/6 ? 0 : progress < 2/3 ? 1 : 2;
       highest = Math.max(level,highest);
       current = percentProblem(level,current);
       levels.forEach((node,index)=>{

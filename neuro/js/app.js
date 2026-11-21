@@ -1,6 +1,6 @@
 import { openFunnel } from './traffic.js?v=1.13.0';
 import { runColors } from './colors.js?v=1.7.0';
-import { runPercent } from './percent.js?v=2';
+import { runPercent } from './percent.js?v=3';
 import { initReminders, openReminders } from './reminders.js?v=1.5.0';
 import { openRoutine, ownComparisonMarkup } from './routine.js?v=1.6.0';
 import { askQuestion, completePersonalSurvey, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=1.11.1';
