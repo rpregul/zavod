@@ -17,7 +17,7 @@ import { runSchulte } from './schulte.js?v=1.5.0';
 import { runDobble } from './dobble.js?v=1.5.0';
 import { runMemory } from './memory.js?v=1.5.0';
 import { BILLING } from './config.js?v=1.5.0';
-import { openSubscription, initSaleCountdown, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.7.0';
+import { openSubscription, initSaleCountdown, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.12.0';
 import { recommendations, exerciseReport } from './recommendations.js?v=1.5.0';
 
 // ---------------------------------------------------------------- упражнения

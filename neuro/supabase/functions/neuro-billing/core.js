@@ -51,7 +51,7 @@ export function createHandler({ env, fetch: request = globalThis.fetch, crypto =
     if (claimed.skip) return { processing: true };
     const body = {
       amount: { value: Number(claimed.amount).toFixed(2), currency: 'RUB' }, capture: true,
-      description: claimed.plan === 'family' ? 'Нейро-зарядка: семья до 4 человек, 1 месяц' : 'Нейро-зарядка: 1 человек, 1 месяц', metadata: { order_id: claimed.id },
+      description: claimed.plan === 'family' ? 'Нейро-зарядка: семья до 4 человек, 1 месяц' : 'Нейро-зарядка: 1 человек, '+(claimed.duration_months === 3 ? '3 месяца' : '1 месяц'), metadata: { order_id: claimed.id },
       ...(claimed.kind === 'checkout'
         ? { confirmation: { type: 'redirect', return_url: RETURN_URL } }
         : { payment_method_id: claimed.payment_method_id }),
