@@ -1,10 +1,10 @@
 #app:has(.market-stage){max-width:none;padding:0}
-.play:has(.market-stage){position:relative;height:100dvh;min-height:0;overflow:hidden;isolation:isolate;background:radial-gradient(ellipse at 82% 20%,#ffedf4,transparent 57%),linear-gradient(165deg,#fff9f1,#efeafd 82%);color:#332443}
+.play:has(.market-stage){position:relative;height:100dvh;min-height:0;overflow:hidden;isolation:isolate;background:radial-gradient(ellipse at 12% 8%,#ffe6d3,transparent 60%),linear-gradient(145deg,#fff4f4,#f4eafa 54%,#e3e9fa);color:#332443}
 .play:has(.market-stage) .hud{position:absolute;inset:max(12px,env(safe-area-inset-top)) 16px auto;z-index:2;pointer-events:none}
 .play:has(.market-stage) .hud button{pointer-events:auto}
 .market-stage,.market-board{position:absolute;inset:0;width:100%;height:100%}
 .market-board{touch-action:none;user-select:none;cursor:ns-resize;overflow:hidden;transition:background .16s,color .16s}
-.market-stage[data-drag]:not([data-answer]) .market-board{background:#302041;color:#fff7fd}
+.market-stage[data-drag]:not([data-answer]) .market-board{background:radial-gradient(ellipse at 12% 12%,#53405e,transparent 68%),linear-gradient(145deg,#36273f,#302842 60%,#26344b);color:#fff7fd}
 .market-heading{position:absolute;top:calc(max(12px,env(safe-area-inset-top)) + 76px);left:0;right:0;text-align:center}
 .market-heading span{font-size:13px;font-weight:750;color:#815e96}
 .market-heading h2{font-size:17px;margin:4px 0;font-weight:550;color:inherit}
@@ -16,7 +16,11 @@
 .market-scale::before{content:'';position:absolute;inset:0 auto 0 53px;width:2px;background:repeating-linear-gradient(to bottom,#a58fb9 0 2px,transparent 2px 8px)}
 .market-tick{position:absolute;top:var(--position);left:4px;width:38px;text-align:right;transform:translateY(-50%);font-size:13px;font-weight:650}
 .market-tick::after{content:'';position:absolute;left:47px;top:50%;width:6px;height:4px;background:#a487ba;border-radius:2px}
-.market-guess{position:absolute;top:var(--pick);height:var(--band);left:53px;right:0;transform:translateY(-50%);display:flex;align-items:center;justify-content:flex-end;padding-right:5vw;box-sizing:border-box;background:#cfa5ff42;border-left:5px solid #ba87f8;color:inherit;font-weight:750;opacity:0}
+.market-guess{position:absolute;top:var(--pick);height:var(--band);left:53px;right:0;transform:translateY(-50%);display:flex;align-items:center;justify-content:flex-start;padding-left:16px;box-sizing:border-box;background:linear-gradient(90deg,#bda0ed55,#cfa5ff22);border-left:5px solid #ba87f8;color:inherit;font-weight:750;opacity:0}
+.market-guess::before{content:'';position:absolute;top:50%;left:-7px;width:10px;height:10px;box-sizing:border-box;border:2px solid #fff;background:#7948ac;border-radius:50%;transform:translateY(-50%)}
+.market-guess::after{content:'';position:absolute;top:50%;left:2px;width:9px;height:2px;background:currentColor;transform:translateY(-50%)}
+.market-stage[data-drag]:not([data-answer]) .market-heading span{color:#e1d1f1}
+.play:has(.market-stage[data-drag]:not([data-answer])) .hud{color:#fff7fd}
 .market-stage[data-drag] .market-guess,.market-ruler:focus-within .market-guess{opacity:1}
 .market-exact{position:absolute;z-index:1;top:var(--position);left:53px;transform:translateY(-50%);border-radius:0 16px 16px 0;padding:6px 13px;background:#436b63;color:white;font-weight:750}
 .market-stage[data-answer="miss"] .market-exact{background:#974365}
