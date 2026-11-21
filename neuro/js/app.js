@@ -312,6 +312,7 @@ function renderHome({ quiet = false } = {}) {
       <div class="top__hello"><h1>${greeting()},<br><span class="grad">${esc(name)}</span></h1></div>
       <div class="trainer-account">
         ${guest ? '<a class="btn btn--glass trainer-signin" href="training.html?login=1">Войти</a>' : ''}
+        ${store.session?.key === 'рома' ? '<button type="button" class="avatar glass-btn" data-act="funnel" aria-label="Статистика сайта" title="Статистика сайта"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="pointer-events:none"><path d="M5 19v-6m7 6V5m7 14V9"/></svg></button>' : ''}
         <button class="avatar glass-btn" data-act="settings" aria-label="Настройки">${esc(name.trim()[0]?.toUpperCase() || '?')}<i class="sync-dot" data-sync></i></button>
       </div>
     </header>
@@ -374,7 +375,6 @@ function renderHome({ quiet = false } = {}) {
     </div>
     </div>
     <div data-install></div>
-    ${store.session?.key === 'рома' ? '<button type="button" class="btn btn--glass analytics-launch" data-act="funnel">Статистика сайта</button>' : ''}
     <section class="habit-advice habit-card glass"><img src="assets/habit-character.webp" width="960" height="640" alt="" loading="lazy" decoding="async"><div class="habit-card__body"><h3>Как сделать зарядку привычкой</h3><ul><li><span aria-hidden="true">🌱</span><div><b>Начните с посильного</b><p>Небольшая нагрузка каждый день помогает удерживать регулярность.</p></div></li><li><span aria-hidden="true">🎯</span><div><b>Сделайте начало проще</b><p><button class="link inline-link" data-act="routine">Сократите число упражнений</button> или временно уберите самое сложное. Лучше короткая зарядка, к которой хочется вернуться.</p></div></li><li><span aria-hidden="true">☕</span><div><b>Привяжите к знакомому ритуалу</b><p>Например, несколько минут утром за чашкой кофе вместо прокрутки ленты. Выберите удобное время для себя.</p></div></li></ul></div></section>
     <footer class="foot">Нейро-зарядка · данные ${cloudOn() ? 'синхронизируются между устройствами' : 'хранятся на этом устройстве'}</footer>`;
 
