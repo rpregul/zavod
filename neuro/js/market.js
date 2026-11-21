@@ -5,16 +5,24 @@ const LIMIT = 400;
 const FEEDBACK_MS = 750;
 const money = new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB' });
 
-export function marketProblem(previous, random = Math.random) {
-  const first = 1200 + Math.floor(random() * 18500);
-  const second = 1200 + Math.floor(random() * 18500);
-  return previous?.first === first && previous.second === second
-    ? { first, second: second - 1, total: first + second - 1 }
-    : { first, second, total: first + second };
+const levels = [
+  { step: 1000, count: 17, tolerance: 40 },
+  { step: 100, count: 179, tolerance: 20 },
+  { step: 1, count: 18500, tolerance: 8 },
+];
+
+export function marketProblem(previous, random = Math.random, level = 0) {
+  const { step, count } = levels[level];
+  const price = () => (1 + Math.floor(random() * count)) * step + (level === 2 ? 1000 : 0);
+  const first = price();
+  let second = price();
+  if (previous?.first === first && previous.second === second) second += second > step ? -step : step;
+  return { first, second, total: first + second };
 }
 
-export function marketPoints(guess, total) {
-  return Math.max(0, 10 - Math.floor(Math.abs(guess * 100 - total) / 400));
+export function marketPoints(guess, total, tolerance = levels[0].tolerance) {
+  const excess = Math.max(0, Math.abs(Math.round(guess * 100) - total) / 100 - tolerance);
+  return Math.max(0, 10 - Math.ceil(excess / tolerance));
 }
 
 export function runMarket(ctx, { step = '', trial = false } = {}) {
@@ -25,9 +33,9 @@ export function runMarket(ctx, { step = '', trial = false } = {}) {
     stage.className = 'market-stage';
     stage.setAttribute('aria-label', 'Рынок');
     stage.innerHTML = `
-      <div class="market-board glass">
+      <div class="market-board">
         <div class="market-receipt">
-          <h2>Прикиньте сумму</h2>
+          <header class="market-heading"><span data-level></span><h2>Прикиньте сумму</h2></header>
           <div class="market-prices" aria-live="polite"><b data-first></b><b data-second></b></div>
           <p class="market-feedback" role="status" aria-atomic="true"></p>
         </div>
@@ -53,10 +61,15 @@ export function runMarket(ctx, { step = '', trial = false } = {}) {
     const submit = stage.querySelector('.market-submit');
     const pause = stage.querySelector('.market-pause');
     const resume = pause.querySelector('button');
+    let level = 0;
     let problem, score = 0, attempts = 0, totalError = 0, elapsed = 0;
     let since = performance.now(), frame, delay, animation;
     let locked = false, paused = false, finished = false;
     const used = () => elapsed + (paused ? 0 : performance.now() - since);
+
+    function formatPrice(cents) {
+      return cents % 100 === 0 ? (cents / 100) + ' ₽' : money.format(cents / 100);
+    }
 
     function updateGuess() {
       stage.style.setProperty('--pick', (100 - Number(slider.value) / 4) + '%');
@@ -67,9 +80,12 @@ export function runMarket(ctx, { step = '', trial = false } = {}) {
     function next() {
       if (paused || finished || used() >= duration) return;
       locked = false;
-      problem = marketProblem(problem);
-      first.textContent = money.format(problem.first / 100);
-      second.textContent = money.format(problem.second / 100);
+      level = Math.min(2, Math.floor(used() / duration * 3));
+      stage.querySelector('[data-level]').textContent = 'Уровень ' + (level + 1) + ' / 3';
+      stage.style.setProperty('--band', (200 * levels[level].tolerance / LIMIT) + '%');
+      problem = marketProblem(problem, Math.random, level);
+      first.textContent = formatPrice(problem.first);
+      second.textContent = formatPrice(problem.second);
       feedback.textContent = '';
       exact.hidden = true;
       slider.disabled = false;
@@ -78,7 +94,7 @@ export function runMarket(ctx, { step = '', trial = false } = {}) {
       stage.removeAttribute('data-drag');
       if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
         animation?.cancel();
-        animation = prices.animate([{ opacity: .35, transform: 'translateY(9px)' }, { opacity: 1, transform: 'none' }],
+        animation = prices.animate([{ opacity: .35, translate: '0 9px' }, { opacity: 1, translate: '0 0' }],
           { duration: 240, easing: 'ease-out' });
       }
     }
@@ -87,7 +103,7 @@ export function runMarket(ctx, { step = '', trial = false } = {}) {
       if (locked || paused || finished || used() >= duration) return;
       locked = true;
       const value = Number(slider.value);
-      const points = marketPoints(value, problem.total);
+      const points = marketPoints(value, problem.total, levels[level].tolerance);
       attempts++;
       totalError += Math.abs(value * 100 - problem.total);
       score += points;
@@ -95,10 +111,11 @@ export function runMarket(ctx, { step = '', trial = false } = {}) {
       slider.disabled = true;
       submit.disabled = true;
       exact.style.setProperty('--position', (100 - problem.total / LIMIT) + '%');
+      exact.textContent = formatPrice(problem.total);
       exact.hidden = false;
-      stage.dataset.answer = points >= 8 ? 'close' : 'miss';
+      stage.dataset.answer = points === 10 ? 'close' : 'miss';
       feedback.textContent = `Точная сумма ${money.format(problem.total / 100)}. +${points} баллов`;
-      if (points >= 8) { sfx('ok'); haptic(12); }
+      if (points === 10) { sfx('ok'); haptic(12); }
       delay = setTimeout(next, FEEDBACK_MS);
     }
 
@@ -116,7 +133,7 @@ export function runMarket(ctx, { step = '', trial = false } = {}) {
       const averageError = attempts ? Math.round(totalError / attempts) / 100 : null;
       resolve(aborted ? null : {
         score,
-        meta: { attempts, average_error: averageError, duration_ms: duration },
+        meta: { attempts, average_error: averageError, duration_ms: duration, level: level + 1 },
         extra: [
           { label: 'Оценок', value: attempts },
           { label: 'Средняя погрешность', value: averageError === null ? '—' : money.format(averageError) },
