@@ -91,8 +91,8 @@ export async function openSubscription(store, { plan: selected = null } = {}) {
       s.node.innerHTML = `<button class="link" data-back>← Другой тариф</button><h3 class="sheet__title">${chosen.title}</h3>
         <p class="subscription-price">${chosen.sale ? `<s>${money(chosen.oldPrice)} ₽</s> <span class="bf-checkout-badge">−25%</span><br>` : ''}<b>${money(chosen.price)} ₽</b> за ${period(chosen)}</p><p class="sheet__text">${chosen.detail}${chosen.months === 3 ? ' · ' + savings(chosen.price) : ''}</p>
         ${sub.ready ? `<form data-checkout><label class="subscription-consent"><input type="checkbox" required name="consent"><span>Принимаю <a href="offer.html" target="_blank" rel="noopener">условия</a> и соглашаюсь на разовое списание ${money(chosen.price)} ₽ за ${period(chosen)} доступа. Автоматических списаний не будет. Ознакомлен с <a href="privacy.html" target="_blank" rel="noopener">политикой обработки данных</a>.</span></label>
-          <button class="btn btn--primary btn--lg btn--block" type="submit" data-method="sbp">Оплатить через СБП · ${money(chosen.price)} ₽</button>
-          <button class="btn btn--glass btn--block" type="submit" data-method="auto">Картой или другим способом</button>
+          <div style="display:grid;gap:12px;margin-bottom:12px"><button class="btn btn--primary btn--lg btn--block" type="submit" data-method="sbp">Оплатить через СБП · ${money(chosen.price)} ₽</button>
+          <button class="btn btn--glass btn--block" type="submit" data-method="auto">Картой или другим способом</button></div>
           <p class="login__note">Оплата покрывает выбранный срок доступа. Чтобы продолжить, позже оформите новую оплату.</p></form>` : '<p class="sheet__text">Оплата готовится к запуску.</p>'}
         <p class="login__err" role="alert" data-error></p><button class="link" data-close>Закрыть</button>`;
       trackAction(sub.ready ? 'checkout_form_' + selected : 'payments_unavailable');

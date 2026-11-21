@@ -1,6 +1,6 @@
 <!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><title>Проверка оплаты</title><link rel="stylesheet" href="css/app.css?v=1.13.0"><main id="app"><h1>Проверка оплаты</h1><p>Реальный магазин. Для проверки перехода закройте ЮKassa до подтверждения платежа.</p><button class="btn btn--glass" id="open">Открыть форму оплаты</button><p role="status" id="status"></p></main><div id="sheet-root"></div><div id="toast-root"></div><script type="module">
 import { billingRequest } from './js/billing-api.js?v=1.5.0';
-import { openSubscription } from './js/subscription.js?v=1.16.0';
+import { openSubscription } from './js/subscription.js?v=1.16.1';
 const button = document.querySelector('#open');
 const status = document.querySelector('#status');
 const secret = location.hash.slice(1);
