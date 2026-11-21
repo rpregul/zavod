@@ -23,3 +23,13 @@ begin
     'chosen_ex not in (''sch_f'',''sch_r'',''dob'',''mem'',''colors'')');
   execute definition;
 end $migration$;
+
+do $migration$
+declare definition text;
+begin
+ definition := pg_get_functiondef('public.nz_billing_api(text,jsonb)'::regprocedure);
+ if strpos(definition, '''next_index'',coalesce(trial.next_index,0)')=0 then raise exception 'Unexpected trial status definition'; end if;
+ definition := replace(definition, '''next_index'',coalesce(trial.next_index,0)',
+   '''next_index'',coalesce(trial.next_index,0),''order_version'',trial.order_version');
+ execute definition;
+end $migration$;

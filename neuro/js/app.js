@@ -2,7 +2,7 @@ import { openFunnel } from './traffic.js?v=1.9.0';
 import { runColors } from './colors.js?v=1.7.0';
 import { initReminders, openReminders } from './reminders.js?v=1.5.0';
 import { openRoutine, ownComparisonMarkup } from './routine.js?v=1.6.0';
-import { askQuestion, completePersonalSurvey, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=1.11.0';
+import { askQuestion, completePersonalSurvey, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=1.11.1';
 import { runReading, paintMeasurementStats, readingAccess } from './reading.js?v=1.5.0';
 import { comparisonMarkup } from './summary-comparison.js?v=1.5.0';
 import { initAnalytics, trackScreen, trackExercise, trackAction } from './analytics.js?v=1.5.0';
@@ -253,7 +253,8 @@ function renderHome({ quiet = false } = {}) {
   const full = S.fullDays(res);
   const week = S.weekStrip(res);
   const name = /^g_[a-f0-9]{32}$/.test(store.session.key) ? 'Гость' : store.session.name;
-  const routine = premium ? selectedExercises(store) : ORDER;
+  const trialOrder = store.access?.trial?.order_version === 1 ? ORDER : TRIAL_ORDER;
+  const routine = premium ? selectedExercises(store) : trialOrder;
   const left = routine.filter((id) => !done.has(id));
   const allDone = left.length === 0;
   const startedCount = routine.filter(id => done.has(id)).length;
@@ -351,14 +352,16 @@ function renderHome({ quiet = false } = {}) {
     node.querySelector('.hero__txt p').textContent = completed ? 'Ваша точка отсчёта сохранена' : 'Выработайте новую полезную привычку развития своего мозга';
     node.querySelector('.hero__cta span').textContent = completed ? 'Мой персональный итог' : 'Начать тренировку';
     node.querySelector('.chips-row').hidden = true;
-    node.querySelectorAll('.tiles [data-ex]:not([data-ex=colors]) .tile__best,.tiles [data-ex]:not([data-ex=colors]) .tile__badge,.tiles [data-ex]:not([data-ex=colors]) .tile__new').forEach(x => { x.textContent = 'В первой тренировке'; });
+    node.querySelectorAll('.tiles [data-ex]').forEach(tile => {
+      const badge = tile.querySelector('.tile__best,.tile__badge,.tile__new');
+      if (badge) badge.textContent = !completed && trialOrder.includes(tile.dataset.ex) ? 'В первой тренировке' : 'По подписке';
+    });
     node.querySelectorAll('.home__col')[1].innerHTML = `<section class="sec"><div class="progress glass subscription-locked"><h3>Ваш следующий шаг</h3><p>Доступны после прохождения первой тренировки:</p><ul class="guest-benefit-pills"><li>Персональные подсказки</li><li>Динамика прогресса</li><li>Статистика</li><li>Дополнительные упражнения</li></ul><small>Расширенная статистика и дополнительные упражнения — по подписке.</small>${completed ? '<button class="btn btn--primary btn--block" data-act="subscribe">Продолжить с подпиской</button>' : '<p class="login__note">Сначала пройдите бесплатную тренировку — она станет вашей точкой отсчёта.</p>'}</div></section>`;
     if (completed) {
       const offer = el('section', 'sec home-offer', offerMarkup({ completed: true }));
       node.querySelector('header').after(offer);
       node.querySelectorAll('.home__col')[1].hidden = true;
       node.querySelector('.home__cols').classList.add('home__cols--single');
-      node.querySelectorAll('.tiles [data-ex]:not([data-ex=colors]) .tile__best,.tiles [data-ex]:not([data-ex=colors]) .tile__badge,.tiles [data-ex]:not([data-ex=colors]) .tile__new').forEach(x => { x.textContent = 'По подписке'; });
     }
   } else {
     paintChart(node);

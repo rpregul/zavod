@@ -101,7 +101,7 @@ export async function paintPersonal({host,store,summary=false,recs=store.results
  render();
 }
 
-export function selectedExercises(store){const all=Object.keys(QUESTIONS);const chosen=state(store).exercises;return Array.isArray(chosen)&&chosen.length?all.filter(ex=>chosen.includes(ex)):all;}
+export function selectedExercises(store){const all=['sch_f','sch_r','dob','mem'];const chosen=state(store).exercises;return Array.isArray(chosen)&&chosen.length?all.filter(ex=>chosen.includes(ex)):all;}
 export function saveExercises(store,exercises){state(store).exercises=exercises;queue(store,'routine',{exercises});}
 
 
