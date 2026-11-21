@@ -6,7 +6,8 @@ export const SCHULTE_MS = 60000;
 
 // Таблица Шульте 5x5. reverse = таблица перевёрнута на 180° и счёт идёт от 25 к 1.
 // Счёт = сколько чисел найдено за минуту. Закончил таблицу раньше: выдаём новую, счёт продолжается.
-export function runSchulte(ctx, { reverse = false, step = '' } = {}) {
+export function runSchulte(ctx, { reverse = false, step = '', shortTrial = false } = {}) {
+  const phaseMs = shortTrial ? 30000 : SCHULTE_MS;
   return new Promise((resolve) => {
     ctx.onAbort = () => resolve(null);
     const root = ctx.root;
@@ -92,7 +93,7 @@ export function runSchulte(ctx, { reverse = false, step = '' } = {}) {
       stage.classList.remove('pre');
       playing = true;
       lastHit = performance.now();
-      startTimer(ctx, SCHULTE_MS, {
+      startTimer(ctx, phaseMs, {
         onTick: (left, frac) => hud.setTime(left, frac),
         onEnd: async () => {
           playing = false;

@@ -1,5 +1,5 @@
 import { openFunnel } from './traffic.js?v=1.13.0';
-import { runColors } from './colors.js?v=1.7.0';
+import { runColors } from './colors.js?v=1.15.0';
 import { runPercent } from './percent.js?v=3';
 import { runMarket } from './market.js?v=3';
 import { initReminders, openReminders } from './reminders.js?v=1.5.0';
@@ -15,9 +15,9 @@ import { glyph, gi } from './icons.js?v=1.5.0';
 import { initFx, initRipple, confetti, haptic, sfx, countUp, toast } from './fx.js?v=1.5.0';
 import { lineChart, heatmap, ringSvg } from './charts.js?v=1.6.0';
 import { makeCtx, sheet, confirmSheet } from './ui.js?v=1.5.0';
-import { runSchulte } from './schulte.js?v=1.5.0';
-import { runDobble } from './dobble.js?v=1.5.0';
-import { runMemory } from './memory.js?v=1.5.0';
+import { runSchulte } from './schulte.js?v=1.15.0';
+import { runDobble } from './dobble.js?v=1.15.0';
+import { runMemory } from './memory.js?v=1.15.0';
 import { BILLING } from './config.js?v=1.5.0';
 import { openSubscription, initSaleCountdown, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=1.12.0';
 import { recommendations, exerciseReport } from './recommendations.js?v=1.5.0';
@@ -45,7 +45,7 @@ export const EX = {
     lead: 'Скорость зрительного поиска и переключения',
     skill: 'Сравнение двух наборов, поиск общего символа и отсев лишних деталей.',
     everyday: 'Такой поиск нужен при сверке документов, изображений и товаров. Ориентир — быстрее замечать совпадения, не жертвуя точностью.',
-    rules: ['На двух картах всегда есть ровно один одинаковый рисунок', 'Найдите его и нажмите. Общая карта ляжет на вашу, откроется следующая', 'За минуту наберите как можно больше пар. Ошибка = короткая пауза'],
+    rules: ['На двух картах всегда есть ровно один одинаковый рисунок', 'Найдите его и нажмите. Общая карта ляжет на вашу, откроется следующая', 'Наберите как можно больше пар. Ошибка = короткая пауза'],
     run: (ctx, o) => runDobble(ctx, o),
   },
   mem: {
@@ -53,10 +53,10 @@ export const EX = {
     lead: 'Рабочая память и точность',
     skill: 'Запоминание и воспроизведение слов с помощью цепочки образов и ассоциаций.',
     everyday: 'Этот приём можно применять к списку покупок, тезисам выступления или новым терминам. Ориентир — вспомнить больше нужного без подсказки; переносите сам приём в повседневные задачи.',
-    rules: ['Минуту смотрите на 3 столбика по 10 слов', 'В голове стройте цепочку образов: слово за словом', 'Потом минуту записывайте слова в точности, с окончаниями'],
+    rules: ['Смотрите на 3 столбика по 10 слов', 'В голове стройте цепочку образов: слово за словом', 'Потом записывайте слова в точности, с окончаниями'],
     run: (ctx, o) => runMemory(ctx, o),
   },
-  colors: { id: 'colors', title: 'Цвета', sub: 'Цвет букв · тестовая игра', icon: 'cards', color: 'violet', unit: 'ответов', c1: '#9955ce', c2: '#4f7cff', lead: 'Концентрация и переключение правила', skill: 'Удерживать правило: отвечать на цвет букв, подавляя привычное чтение слова. Переключать внимание между значением и визуальным признаком.', everyday: 'Такая практика помогает исследовать, как вы удерживаете инструкцию при отвлекающей информации. В игре следите за скоростью вместе с точностью.', rules: ['Выбирайте цвет букв, а не значение слова', 'Раунд длится 60 секунд. При ошибке увидите правильный ответ'], run: runColors },
+  colors: { id: 'colors', title: 'Цвета', sub: 'Цвет букв · тестовая игра', icon: 'cards', color: 'violet', unit: 'ответов', c1: '#9955ce', c2: '#4f7cff', lead: 'Концентрация и переключение правила', skill: 'Удерживать правило: отвечать на цвет букв, подавляя привычное чтение слова. Переключать внимание между значением и визуальным признаком.', everyday: 'Такая практика помогает исследовать, как вы удерживаете инструкцию при отвлекающей информации. В игре следите за скоростью вместе с точностью.', rules: ['Выбирайте цвет букв, а не значение слова', 'При ошибке увидите правильный ответ'], run: runColors },
   percent: {
     id: 'percent', title: 'Проценты', sub: 'Устный счёт · 3 уровня', icon: 'grid', color: 'violet',
     unit: 'ответов', c1: '#7643bd', c2: '#d281cb', lead: 'Сколько будет 10% от 100?',
@@ -82,8 +82,9 @@ const TRIAL_ORDERS = {
   2: ['sch_f', 'colors', 'dob', 'mem'],
   3: ['sch_f', 'colors', 'dob', 'mem', 'percent'],
   4: ['sch_f', 'colors', 'dob', 'mem', 'percent', 'market'],
+  5: ['sch_f', 'colors', 'market', 'dob', 'mem'],
 };
-const CURRENT_TRIAL_ORDER = 4;
+const CURRENT_TRIAL_ORDER = 5;
 
 // ---------------------------------------------------------------- каркас экранов
 const app = document.getElementById('app');
@@ -665,7 +666,7 @@ function introScreen(id, { guided, idx, trial, sessionOrder = ORDER }) {
       </div>
       <ol class="rules glass">${e.rules.map((r, i) => `<li style="--i:${i}"><b>${i + 1}</b><span>${r}</span></li>`).join('')}</ol>
       <div class="intro__benefit"><p><b>Что тренирует.</b> ${esc(e.skill)}</p><p><b>В жизни.</b> ${esc(e.everyday)}</p></div>
-      <div class="intro__time">${glyph.clock}<span>${id === 'mem' ? '1 минута запоминаем + 1 минута пишем' : (id === 'percent' || id === 'market') && trial ? '30 секунд' : '1 минута'}</span></div>
+      <div class="intro__time">${glyph.clock}<span>${trial?.order_version === 5 ? (id === 'mem' ? '15 секунд на запоминание + 15 секунд на запись' : '30 секунд') : id === 'mem' ? '1 минута запоминаем + 1 минута пишем' : (id === 'percent' || id === 'market') && trial ? '30 секунд' : '1 минута'}</span></div>
       <button class="btn btn--primary btn--lg btn--block btn--shine" data-r="go">${glyph.play}<span>Поехали</span></button>`;
     mount(node, 'intro');
     node.addEventListener('click', (ev) => {
@@ -742,7 +743,7 @@ async function playOne(id, { guided = false, idx = 0, trial = null, sessionOrder
       await keepAwake(true);
       const exerciseStart = performance.now();
       trackExercise('start', id);
-      const res = await EX[id].run(ctx, { trial: Boolean(trial), step: guided ? `${idx + 1} / ${sessionOrder.length}` : '' });
+      const res = await EX[id].run(ctx, { trial: Boolean(trial), shortTrial: trial?.order_version === 5, step: guided ? `${idx + 1} / ${sessionOrder.length}` : '' });
       await keepAwake(false);
       trackExercise(res ? 'complete' : 'quit', id, performance.now() - exerciseStart);
       if (!res) return null;

@@ -75,7 +75,8 @@ export function reviewHtml(ev, columns) {
   return `<div class="review"><div class="rcols">${cols}</div>${extra}<p class="review__note">≈ слово записано не в точности (окончание или буква). В зачёт идут только точные совпадения.</p></div>`;
 }
 
-export function runMemory(ctx, { step = '' } = {}) {
+export function runMemory(ctx, { step = '', shortTrial = false } = {}) {
+  const phaseMs = shortTrial ? 15000 : MEMORY_MS;
   return new Promise((resolve) => {
     ctx.onAbort = () => resolve(null);
     const root = ctx.root;
@@ -102,7 +103,7 @@ export function runMemory(ctx, { step = '' } = {}) {
       hud.setScore('30');
       let gone = false;
       const next = () => { if (gone) return; gone = true; t.stop(); bridge(); };
-      const t = startTimer(ctx, MEMORY_MS, {
+      const t = startTimer(ctx, phaseMs, {
         onTick: (left, frac) => hud.setTime(left, frac),
         onEnd: next,
       });
@@ -119,12 +120,12 @@ export function runMemory(ctx, { step = '' } = {}) {
         <div class="bridge glass">
           <div class="bridge__emoji">🧠</div>
           <h3>Слова спрятаны</h3>
-          <p>Теперь минута, чтобы записать как можно больше слов <b>в точности</b> (с окончаниями). Порядок не важен.</p>
+          <p>Теперь ${shortTrial ? '15 секунд' : 'минута'}, чтобы записать как можно больше слов <b>в точности</b> (с окончаниями). Порядок не важен.</p>
           <button class="btn btn--primary btn--lg bridge__go">Начать запись</button>
         </div>`;
       hud.setLabel('Записано');
       hud.setScore(0);
-      hud.setTime(MEMORY_MS, 0);
+      hud.setTime(phaseMs, 0);
       stage.querySelector('.bridge__go').addEventListener('click', recall);
     }
 
@@ -213,7 +214,7 @@ export function runMemory(ctx, { step = '' } = {}) {
         });
       };
       stage.querySelector('.recall__done').addEventListener('click', end);
-      const t = startTimer(ctx, MEMORY_MS, {
+      const t = startTimer(ctx, phaseMs, {
         onTick: (left, frac) => hud.setTime(left, frac),
         onEnd: end,
       });

@@ -66,7 +66,8 @@ function makeCard(cardIdx) {
   return c;
 }
 
-export function runDobble(ctx, { step = '' } = {}) {
+export function runDobble(ctx, { step = '', shortTrial = false } = {}) {
+  const phaseMs = shortTrial ? 30000 : DOBBLE_MS;
   return new Promise((resolve) => {
     ensureSprite();
     ctx.onAbort = () => resolve(null);
@@ -194,7 +195,7 @@ export function runDobble(ctx, { step = '' } = {}) {
       stage.classList.remove('pre');
       playing = true;
       lastAt = performance.now();
-      timerRef = startTimer(ctx, DOBBLE_MS, {
+      timerRef = startTimer(ctx, phaseMs, {
         onTick: (left, frac) => hud.setTime(left, frac),
         onEnd: finish,
       });
