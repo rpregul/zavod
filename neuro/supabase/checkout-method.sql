@@ -1,0 +1,5 @@
+alter table public.nz_payments add column checkout_method text not null default 'auto' check(checkout_method in ('auto','sbp'));
+do $$ declare d text:=pg_get_functiondef('public.nz_billing_api(text,jsonb)'::regprocedure); needle text:='insert into public.nz_payments(user_key,kind,period_start,plan,amount,duration_months) values(uk,''checkout'',now(),chosen_plan,checkout_price,checkout_months)'; begin
+if strpos(d,needle)=0 or strpos(d,'if pay.plan<>chosen_plan')=0 then raise exception 'unexpected checkout definition'; end if;
+d:=replace(d,needle,'insert into public.nz_payments(user_key,kind,period_start,plan,amount,duration_months,checkout_method) values(uk,''checkout'',now(),chosen_plan,checkout_price,checkout_months,coalesce(p_data->>''checkout_method'',''auto''))');
+d:=replace(d,'if pay.plan<>chosen_plan','if pay.checkout_method<>coalesce(p_data->>''checkout_method'',''auto'') then raise exception ''checkout_method_pending''; end if; if pay.plan<>chosen_plan');execute d; end $$;

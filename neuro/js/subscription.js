@@ -28,6 +28,7 @@ const message = error => ({ consent_required: 'Обновите страницу
   payments_unavailable: 'Оплата пока не подключена.', already_active: 'У вас уже есть действующая подписка.',
   family_full: 'Все четыре места уже заняты или зарезервированы приглашениями.',
   invalid_invite: 'Приглашение истекло, уже использовано или отозвано.',
+  checkout_method_pending: 'Предыдущий платёж ещё открыт. Продолжите выбранным ранее способом или дождитесь окончания срока оплаты.',
   checkout_in_progress: 'Есть незавершённая оплата другого тарифа. Напишите в поддержку, если хотите изменить выбор.' }[error.message]
   || 'Не удалось связаться с сервером. Попробуйте ещё раз.');
 
@@ -90,7 +91,8 @@ export async function openSubscription(store, { plan: selected = null } = {}) {
       s.node.innerHTML = `<button class="link" data-back>← Другой тариф</button><h3 class="sheet__title">${chosen.title}</h3>
         <p class="subscription-price">${chosen.sale ? `<s>${money(chosen.oldPrice)} ₽</s> <span class="bf-checkout-badge">−25%</span><br>` : ''}<b>${money(chosen.price)} ₽</b> за ${period(chosen)}</p><p class="sheet__text">${chosen.detail}${chosen.months === 3 ? ' · ' + savings(chosen.price) : ''}</p>
         ${sub.ready ? `<form data-checkout><label class="subscription-consent"><input type="checkbox" required name="consent"><span>Принимаю <a href="offer.html" target="_blank" rel="noopener">условия</a> и соглашаюсь на разовое списание ${money(chosen.price)} ₽ за ${period(chosen)} доступа. Автоматических списаний не будет. Ознакомлен с <a href="privacy.html" target="_blank" rel="noopener">политикой обработки данных</a>.</span></label>
-          <button class="btn btn--primary btn--lg btn--block" type="submit">Оплатить ${money(chosen.price)} ₽</button>
+          <button class="btn btn--primary btn--lg btn--block" type="submit" data-method="sbp">Оплатить через СБП · ${money(chosen.price)} ₽</button>
+          <button class="btn btn--glass btn--block" type="submit" data-method="auto">Картой или другим способом</button>
           <p class="login__note">Оплата покрывает выбранный срок доступа. Чтобы продолжить, позже оформите новую оплату.</p></form>` : '<p class="sheet__text">Оплата готовится к запуску.</p>'}
         <p class="login__err" role="alert" data-error></p><button class="link" data-close>Закрыть</button>`;
       trackAction(sub.ready ? 'checkout_form_' + selected : 'payments_unavailable');
@@ -100,15 +102,19 @@ export async function openSubscription(store, { plan: selected = null } = {}) {
         event.preventDefault();
         if (chosen.sale !== saleActive()) { await draw(); return; }
         const form = event.target; if (!form.reportValidity()) return;
-        const button = form.querySelector('button'); button.disabled = true; button.textContent = 'Открываем оплату…';
+        const buttons = [...form.querySelectorAll('button[type="submit"]')];
+        if (buttons.some(item => item.disabled)) return;
+        const button = event.submitter || buttons[0];
+        const label = button.textContent;
+        buttons.forEach(item => { item.disabled = true; }); button.textContent = 'Открываем оплату…';
         trackAction('checkout_submit_' + selected);
         try {
           const result = await store.billing('checkout', { 
-            consent: form.elements.consent.checked, consent_version: chosen.consentVersion, plan: selected });
+            checkout_method: button.dataset.method, consent: form.elements.consent.checked, consent_version: chosen.consentVersion, plan: selected });
           if (result.confirmation_url) { trackAction('checkout_redirect'); await flushAnalytics(); location.assign(result.confirmation_url); }
           else { trackAction('checkout_processing'); errorText('Платёж обрабатывается. Доступ появится после подтверждения оплаты.'); }
         } catch (error) { trackAction('checkout_error'); errorText(message(error)); }
-        finally { button.disabled = false; button.textContent = `Оплатить ${money(chosen.price)} ₽`; }
+        finally { buttons.forEach(item => { item.disabled = false; }); button.textContent = label; }
       });
     } catch (error) {
       s.node.innerHTML = `<h3 class="sheet__title">Подписка</h3><p class="sheet__text" role="alert">${message(error)}</p><button class="btn btn--glass" data-retry>Повторить</button><button class="link" data-close>Закрыть</button>`;

@@ -50,6 +50,7 @@ export function createHandler({ env, fetch: request = globalThis.fetch, crypto =
     const claimed = await rpc('claim', { order_id: order.id });
     if (claimed.skip) return { processing: true };
     const body = {
+      ...(claimed.kind === 'checkout' && claimed.checkout_method === 'sbp' ? { payment_method_data: { type: 'sbp' } } : {}),
       amount: { value: Number(claimed.amount).toFixed(2), currency: 'RUB' }, capture: true,
       description: claimed.plan === 'family' ? 'Нейро-зарядка: семья до 4 человек, 1 месяц' : 'Нейро-зарядка: 1 человек, '+(claimed.duration_months === 3 ? '3 месяца' : '1 месяц'), metadata: { order_id: claimed.id },
       ...(claimed.kind === 'checkout'
@@ -150,7 +151,7 @@ export function createHandler({ env, fetch: request = globalThis.fetch, crypto =
       if (action === 'checkout') {
         if (!ready) return reply({ error: 'payments_unavailable' }, 503);
         if (body.consent !== true) return reply({ error: 'consent_required' }, 400);
-        const order = await rpc('checkout', { token_hash, email: String(body.email || '').trim(), consent_version: body.consent_version, plan: body.plan || 'individual' });
+        const order = await rpc('checkout', { token_hash, checkout_method: body.checkout_method === 'sbp' ? 'sbp' : 'auto', email: String(body.email || '').trim(), consent_version: body.consent_version, plan: body.plan || 'individual' });
         const result = await submit(order);
         return reply({ confirmation_url: result.confirmation_url || null, processing: !result.confirmation_url });
       }
@@ -168,7 +169,7 @@ export function createHandler({ env, fetch: request = globalThis.fetch, crypto =
       return reply({ ...await rpc(action.replaceAll('-', '_'), data), ...(action === 'status' ? { ready } : {}) });
     } catch (e) {
       const message = String(e.message);
-      const known = ['unauthorized', 'subscription_required', 'already_active', 'consent_required', 'invalid_email', 'payments_unavailable', 'invalid_plan', 'checkout_in_progress', 'trial_completed', 'invalid_trial', 'trial_order', 'invalid_invite', 'family_full', 'family_owner_required'];
+      const known = ['unauthorized', 'subscription_required', 'already_active', 'consent_required', 'invalid_email', 'payments_unavailable', 'invalid_plan', 'checkout_in_progress', 'checkout_method_pending', 'trial_completed', 'invalid_trial', 'trial_order', 'invalid_invite', 'family_full', 'family_owner_required'];
       return reply({ error: known.includes(message) ? message : 'temporarily_unavailable' }, message === 'unauthorized' ? 401 : message === 'subscription_required' ? 403 : known.includes(message) ? 400 : 503);
     }
   };
