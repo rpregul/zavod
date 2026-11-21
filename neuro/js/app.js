@@ -96,21 +96,23 @@ const fmtTime = (ts) => {
 const sign = (n) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
 
 // ---------------------------------------------------------------- вход
-async function guestWelcome() {
+async function guestWelcome({ startTraining = false } = {}) {
   const node = el('div', 'login');
   node.innerHTML = '<p role="status">Загружаем упражнения…</p><button class="btn btn--glass" hidden>Повторить</button>';
   mount(node, 'welcome');
   try {
     const result = await store.startGuest();
     if (!['created', 'ok'].includes(result.status)) throw new Error('guest_unavailable');
-    renderHome();
-    store.sync();
   } catch {
     node.querySelector('[role="status"]').textContent = 'Не удалось загрузить упражнения. Проверьте соединение.';
     const button = node.querySelector('button');
     button.hidden = false;
-    button.onclick = guestWelcome;
+    button.onclick = () => guestWelcome({ startTraining });
+    return;
   }
+  if (startTraining) return runSession({ fromLanding: true });
+  renderHome();
+  store.sync();
 }
 
 function paidProfile() {
@@ -729,14 +731,21 @@ async function runSingle(id) {
   if (r && r.action === 'home') return;
 }
 
-async function runSession() {
+async function runSession({ fromLanding = false } = {}) {
+  if (fromLanding) {
+    const node = el('div', 'login');
+    node.innerHTML = '<p role="status">Готовим тренировку…</p>';
+    mount(node, 'loading');
+  }
   let trial = null;
   if (BILLING.enabled) {
     try {
       await store.sync();
       const access = await store.refreshAccess();
+      if (fromLanding && access.active && /^g_[a-f0-9]{32}$/.test(store.session.key)) return paidProfile();
       if (!access.active) {
         if (access.trial?.completed) {
+          if (fromLanding) return renderHome();
           const recs=store.results.filter(r=>r.meta?.trial_id);
           await completePersonalSurvey({store,mount,recs});
           const plan=await summaryScreen(recs,{trial:true});renderHome();if(plan)await openSubscription(store,{plan});return;
@@ -744,7 +753,12 @@ async function runSession() {
         trial = await store.billing('trial-start');
         if (trial.paid) trial = null;
       }
-    } catch { return openSubscription(store); }
+    } catch {
+      if (!fromLanding) return openSubscription(store);
+      renderHome();
+      toast('Не удалось открыть тренировку. Попробуйте ещё раз.');
+      return;
+    }
   }
   const order = trial ? TRIAL_ORDER : selectedExercises(store);
   const startIdx = trial?.next_index || 0;
@@ -806,7 +820,16 @@ function boot() {
   initSaleCountdown();
   store.load();
   initAnalytics(store);
-  const entry = new URLSearchParams(location.search).get('land_from');
+  const url = new URL(location.href);
+  const entry = url.searchParams.get('land_from');
+  const paymentReturn = url.searchParams.get('payment') === 'return';
+  const startTraining = url.searchParams.get('start') === '1' && !paymentReturn &&
+    !url.searchParams.has('notification') && !new URLSearchParams(url.hash.slice(1)).has('family');
+  if (startTraining) {
+    url.searchParams.delete('start');
+    history.replaceState(history.state, '', url);
+    trackAction('land_start_direct');
+  }
   if (/^(header|hero|synapse|how|review|final)$/.test(entry || '')) trackAction('land_from_'+entry);
   initReminders(store,{onOpen:()=>{if(screen!=='play')renderHome();else toast('Продолжите текущую тренировку.');}});
   if (store.session) initPersonalization(store);
@@ -820,7 +843,9 @@ function boot() {
     lastSig = now;
     if (screen === 'home' && changed) renderHome({ quiet: true });
   });
-  if (store.session) { renderHome(); store.sync(); } else guestWelcome();
+  if (!store.session) void guestWelcome({ startTraining });
+  else if (startTraining) void runSession({ fromLanding: true });
+  else { renderHome(); store.sync(); }
   if (BILLING.enabled) acceptFamilyInvite(store);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && store.session) {
@@ -836,7 +861,7 @@ function boot() {
   }
   // для отладки и тестов
   if (!BILLING.enabled) window.__nz = { store, S, EX };
-  if (BILLING.enabled && store.session && new URLSearchParams(location.search).get('payment') === 'return') {
+  if (BILLING.enabled && store.session && paymentReturn) {
     history.replaceState(null, '', location.pathname);
     finishPaymentReturn(store);
   }
