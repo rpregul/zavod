@@ -654,7 +654,7 @@ function introScreen(id, { guided, idx, trial, sessionOrder = ORDER }) {
         <p class="intro__lead">${e.lead}</p>
       </div>
       <ol class="rules glass">${e.rules.map((r, i) => `<li style="--i:${i}"><b>${i + 1}</b><span>${r}</span></li>`).join('')}</ol>
-      <div class="intro__benefit"><p><b>Что тренирует.</b> ${esc(e.skill)}</p><p><b>В жизни.</b> ${esc(e.everyday)}</p><small>Прогресс в игре не гарантирует такого же улучшения в повседневной жизни.</small></div>
+      <div class="intro__benefit"><p><b>Что тренирует.</b> ${esc(e.skill)}</p><p><b>В жизни.</b> ${esc(e.everyday)}</p></div>
       <div class="intro__time">${glyph.clock}<span>${id === 'mem' ? '1 минута запоминаем + 1 минута пишем' : id === 'percent' && trial ? '30 секунд' : '1 минута'}</span></div>
       <button class="btn btn--primary btn--lg btn--block btn--shine" data-r="go">${glyph.play}<span>Поехали</span></button>`;
     mount(node, 'intro');
