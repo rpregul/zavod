@@ -98,7 +98,7 @@ const sign = (n) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
 // ---------------------------------------------------------------- вход
 async function guestWelcome({ startTraining = false } = {}) {
   const node = el('div', 'login');
-  node.innerHTML = '<p role="status">Загружаем упражнения…</p><button class="btn btn--glass" hidden>Повторить</button>';
+  node.innerHTML = '<header class="trainer-welcome-account"><a class="btn btn--glass trainer-signin" href="training.html?login=1">Войти</a></header><p role="status">Загружаем упражнения…</p><button class="btn btn--glass" hidden>Повторить</button>';
   mount(node, 'welcome');
   let result;
   try {
@@ -252,14 +252,15 @@ const TAB_LABEL = { all: 'Общий', sch_f: 'Шульте', sch_r: 'Шульт
 
 function renderHome({ quiet = false } = {}) {
   if (!store.session) return guestWelcome();
-  if (/^g_[a-f0-9]{32}$/.test(store.session.key) && store.access?.active) return paidProfile();
+  const guest = /^g_[a-f0-9]{32}$/.test(store.session.key);
+  if (guest && store.access?.active) return paidProfile();
   const res = store.results;
   const premium = !BILLING.enabled || !!store.access?.active;
   const done = S.doneToday(res);
   const streak = S.streak(res);
   const full = S.fullDays(res);
   const week = S.weekStrip(res);
-  const name = /^g_[a-f0-9]{32}$/.test(store.session.key) ? 'Гость' : store.session.name;
+  const name = guest ? 'Гость' : store.session.name;
   const trialOrder = store.access?.trial?.order_version === 1 ? ORDER : TRIAL_ORDER;
   const routine = premium ? selectedExercises(store) : trialOrder;
   const left = routine.filter((id) => !done.has(id));
@@ -284,7 +285,10 @@ function renderHome({ quiet = false } = {}) {
   node.innerHTML = `
     <header class="top">
       <div class="top__hello"><h1>${greeting()},<br><span class="grad">${esc(name)}</span></h1></div>
-      <button class="avatar glass-btn" data-act="settings" aria-label="Настройки">${esc(name.trim()[0]?.toUpperCase() || '?')}<i class="sync-dot" data-sync></i></button>
+      <div class="trainer-account">
+        ${guest ? '<a class="btn btn--glass trainer-signin" href="training.html?login=1">Войти</a>' : ''}
+        <button class="avatar glass-btn" data-act="settings" aria-label="Настройки">${esc(name.trim()[0]?.toUpperCase() || '?')}<i class="sync-dot" data-sync></i></button>
+      </div>
     </header>
 
     <div class="home__cols">
