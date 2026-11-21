@@ -111,3 +111,24 @@
 .market-submit:disabled { opacity: .55; }
 .market-pause { position: absolute; z-index: 2; inset: 0; display: grid; align-content: center; justify-items: center; gap: 10px; background: #faf5ff; border-radius: 28px; }
 .market-pause[hidden], .market-exact[hidden] { display: none; }
+
+.market-stage { max-width: 680px; }
+.market-board { position: relative; display: block; padding: 0; height: clamp(320px,65svh,650px); overflow: hidden; touch-action: none; cursor: ns-resize; background: radial-gradient(ellipse at 72% 30%,#fff8fa,transparent 62%),linear-gradient(155deg,#fcfaff,#efe7fc); }
+.market-receipt { position: absolute; inset: 0 12px 0 58px; display: grid; align-content: center; justify-items: center; pointer-events: none; }
+.market-receipt h2 { position: absolute; top: 18px; font-size: 14px; font-weight: 600; }
+.market-prices { justify-items: center; gap: 8px; font-size: clamp(38px,9vw,66px); }
+.market-prices b { font-weight: 500; }
+.market-prices b + b { width: auto; padding: 0; border: 0; }
+.market-prices b + b::before { content: none; }
+.market-feedback { position: absolute; bottom: 0; text-align: center; font-weight: 700; }
+.market-ruler { position: absolute; inset: 46px 0 50px; display: block; pointer-events: none; }
+.market-scale { height: 100%; margin: 0; }
+.market-scale::before { inset: 0 auto 0 49px; width: 2px; background: repeating-linear-gradient(to bottom,#9879bd 0 2px,transparent 2px 9px); }
+.market-tick { right: auto; left: 5px; width: 30px; text-align: right; }
+.market-slider { opacity: 0; }
+.market-ruler:focus-within { outline: 2px solid var(--market-violet); }
+.market-guess { position: absolute; top: var(--pick); left: 49px; right: 0; transform: translateY(-50%); text-align: right; color: #593190; padding-right: 14px; background: #be9fe647; border-left: 5px solid #8650bf; border-radius: 0; opacity: 0; }
+.market-stage[data-drag] .market-guess,.market-ruler:focus-within .market-guess { opacity: 1; }
+.market-exact { left: 49px; right: 0; width: auto; height: 3px; }
+.market-submit { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.market-submit:focus-visible { position: static; width: auto; height: auto; clip-path: none; }

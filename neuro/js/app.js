@@ -1,7 +1,7 @@
 import { openFunnel } from './traffic.js?v=1.13.0';
 import { runColors } from './colors.js?v=1.7.0';
 import { runPercent } from './percent.js?v=3';
-import { runMarket } from './market.js?v=1';
+import { runMarket } from './market.js?v=2';
 import { initReminders, openReminders } from './reminders.js?v=1.5.0';
 import { openRoutine, ownComparisonMarkup } from './routine.js?v=1.6.0';
 import { askQuestion, completePersonalSurvey, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=1.11.1';
@@ -70,7 +70,7 @@ export const EX = {
     unit: 'баллов', c1: '#7445b6', c2: '#c781bc', lead: 'Быстрый счёт и оценка суммы',
     skill: 'Складывать цены в уме и быстро оценивать порядок суммы.',
     everyday: 'Попрактикуйтесь прикидывать стоимость покупок до кассы.',
-    rules: ['Оцените сумму двух цен.', 'Выберите сумму на шкале. Отпустите ползунок или нажмите «Проверить».', 'Чем ближе ваша оценка к точной сумме, тем больше баллов.'],
+    rules: ['Оцените сумму двух цен.', 'Коснитесь поля и ведите вверх или вниз. Отпустите, чтобы проверить сумму.', 'Чем ближе ваша оценка к точной сумме, тем больше баллов.'],
     run: runMarket,
   },
 };

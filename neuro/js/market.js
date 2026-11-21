@@ -59,6 +59,7 @@ export function runMarket(ctx, { step = '', trial = false } = {}) {
     const used = () => elapsed + (paused ? 0 : performance.now() - since);
 
     function updateGuess() {
+      stage.style.setProperty('--pick', (100 - Number(slider.value) / 4) + '%');
       guess.textContent = slider.value + ' ₽';
       slider.setAttribute('aria-valuetext', guess.textContent);
     }
@@ -74,6 +75,7 @@ export function runMarket(ctx, { step = '', trial = false } = {}) {
       slider.disabled = false;
       submit.disabled = false;
       stage.removeAttribute('data-answer');
+      stage.removeAttribute('data-drag');
       if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
         animation?.cancel();
         animation = prices.animate([{ opacity: .35, transform: 'translateY(9px)' }, { opacity: 1, transform: 'none' }],
@@ -141,7 +143,32 @@ export function runMarket(ctx, { step = '', trial = false } = {}) {
     }
 
     slider.addEventListener('input', updateGuess);
-    slider.addEventListener('pointerup', check);
+    const field = stage.querySelector('.market-board');
+    let pointer = null;
+    function move(e) {
+      const bounds = stage.querySelector('.market-scale').getBoundingClientRect();
+      slider.value = String(Math.round(LIMIT * Math.max(0, Math.min(1, (bounds.bottom - e.clientY) / bounds.height))));
+      updateGuess();
+    }
+    field.addEventListener('pointerdown', e => {
+      if (locked || paused || finished || pointer !== null || e.button !== 0) return;
+      e.preventDefault();
+      pointer = e.pointerId;
+      field.setPointerCapture(pointer);
+      stage.dataset.drag = 'true';
+      move(e);
+    });
+    field.addEventListener('pointermove', e => { if (e.pointerId === pointer) move(e); });
+    field.addEventListener('pointerup', e => {
+      if (e.pointerId !== pointer) return;
+      pointer = null;
+      move(e);
+      check();
+    });
+    field.addEventListener('lostpointercapture', () => {
+      pointer = null;
+      if (!locked) stage.removeAttribute('data-drag');
+    });
     slider.addEventListener('keydown', event => {
       if (event.key === 'Enter') { event.preventDefault(); check(); }
     });
