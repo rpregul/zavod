@@ -112,7 +112,7 @@
 .market-pause { position: absolute; z-index: 2; inset: 0; display: grid; align-content: center; justify-items: center; gap: 10px; background: #faf5ff; border-radius: 28px; }
 .market-pause[hidden], .market-exact[hidden] { display: none; }
 
-.market-stage { max-width: 680px; }
+.market-stage { width: 100%; max-width: 680px; min-width: 0; box-sizing: border-box; grid-template-columns: minmax(0, 1fr); }
 .market-board { position: relative; display: block; padding: 0; height: clamp(320px,65svh,650px); overflow: hidden; touch-action: none; cursor: ns-resize; background: radial-gradient(ellipse at 72% 30%,#fff8fa,transparent 62%),linear-gradient(155deg,#fcfaff,#efe7fc); }
 .market-receipt { position: absolute; inset: 0 12px 0 58px; display: grid; align-content: center; justify-items: center; pointer-events: none; }
 .market-receipt h2 { position: absolute; top: 18px; font-size: 14px; font-weight: 600; }
