@@ -1,6 +1,7 @@
 import { openFunnel } from './traffic.js?v=1.13.0';
 import { runColors } from './colors.js?v=1.7.0';
 import { runPercent } from './percent.js?v=3';
+import { runMarket } from './market.js?v=1';
 import { initReminders, openReminders } from './reminders.js?v=1.5.0';
 import { openRoutine, ownComparisonMarkup } from './routine.js?v=1.6.0';
 import { askQuestion, completePersonalSurvey, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=1.11.1';
@@ -64,16 +65,25 @@ export const EX = {
     rules: ['Введите ответ на цифровой клавиатуре и нажмите ↵.', 'Примеры станут сложнее по ходу раунда.', 'Если ошибётесь, увидите ответ и решение.'],
     run: runPercent,
   },
+  market: {
+    id: 'market', title: 'Рынок', sub: 'Оцените сумму двух цен', icon: 'grid', color: 'violet',
+    unit: 'баллов', c1: '#7445b6', c2: '#c781bc', lead: 'Быстрый счёт и оценка суммы',
+    skill: 'Складывать цены в уме и быстро оценивать порядок суммы.',
+    everyday: 'Попрактикуйтесь прикидывать стоимость покупок до кассы.',
+    rules: ['Оцените сумму двух цен.', 'Выберите сумму на шкале. Отпустите ползунок или нажмите «Проверить».', 'Чем ближе ваша оценка к точной сумме, тем больше баллов.'],
+    run: runMarket,
+  },
 };
 const ORDER = ['sch_f', 'sch_r', 'dob', 'mem'];
 // Future exercises are paid-only unless explicitly added to this trial whitelist.
-const GAME_LIST = [...ORDER, 'colors', 'percent'];
+const GAME_LIST = [...ORDER, 'colors', 'percent', 'market'];
 const TRIAL_ORDERS = {
   1: ORDER,
   2: ['sch_f', 'colors', 'dob', 'mem'],
   3: ['sch_f', 'colors', 'dob', 'mem', 'percent'],
+  4: ['sch_f', 'colors', 'dob', 'mem', 'percent', 'market'],
 };
-const CURRENT_TRIAL_ORDER = 3;
+const CURRENT_TRIAL_ORDER = 4;
 
 // ---------------------------------------------------------------- каркас экранов
 const app = document.getElementById('app');
@@ -262,7 +272,7 @@ function renderLogin({ restore = false, signInOnly = false } = {}) {
 // ---------------------------------------------------------------- главная (дашборд)
 const CHART_TABS = ['all', ...GAME_LIST];
 let chartEx = (() => { try { const v = sessionStorage.getItem('nz.chartEx'); return CHART_TABS.includes(v) ? v : 'all'; } catch { return 'all'; } })();
-const TAB_LABEL = { all: 'Общий', sch_f: 'Шульте', sch_r: 'Шульте ↕', dob: 'Совпадения', mem: 'Память', colors: 'Цвета', percent: 'Проценты' };
+const TAB_LABEL = { all: 'Общий', sch_f: 'Шульте', sch_r: 'Шульте ↕', dob: 'Совпадения', mem: 'Память', colors: 'Цвета', percent: 'Проценты', market: 'Рынок' };
 
 function renderHome({ quiet = false } = {}) {
   if (!store.session) return guestWelcome();
@@ -655,7 +665,7 @@ function introScreen(id, { guided, idx, trial, sessionOrder = ORDER }) {
       </div>
       <ol class="rules glass">${e.rules.map((r, i) => `<li style="--i:${i}"><b>${i + 1}</b><span>${r}</span></li>`).join('')}</ol>
       <div class="intro__benefit"><p><b>Что тренирует.</b> ${esc(e.skill)}</p><p><b>В жизни.</b> ${esc(e.everyday)}</p></div>
-      <div class="intro__time">${glyph.clock}<span>${id === 'mem' ? '1 минута запоминаем + 1 минута пишем' : id === 'percent' && trial ? '30 секунд' : '1 минута'}</span></div>
+      <div class="intro__time">${glyph.clock}<span>${id === 'mem' ? '1 минута запоминаем + 1 минута пишем' : (id === 'percent' || id === 'market') && trial ? '30 секунд' : '1 минута'}</span></div>
       <button class="btn btn--primary btn--lg btn--block btn--shine" data-r="go">${glyph.play}<span>Поехали</span></button>`;
     mount(node, 'intro');
     node.addEventListener('click', (ev) => {
