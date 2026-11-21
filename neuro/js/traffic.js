@@ -11,6 +11,14 @@ export async function openFunnel(store){
  const old=[...host.querySelectorAll('b')].find(n=>n.textContent==='Вся история участников');
  if(old){const details=document.createElement('details');details.className='analytics-archive';const summary=document.createElement('summary');summary.textContent='Архив: участники за всё время';details.append(summary);old.before(details);let n=old;for(let i=0;i<4&&n;i++){const next=n.nextSibling;details.append(n);n=next;}old.remove();}
  const panel=document.createElement('section');panel.className='traffic-panel';panel.innerHTML='<h3>Посещения</h3><p class="reading-note">Загружаем графики…</p>';host.prepend(panel);
+ const geo=document.createElement('section');panel.after(geo);
+ try {
+   const response=await fetch(CLOUD.url+'/rest/v1/rpc/nz_geo_report',{method:'POST',headers:{apikey:CLOUD.key,'Content-Type':'application/json'},body:JSON.stringify({p_token:store.session.token})});
+   if(!response.ok)throw Error();
+   const rows=Object.entries(await response.json()).sort((a,b)=>b[1]-a[1]);
+   const names=new Intl.DisplayNames(['ru'],{type:'region'});
+   geo.innerHTML='<h3>Страны посетителей</h3><p>За последние 14 дней, сбор с 21 ноября. Страна определяется по сети при посещении.</p><ul>'+rows.map(([code,n])=>'<li>'+esc(code==='unknown'?'Не определена':names.of(code))+' — '+Number(n)+'</li>').join('')+'</ul>';
+ } catch {geo.textContent='Данные по странам временно недоступны.';}
  let selected=null,busy=false,timer;
  async function load(){if(busy||!panel.isConnected)return;busy=true;try{
  const response=await fetch(CLOUD.url+'/rest/v1/rpc/nz_traffic_report',{method:'POST',headers:{apikey:CLOUD.key,Authorization:'Bearer '+CLOUD.key,'Content-Type':'application/json'},body:JSON.stringify({p_token:store.session.token,p_day:selected}),signal:AbortSignal.timeout(10000),cache:'no-store'});

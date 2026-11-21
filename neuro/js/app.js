@@ -1,4 +1,4 @@
-import { openFunnel } from './traffic.js?v=1.13.0';
+import { openFunnel } from './traffic.js?v=geo1';
 import { runColors } from './colors.js?v=1.15.0';
 import { runPercent } from './percent.js?v=3';
 import { runMarket } from './market.js?v=3';
