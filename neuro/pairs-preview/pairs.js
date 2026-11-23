@@ -11,12 +11,12 @@ function art(id){return '<i class="art" role="img" aria-label="'+names[id]+'" st
 function focusTitle(){$('title').focus({preventScroll:true});window.scrollTo(0,0);}
 function startRound(){
  const deck=shuffle(names.map((_,i)=>i));
- pairs=Array.from({length:5},(_,i)=>({items:deck.slice(i*2,i*2+2),hidden:Math.floor(Math.random()*2),answer:null}));
- choices=shuffle([...pairs.map(p=>p.items[p.hidden]),...deck.slice(10,15)]);
- phase='study';selection=null;$('welcome').hidden=true;$('game').hidden=false;$('bank').hidden=true;
+ pairs=Array.from({length:3},(_,i)=>({items:deck.slice(i*2,i*2+2),hidden:Math.floor(Math.random()*2),answer:null}));
+ choices=shuffle([...pairs.map(p=>p.items[p.hidden]),...deck.slice(6,13)]);
+ document.querySelector('.fireworks')?.remove();phase='study';selection=null;$('welcome').hidden=true;$('game').hidden=false;$('bank').hidden=true;
  $('title').textContent='Запомните пары';$('hint').textContent='Свяжите два рисунка в каждой строке.';
  $('rows').innerHTML=pairs.map(p=>'<div class="row">'+art(p.items[0])+'<span class="link"></span>'+art(p.items[1])+'</div>').join('');
- $('next').textContent='Я запомнил';$('next').disabled=false;focusTitle();deadline=Date.now()+30000;
+ $('next').textContent='Я запомнил';$('next').disabled=false;focusTitle();deadline=Date.now()+20000;
  clearInterval(clock);clock=setInterval(tick,100);tick();
 }
 function tick(){
@@ -41,19 +41,40 @@ function refresh(){
  const p=pairs[i];el.textContent=names[p.answer]||'＋';el.setAttribute('aria-label',names[p.items[1-p.hidden]]+' — '+(names[p.answer]||'пустая ячейка'));
  });
  document.querySelectorAll('[data-word]').forEach(el=>el.setAttribute('aria-pressed',String(+el.dataset.word===selection)));
- const count=pairs.filter(p=>p.answer!==null).length;$('counter').textContent=count+' / 5';$('next').disabled=count!==5;
+ const count=pairs.filter(p=>p.answer!==null).length;$('counter').textContent=count+' / '+pairs.length;$('next').disabled=count!==pairs.length;
 }
 function assign(i,word){
  pairs[i].answer=word;selection=null;refresh();$('status').textContent=names[word]+' — в паре с картинкой '+names[pairs[i].items[1-pairs[i].hidden]]+'.';
 }
+function celebrate(){
+ if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ const overlay=document.createElement('div');
+ overlay.className='fireworks';
+ overlay.setAttribute('aria-hidden','true');
+ document.body.append(overlay);
+ const colors=['#ff755f','#f54a99','#ffba31','#9267e3','#36b5ac'];
+ for(let burst=0;burst<3;burst++){
+  for(let i=0;i<18;i++){
+   const spark=document.createElement('i');
+   const angle=i*2*Math.PI/18;
+   const radius=48+Math.random()*52;
+   spark.style.left=[22,77,50][burst]+'%';
+   spark.style.top=[32,36,23][burst]+'%';
+   spark.style.background=colors[i%colors.length];
+   overlay.append(spark);
+   spark.animate([{opacity:0,transform:'scale(.3)'},{opacity:1,offset:.12},{opacity:0,transform:'translate('+Math.cos(angle)*radius+'px,'+(Math.sin(angle)*radius+16)+'px) scale(.35)'}],{duration:850,delay:burst*240,easing:'ease-out'});
+  }
+ }
+ setTimeout(()=>overlay.remove(),1500);
+}
 function finish(){
  phase='done';$('bank').hidden=true;const score=pairs.filter(p=>p.answer===p.items[p.hidden]).length;
- $('title').textContent='Ваш результат';$('counter').textContent=score+' / 5';$('hint').textContent='Верно восстановлено пар: '+score+' из 5.';
+ $('title').textContent=['Попробуйте ещё раз','Хорошее начало!','Почти получилось!','Отличная память!'][score];$('counter').textContent=score+' / '+pairs.length;$('hint').textContent='Правильных ответов — '+score+' из '+pairs.length+'.';
  $('rows').innerHTML=pairs.map(p=>{
  const answer=p.items[p.hidden],right=p.answer===answer;
  return '<div class="row">'+art(p.items[1-p.hidden])+'<span class="link"></span><span class="'+(right?'correct':'wrong')+'">'+(right?'✓ ':'✕ ')+names[p.answer]+(right?'':'<small>Верно: '+names[answer]+'</small>')+'</span></div>';
  }).join('');
- $('next').textContent='Сыграть ещё раз';focusTitle();
+ $('next').textContent='Сыграть ещё раз';focusTitle();if(score===pairs.length)celebrate();
 }
 $('start').onclick=async()=>{
  $('start').disabled=true;const img=new Image();img.src='art-c47f7c.webp';
