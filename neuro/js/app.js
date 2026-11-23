@@ -9,7 +9,7 @@ import { openRoutine, ownComparisonMarkup } from './routine.js?v=multi1';
 import { askQuestion, completePersonalSurvey, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=multi1';
 import { runReading, paintMeasurementStats, readingAccess } from './reading.js?v=1.5.0';
 import { comparisonMarkup } from './summary-comparison.js?v=1.5.0';
-import { initAnalytics, trackScreen, trackExercise, trackAction } from './analytics.js?v=1.5.0';
+import { initAnalytics, flushAnalytics, trackScreen, trackExercise, trackAction } from './analytics.js?v=1.5.0';
 import { store, cloudOn } from './store.js?v=1.11.0';
 import * as S from './stats.js?v=1.6.0';
 import { el, esc, plural, dayStr, fmtLong, fmtShort, weekdayName, sleep, logicalDay } from './util.js?v=1.5.0';
@@ -759,10 +759,14 @@ async function playOne(id, { inspection = false, guided = false, idx = 0, trial 
       if (!['sch_f','market','dob'].includes(id)) markStart();
       const res = await EX[id].run(ctx, { ownerSkip: true, onStart: markStart, trial: Boolean(trial), shortTrial: trial?.order_version >= 5, step: guided ? `${idx + 1} / ${sessionOrder.length}` : '' });
       await keepAwake(false);
-      if (res?.skipped) {trackAction('test_visit_skip');return { skipped: true };}
+      if (res?.skipped) {trackAction('test_visit_skip');await flushAnalytics();return { skipped: true };}
       trackExercise(res ? 'complete' : 'quit', id, performance.now() - exerciseStart);
       if (!res) return null;
-      if (inspection) return { inspected: true };
+      if (inspection) {
+        const preview={score:res.score,meta:res.meta,ts:Date.now(),ex:id};
+        const action=await resultScreen(id,preview,res,{guided,idx,isLast:idx===sessionOrder.length-1,trial:!!trial,sessionOrder});
+        return {inspected:true,action};
+      }
       const rec = store.add(id, res.score, { ...res.meta, ...(trial ? { trial_id: trial.trial_id } : {}) });
       if (trial) {
         for (;;) {
