@@ -56,7 +56,7 @@ function finish(){
  $('next').textContent='Сыграть ещё раз';focusTitle();
 }
 $('start').onclick=async()=>{
- $('start').disabled=true;const img=new Image();img.src='art.webp';
+ $('start').disabled=true;const img=new Image();img.src='art-c47f7c.webp';
  try{await img.decode();startRound();}catch{$('error').textContent='Картинки не загрузились. Попробуйте ещё раз.';}finally{$('start').disabled=false;}
 };
 $('next').onclick=()=>{if(phase==='study')recall();else if(phase==='recall')finish();else startRound();};
