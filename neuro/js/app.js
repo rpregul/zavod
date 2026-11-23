@@ -2,10 +2,11 @@ import { mountPractice } from './practice.js?v=1';
 import { openFunnel } from './traffic.js?v=geo1';
 import { runColors } from './colors.js?v=1.15.0';
 import { runPercent } from './percent.js?v=3';
+import { pairsFrame, runPairs } from './pairs.js?v=1';
 import { runMarket } from './market.js?v=3';
 import { initReminders, openReminders } from './reminders.js?v=1.5.0';
-import { openRoutine, ownComparisonMarkup } from './routine.js?v=1.6.0';
-import { askQuestion, completePersonalSurvey, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=1.11.1';
+import { openRoutine, ownComparisonMarkup } from './routine.js?v=pairs1';
+import { askQuestion, completePersonalSurvey, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=pairs1';
 import { runReading, paintMeasurementStats, readingAccess } from './reading.js?v=1.5.0';
 import { comparisonMarkup } from './summary-comparison.js?v=1.5.0';
 import { initAnalytics, trackScreen, trackExercise, trackAction } from './analytics.js?v=1.5.0';
@@ -66,6 +67,7 @@ export const EX = {
     rules: ['Введите ответ на цифровой клавиатуре и нажмите ↵.', 'Примеры станут сложнее по ходу раунда.', 'Если ошибётесь, увидите ответ и решение.'],
     run: runPercent,
   },
+  pairs: {id:'pairs',title:'Пары',sub:'Запоминание картинок',icon:'cards',color:'teal',unit:'верных пар',c1:'#22c5a5',c2:'#8463be',run:runPairs},
   market: {
     id: 'market', title: 'Рынок', sub: 'Оцените сумму двух цен', icon: 'grid', color: 'violet',
     unit: 'баллов', c1: '#7445b6', c2: '#c781bc', lead: 'Быстрый счёт и оценка суммы',
@@ -77,15 +79,16 @@ export const EX = {
 };
 const ORDER = ['sch_f', 'sch_r', 'dob', 'mem'];
 // Future exercises are paid-only unless explicitly added to this trial whitelist.
-const GAME_LIST = [...ORDER, 'colors', 'percent', 'market'];
+const GAME_LIST = [...ORDER, 'colors', 'percent', 'market', 'pairs'];
 const TRIAL_ORDERS = {
   1: ORDER,
   2: ['sch_f', 'colors', 'dob', 'mem'],
   3: ['sch_f', 'colors', 'dob', 'mem', 'percent'],
   4: ['sch_f', 'colors', 'dob', 'mem', 'percent', 'market'],
+  6: ['sch_f','colors','market','dob','pairs'],
   5: ['sch_f', 'colors', 'market', 'dob', 'mem'],
 };
-const CURRENT_TRIAL_ORDER = 5;
+const CURRENT_TRIAL_ORDER = 6;
 
 // ---------------------------------------------------------------- каркас экранов
 const app = document.getElementById('app');
@@ -274,7 +277,7 @@ function renderLogin({ restore = false, signInOnly = false } = {}) {
 // ---------------------------------------------------------------- главная (дашборд)
 const CHART_TABS = ['all', ...GAME_LIST];
 let chartEx = (() => { try { const v = sessionStorage.getItem('nz.chartEx'); return CHART_TABS.includes(v) ? v : 'all'; } catch { return 'all'; } })();
-const TAB_LABEL = { all: 'Общий', sch_f: 'Шульте', sch_r: 'Шульте ↕', dob: 'Совпадения', mem: 'Память', colors: 'Цвета', percent: 'Проценты', market: 'Рынок' };
+const TAB_LABEL = { all: 'Общий', sch_f: 'Шульте', sch_r: 'Шульте ↕', dob: 'Совпадения', mem: 'Память', colors: 'Цвета', percent: 'Проценты', market: 'Рынок', pairs: 'Пары' };
 
 function renderHome({ quiet = false } = {}) {
   if (!store.session) return guestWelcome();
@@ -670,7 +673,14 @@ function introScreen(id, { guided, idx, trial, sessionOrder = ORDER }) {
         <button type="button" data-skip>Сразу к упражнению</button>
       </section>`;
     mount(node, 'intro');
-    mountPractice(node, id, () => resolve('start'));
+    if(id==='pairs'){
+      const practice=node.querySelector('.practice');
+      const skip=practice.querySelector('[data-skip]');
+      const frame=pairsFrame('practice');
+      frame.addEventListener('pairs-ready',()=>resolve('start'),{once:true});
+      practice.replaceChildren(frame,skip);
+      skip.onclick=()=>resolve('start');
+    } else mountPractice(node, id, () => resolve('start'));
     node.addEventListener('click', (ev) => {
       const b = ev.target.closest('[data-r]');
       if (!b) return;
@@ -701,7 +711,7 @@ function resultScreen(id, rec, res, { guided, idx, isLast, trial = false, sessio
       <div class="result__top">${gi(e.icon, e.color, 'lg')}<h2>${e.title}</h2></div>
       <div class="score glass">
         <div class="score__n"><b data-count>0</b></div>
-        <div class="score__u">${e.unit}</div>
+        <div class="score__u">${id==='pairs' && rec.score===rec.meta.total ? 'Отличная память!' : e.unit}</div>
         ${chip}
         <div class="score__best">рекорд: <b>${Math.max(prevBest ?? 0, rec.score)}</b></div>
       </div>
@@ -718,7 +728,7 @@ function resultScreen(id, rec, res, { guided, idx, isLast, trial = false, sessio
     mount(node, 'result');
     countUp(node.querySelector('[data-count]'), rec.score, { dur: 900 });
     setTimeout(() => {
-      if (record) { confetti({ count: 150 }); sfx('done'); haptic([20, 40, 20, 40, 30]); }
+      if (record || (id==='pairs' && rec.score===rec.meta.total)) { confetti({ count: 150 }); sfx('done'); haptic([20, 40, 20, 40, 30]); }
       else if (first || rec.score > 0) sfx('ok');
     }, 650);
     node.addEventListener('click', (ev) => {
@@ -745,7 +755,7 @@ async function playOne(id, { guided = false, idx = 0, trial = null, sessionOrder
       await keepAwake(true);
       const exerciseStart = performance.now();
       trackExercise('start', id);
-      const res = await EX[id].run(ctx, { trial: Boolean(trial), shortTrial: trial?.order_version === 5, step: guided ? `${idx + 1} / ${sessionOrder.length}` : '' });
+      const res = await EX[id].run(ctx, { trial: Boolean(trial), shortTrial: trial?.order_version >= 5, step: guided ? `${idx + 1} / ${sessionOrder.length}` : '' });
       await keepAwake(false);
       trackExercise(res ? 'complete' : 'quit', id, performance.now() - exerciseStart);
       if (!res) return null;

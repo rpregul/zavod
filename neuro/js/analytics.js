@@ -218,7 +218,7 @@ function targetLabel(id) {
  if (targetNames[id]) return targetNames[id];
  if (id.startsWith('tap_')) return 'Касание области ('+id.slice(4)+')';
  if (id.startsWith('field_')) return 'Поле: '+({email:'почта',checkbox:'согласие',password:'PIN',text:'ввод'}[id.slice(6)] || 'ввод');
- const ex = {sch_f:'Шульте',sch_r:'Шульте вверх ногами',dob:'Совпадения',mem:'Запоминание слов',colors:'Цвета',percent:'Проценты',market:'Рынок'};
+ const ex = {sch_f:'Шульте',sch_r:'Шульте вверх ногами',dob:'Совпадения',mem:'Запоминание слов',colors:'Цвета',percent:'Проценты',market:'Рынок',pairs:'Пары'};
  for (const [key,title] of Object.entries(ex)) {
   for (const [prefix,stage] of Object.entries({intro:'Инструкция',start:'Начато',complete:'Завершено',quit:'Прервано',saved:'Сохранено',save_error:'Ошибка сохранения',ex:'Выбор упражнения',chart:'График'})) if (id === prefix+'_'+key) return stage+': '+title;
  }

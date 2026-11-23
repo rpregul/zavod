@@ -19,14 +19,16 @@ function showExample(){
  $('rows').innerHTML='<div class="row">'+art(0)+''+art(7)+'</div>';
  $('next').textContent='Я запомнил';focusTitle();
 }
+const mode = window.parent === window ? null : new URLSearchParams(location.search).get('mode');
+const full = mode === 'full';
 function startRound(){
  const deck=shuffle(names.map((_,i)=>i));
- pairs=Array.from({length:3},(_,i)=>({items:deck.slice(i*2,i*2+2),hidden:Math.floor(Math.random()*2),answer:null}));
- choices=shuffle([...pairs.map(p=>p.items[p.hidden]),...deck.slice(6,13)]);
+ pairs=Array.from({length:full ? 5 : 3},(_,i)=>({items:deck.slice(i*2,i*2+2),hidden:Math.floor(Math.random()*2),answer:null}));
+ choices=shuffle([...pairs.map(p=>p.items[p.hidden]),...deck.slice(pairs.length*2,pairs.length*2+10-pairs.length)]);
  document.querySelector('.fireworks')?.remove();phase='study';selection=null;$('welcome').hidden=true;$('game').hidden=false;$('bank').hidden=true;
  $('title').textContent='Запомните пары';$('hint').textContent='Свяжите два рисунка в каждой строке.';
  $('rows').innerHTML=pairs.map(p=>'<div class="row">'+art(p.items[0])+''+art(p.items[1])+'</div>').join('');
- $('next').textContent='Я запомнил';$('next').disabled=false;focusTitle();deadline=Date.now()+20000;
+ $('next').textContent='Я запомнил';$('next').disabled=false;focusTitle();deadline=Date.now()+(full ? 45000 : 20000);
  clearInterval(clock);clock=setInterval(tick,100);tick();
 }
 function tick(){
@@ -92,18 +94,22 @@ function celebrate(){
 }
 function finish(){
  phase='done';$('bank').hidden=true;const score=pairs.filter(p=>p.answer===p.items[p.hidden]).length;
- $('title').textContent=['Попробуйте ещё раз','Хорошее начало!','Почти получилось!','Отличная память!'][score];$('counter').textContent=score+' / '+pairs.length;$('hint').textContent='Правильных ответов — '+score+' из '+pairs.length+'.';
+ $('title').textContent=score===pairs.length?'Отличная память!':score===0?'Попробуйте ещё раз':score===pairs.length-1?'Почти получилось!':'Хорошее начало!';$('counter').textContent=score+' / '+pairs.length;$('hint').textContent='Правильных ответов — '+score+' из '+pairs.length+'.';
  $('rows').innerHTML=pairs.map(p=>{
  const answer=p.items[p.hidden],right=p.answer===answer;
  return '<div class="row">'+art(p.items[1-p.hidden])+'<span class="'+(right?'correct':'wrong')+'">'+(right?'✓ ':'✕ ')+names[p.answer]+(right?'':'<small>Верно: '+names[answer]+'</small>')+'</span></div>';
  }).join('');
+ if(mode==='trial'||full){
+  window.frameElement.dispatchEvent(new CustomEvent('pairs-result',{detail:{score,total:pairs.length,answers:pairs.map(p=>({given:names[p.answer],correct:names[p.items[p.hidden]]}))}}));
+  return;
+ }
  $('next').textContent='Сыграть ещё раз';focusTitle();if(score===pairs.length)celebrate();
 }
 $('start').onclick=async()=>{
  $('start').disabled=true;const img=new Image();img.src='art-c47f7c.webp';
- try{await img.decode();showExample();}catch{$('error').textContent='Картинки не загрузились. Попробуйте ещё раз.';}finally{$('start').disabled=false;}
+ try{await img.decode();if(mode==='trial'||full)startRound();else showExample();}catch{$('error').textContent='Картинки не загрузились. Попробуйте ещё раз.';}finally{$('start').disabled=false;}
 };
-$('next').onclick=()=>{if(phase==='study'||phase==='example')recall();else if(phase==='recall')finish();else startRound();};
+$('next').onclick=()=>{if(phase==='study'||phase==='example')recall();else if(phase==='recall')finish();else if(mode==='practice')window.frameElement.dispatchEvent(new Event('pairs-ready'));else startRound();};
 $('rows').onclick=e=>{const slot=e.target.closest('[data-slot]');if(!slot||!['recall','try'].includes(phase))return;
  const i=Number(slot.dataset.slot);
  if(selection!==null)assign(i,selection);
@@ -141,3 +147,8 @@ function endDrag(e){
 }
 bank.onpointerup=endDrag;bank.onpointercancel=endDrag;bank.onlostpointercapture=endDrag;
 
+
+if(['trial','full','practice'].includes(mode)){
+ document.querySelector('header').hidden=true;
+ $('start').click();
+}
