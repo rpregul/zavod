@@ -30,26 +30,30 @@ if(item.action==='goal'&&!s.pending.some(p=>p.action==='goal'))s.goal=result.goa
 async function load(store){
  const k=key(store);if(!k)return;if(loaded.has(k))return;if(loading.has(k))return loading.get(k);
  const task=(async()=>{try{const revision=state(store).revision||0;const remote=await request(store,'get');if(key(store)!==k)return;const s=state(store);const localChanged=(s.revision||0)!==revision;const oldRoutine=JSON.stringify(s.exercises);if(!localChanged&&!s.pending.some(p=>p.action==='routine'))s.exercises=remote.exercises;
-s.answers={...remote.answers,...(localChanged?s.answers:{}),...Object.fromEntries(s.pending.filter(p=>p.action==='answer').map(p=>[p.data.ex,{option:p.data.option,frequency:p.data.frequency}]))};if(!localChanged&&!s.pending.some(p=>p.action==='goal'))s.goal=remote.goal;persist(store);loaded.add(k);if(oldRoutine!==JSON.stringify(s.exercises))window.dispatchEvent(new Event('nz-routine-updated'));}catch{}await flushPersonalization(store);})().finally(()=>loading.delete(k));loading.set(k,task);return task;
+s.answers={...remote.answers,...(localChanged?s.answers:{}),...Object.fromEntries(s.pending.filter(p=>p.action==='answer').map(p=>[p.data.ex,{options:p.data.options,option:p.data.option,frequency:p.data.frequency}]))};if(!localChanged&&!s.pending.some(p=>p.action==='goal'))s.goal=remote.goal;persist(store);loaded.add(k);if(oldRoutine!==JSON.stringify(s.exercises))window.dispatchEvent(new Event('nz-routine-updated'));}catch{}await flushPersonalization(store);})().finally(()=>loading.delete(k));loading.set(k,task);return task;
 }
 function queue(store,action,data){const s=state(store);s.revision=(s.revision||0)+1;s.pending.push({action,data});persist(store);void flushPersonalization(store);}
 export function firstResult(store,ex){return store.results.filter(row=>row.ex===ex).slice().sort((a,b)=>a.ts-b.ts||a.id.localeCompare(b.id))[0];}
+function choicesOf(answer) {
+ return Array.isArray(answer?.options) ? answer.options : answer?.option >= 0 ? [answer.option] : [];
+}
 export async function askQuestion({store,mount,ex,force=false}){
  if(!QUESTIONS[ex])return;
  await Promise.race([load(store),new Promise(resolve=>setTimeout(resolve,600))]);if(!force&&Object.hasOwn(state(store).answers,ex))return;
- const q=QUESTIONS[ex],root=document.createElement('section');root.className='personal-survey';let option=null;
+ const q=QUESTIONS[ex],root=document.createElement('section');root.className='personal-survey';const chosen=new Set(choicesOf(state(store).answers[ex]));
  const start=performance.now();trackAction('survey_view_'+ex);
  await new Promise(resolve=>{
- root.innerHTML='<div class="survey-heading">'+gi(q.icon,'violet','lg')+'<h1>'+q.title+'</h1><p>Подберём полезную подсказку под вашу цель. Ответ необязателен.</p></div>'
-  +'<fieldset class="survey-choices"><legend class="sr-only">Выберите один ответ</legend>'+q.options.map((text,i)=>'<label class="survey-option"><input type="radio" name="survey-option" value="'+i+'"><span>'+esc(text)+'</span><i aria-hidden="true">'+glyph.check+'</i></label>').join('')+'</fieldset>'
-  +'<button class="btn btn--primary btn--lg btn--block" data-survey-next disabled>Продолжить</button><button class="link" data-survey-skip>Пропустить вопрос</button>';
+ root.innerHTML='<div class="survey-heading">'+gi(q.icon,'violet','lg')+'<h1>'+q.title+'</h1><p>Можно выбрать несколько вариантов.</p></div>'
+  +'<fieldset class="survey-choices"><legend class="sr-only">Выберите подходящие варианты</legend>'+q.options.map((text,i)=>'<label class="survey-option"><input type="checkbox" name="survey-option" value="'+i+'" '+(chosen.has(i)?'checked':'')+'><span>'+esc(text)+'</span><i aria-hidden="true">'+glyph.check+'</i></label>').join('')+'</fieldset>'
+  +'<button class="btn btn--primary btn--lg btn--block" data-survey-next '+(chosen.size?'':'disabled')+'>Продолжить</button><button class="link" data-survey-skip>Пропустить вопрос</button>';
  mount(root,'survey_'+ex);
  root.addEventListener('change',event=>{
   if(event.target.name!=='survey-option')return;
-  option=Number(event.target.value);
-  root.querySelector('[data-survey-next]').disabled=false;
+  const value=Number(event.target.value);
+  if(event.target.checked) chosen.add(value); else chosen.delete(value);
+  root.querySelector('[data-survey-next]').disabled=!chosen.size;
  });
- function finish(skipped){const answer={option:skipped?-1:option,frequency:null};state(store).answers[ex]=answer;queue(store,'answer',{ex,...answer});trackAction((skipped?'survey_skip_':'survey_answer_')+ex);trackExercise('survey',ex,performance.now()-start);resolve();}
+ function finish(skipped){const options=skipped?[]:[...chosen].sort((a,b)=>a-b);const answer={options,option:options[0]??-1,frequency:null};state(store).answers[ex]=answer;queue(store,'answer',{ex,...answer});trackAction((skipped?'survey_skip_':'survey_answer_')+ex);trackExercise('survey',ex,performance.now()-start);resolve();}
  root.querySelector('[data-survey-next]').onclick=()=>finish(false);root.querySelector('[data-survey-skip]').onclick=()=>finish(true);
  });
 }
@@ -81,7 +85,7 @@ export async function paintPersonal({host,store,summary=false,recs=store.results
   host.innerHTML='<section class="personal-summary glass"><h2>'+(summary?'Ваш следующий шаг':'Личный маршрут')+'</h2><div class="personal-route"></div><div data-personal-goal></div><div data-personal-edit></div></section>';
   const route=host.querySelector('.personal-route');
   if(summary||editing){route.innerHTML='<p>Что для вас сейчас важнее всего?</p><div class="personal-priorities">'+available.map(ex=>'<button class="btn btn--glass" aria-pressed="'+(ex===chosen)+'" data-priority="'+ex+'">'+QUESTIONS[ex].skill+'</button>').join('')+'</div>'
-    +'<h3>'+esc(answer?.option>=0?q.options[answer.option]:'Развивать '+q.skill.toLowerCase())+'</h3><p>'+esc(q.tips[answer?.option>=0?answer.option:4])+'</p><p class="personal-next">В приложении: <b>'+q.exercise+'</b>. Отслеживайте результат этого упражнения в следующих тренировках.</p>';}
+    +'<h3>'+esc(choicesOf(answer).length?choicesOf(answer).map(i=>q.options[i]).join(' · '):'Развивать '+q.skill.toLowerCase())+'</h3><p>'+(choicesOf(answer).length?choicesOf(answer):[4]).map(i=>esc(q.tips[i])).join('</p><p>')+'</p><p class="personal-next">В приложении: <b>'+q.exercise+'</b>. Отслеживайте результат этого упражнения в следующих тренировках.</p>';}
   const goalHost=host.querySelector('[data-personal-goal]');if(s.goal?.ex===chosen)drawGoal(goalHost,store);
   const edit=host.querySelector('[data-personal-edit]');
   if(!editing){edit.innerHTML='<button class="link" data-edit-goal>'+(s.goal?'Изменить цель':'Выбрать личную цель')+'</button>';edit.querySelector('button').onclick=()=>{editing=true;render();};}

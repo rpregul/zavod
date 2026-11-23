@@ -5,8 +5,8 @@ import { runPercent } from './percent.js?v=3';
 import { pairsFrame, runPairs } from './pairs.js?v=1';
 import { runMarket } from './market.js?v=3';
 import { initReminders, openReminders } from './reminders.js?v=1.5.0';
-import { openRoutine, ownComparisonMarkup } from './routine.js?v=pairs1';
-import { askQuestion, completePersonalSurvey, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=pairs1';
+import { openRoutine, ownComparisonMarkup } from './routine.js?v=multi1';
+import { askQuestion, completePersonalSurvey, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=multi1';
 import { runReading, paintMeasurementStats, readingAccess } from './reading.js?v=1.5.0';
 import { comparisonMarkup } from './summary-comparison.js?v=1.5.0';
 import { initAnalytics, trackScreen, trackExercise, trackAction } from './analytics.js?v=1.5.0';
@@ -17,7 +17,7 @@ import { glyph, gi } from './icons.js?v=1.5.0';
 import { initFx, initRipple, confetti, haptic, sfx, countUp, toast } from './fx.js?v=1.5.0';
 import { lineChart, heatmap, ringSvg } from './charts.js?v=1.6.0';
 import { makeCtx, sheet, confirmSheet } from './ui.js?v=1.5.0';
-import { runSchulte } from './schulte.js?v=1.15.0';
+import { runSchulte } from './schulte.js?v=center1';
 import { runDobble } from './dobble.js?v=1.15.0';
 import { runMemory } from './memory.js?v=1.15.0';
 import { BILLING } from './config.js?v=1.5.0';
@@ -705,7 +705,7 @@ function resultScreen(id, rec, res, { guided, idx, isLast, trial = false, sessio
       chip = d > 0 ? `<span class="delta delta--up">↑ ${sign(d)} к прошлой попытке</span>` : d < 0 ? `<span class="delta delta--down">↓ ${sign(d)} к прошлой попытке</span>` : '<span class="delta">Как в прошлый раз</span>';
     }
     const next = guided && !isLast ? EX[sessionOrder[idx + 1]] : null;
-    const report = exerciseReport(id, rec, store.results);
+    const report = trial && id === 'sch_f' ? null : exerciseReport(id, rec, store.results);
     const node = el('div', 'result');
     node.innerHTML = `
       <div class="result__top">${gi(e.icon, e.color, 'lg')}<h2>${e.title}</h2></div>
@@ -739,10 +739,10 @@ function resultScreen(id, rec, res, { guided, idx, isLast, trial = false, sessio
 }
 
 // возвращает {rec, action} либо null, если вышли
-async function playOne(id, { guided = false, idx = 0, trial = null, sessionOrder = ORDER } = {}) {
+async function playOne(id, { inspection = false, guided = false, idx = 0, trial = null, sessionOrder = ORDER } = {}) {
   for (;;) {
     trackExercise('intro', id);
-    const go = await introScreen(id, { guided, idx, trial, sessionOrder });
+    const go = id === 'sch_f' ? 'start' : await introScreen(id, { guided, idx, trial, sessionOrder });
     if (go === 'back') return null;
     for (;;) {
       const root = el('div', 'play');
@@ -753,12 +753,15 @@ async function playOne(id, { guided = false, idx = 0, trial = null, sessionOrder
         if (await confirmSheet({ title: 'Выйти из упражнения?', text: 'Результат этой попытки не сохранится.', ok: 'Выйти', cancel: 'Продолжить', danger: true })) ctx.abort();
       };
       await keepAwake(true);
-      const exerciseStart = performance.now();
-      trackExercise('start', id);
-      const res = await EX[id].run(ctx, { trial: Boolean(trial), shortTrial: trial?.order_version >= 5, step: guided ? `${idx + 1} / ${sessionOrder.length}` : '' });
+      let exerciseStart = performance.now();
+      const markStart = () => { exerciseStart = performance.now(); trackExercise('start', id); };
+      if (id !== 'sch_f') markStart();
+      const res = await EX[id].run(ctx, { ownerSkip: store.session?.key === 'рома', onStart: id === 'sch_f' ? markStart : undefined, trial: Boolean(trial), shortTrial: trial?.order_version >= 5, step: guided ? `${idx + 1} / ${sessionOrder.length}` : '' });
       await keepAwake(false);
+      if (res?.skipped) return { skipped: true };
       trackExercise(res ? 'complete' : 'quit', id, performance.now() - exerciseStart);
       if (!res) return null;
+      if (inspection) return { inspected: true };
       const rec = store.add(id, res.score, { ...res.meta, ...(trial ? { trial_id: trial.trial_id } : {}) });
       if (trial) {
         for (;;) {
@@ -831,11 +834,17 @@ async function runSession({ fromLanding = false, freshGuest = false } = {}) {
   const startIdx = trial?.next_index || 0;
   const recs = trial ? store.results.filter(r => r.meta?.trial_id === trial.trial_id).sort((a, b) => order.indexOf(a.ex) - order.indexOf(b.ex)) : [];
   if (fromLanding && order[startIdx]) trackExercise('ready', 'landing_intro', performance.now());
+  let inspecting = false;
   for (let i = startIdx; i < order.length; i++) {
-    const r = await playOne(order[i], { guided: true, idx: i, trial, sessionOrder: order });
+    const r = await playOne(order[i], { guided: true, idx: i, trial, inspection: inspecting, sessionOrder: order });
     if (!r) { renderHome(); return; }
-    recs.push(r.rec);
+    if (r.skipped) {
+      if (trial) inspecting = true;
+      continue;
+    }
+    if (!inspecting) recs.push(r.rec);
   }
+  if (inspecting || !recs.length) return renderHome();
   if (BILLING.enabled) await store.refreshAccess().catch(() => {});
   await completePersonalSurvey({store,mount,recs});
   const plan = await summaryScreen(recs, { trial: !!trial });

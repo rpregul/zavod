@@ -1,0 +1,6 @@
+.schulte__guide-text { display: none; }
+.schulte--guide .schulte__guide-text { display: block; max-width: 36ch; text-align: center; line-height: 1.45; }
+.schulte--guide .schulte__hint, .schulte--guide .schulte__foot { display: none; }
+.schulte--guide .cell { opacity: .36; }
+.schulte--guide .cell:nth-child(13) { opacity: 1; box-shadow: inset 0 0 0 3px #8250ac, 0 0 16px #a87dc066; }
+.schulte--guide .cell.cell--cue { opacity: 1; background: #ffe4ca; box-shadow: inset 0 0 0 3px #ba6123; }
