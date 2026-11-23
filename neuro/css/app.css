@@ -676,3 +676,10 @@ small{font-size:.78rem;color:var(--muted);font-weight:600}
 @keyframes pct-drift{from{transform:rotate(-14deg) translateY(8px)}to{transform:rotate(5deg) translateY(-8px)}}
 @keyframes pct-feedback-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.pct-stage *{animation:none!important;transition:none!important}}
+
+/* Personal ten-minute offer */
+[data-coupon-box] [hidden]{display:none!important}
+.nz-coupon{position:fixed;inset:0;margin:auto;width:min(92vw,390px);height:fit-content;max-height:90dvh;overflow:auto;padding:32px 24px;border:1px solid #ffffff30;border-radius:26px;color:white;background:radial-gradient(ellipse at 82% 0%,#493055,transparent 52%),linear-gradient(140deg,#25202f,#090a10 60%,#24182f);box-shadow:0 20px 70px #25193165;text-align:center}
+.nz-coupon::backdrop{background:#20182d88;backdrop-filter:blur(5px)}
+.nz-coupon p{color:#ede1f5;margin:0 0 12px}.nz-coupon h2{font-size:clamp(2.5rem,8vw,3.4rem);margin:10px 0}.nz-coupon button{margin-top:12px}.coupon-clock{width:auto;padding:0 14px}.nz-coupon i{position:absolute;left:50%;top:28%;pointer-events:none;opacity:0}
+@media(prefers-reduced-motion:no-preference){.nz-coupon[open]{animation:coupon-in .4s var(--spring)}.nz-coupon i{animation:coupon-spark .95s both}@keyframes coupon-in{from{opacity:0;transform:translateY(18px) scale(.93)}}@keyframes coupon-spark{from{opacity:1;transform:scale(.2)}to{opacity:0;transform:translate(var(--x),var(--y)) rotate(120deg)}}}

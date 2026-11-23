@@ -1,20 +1,141 @@
 import { trackAction, flushAnalytics } from './analytics.js?v=1.5.0';
-import { BILLING } from './config.js?v=1.5.0';
+import { BILLING, CLOUD } from './config.js?v=1.5.0';
 import { sheet, confirmSheet } from './ui.js?v=1.5.0';
 import { esc } from './util.js?v=1.5.0';
 
-export const SALE_END = Date.parse('2026-11-22T00:00:00+03:00');
-export function countdownText(now=Date.now()){const seconds=Math.max(0,Math.floor((SALE_END-now)/1000));return [Math.floor(seconds/3600),Math.floor(seconds/60)%60,seconds%60].map(n=>String(n).padStart(2,'0')).join(':');}
-export function clockMarkup(){const values=countdownText().split(':');return '<div class="flip-clock" data-sale-countdown role="timer" aria-label="До окончания скидки '+countdownText()+'">'+values.map((value,i)=>'<div class="flip-unit"><div class="flip-tile" data-clock-unit="'+i+'" data-value="'+value+'"><span class="flip-current">'+value+'</span><span class="flip-top" aria-hidden="true"><span>'+value+'</span></span><span class="flip-bottom" aria-hidden="true"><span>'+value+'</span></span></div><small>'+['часов','минут','секунд'][i]+'</small></div>').join('')+'</div>';}
-export function initSaleCountdown(){
- const update=()=>document.querySelectorAll('[data-sale-countdown]').forEach(node=>{
-  const text=countdownText();node.setAttribute('aria-label','До окончания скидки '+text);
-  node.querySelectorAll('[data-clock-unit]').forEach((tile,i)=>{const next=text.split(':')[i];if(tile.dataset.value===next)return;tile.querySelector('.flip-top>span').textContent=tile.dataset.value;tile.querySelector('.flip-bottom>span').textContent=next;tile.querySelector('.flip-current').textContent=next;tile.dataset.value=next;tile.classList.remove('is-flipping');void tile.offsetWidth;tile.classList.add('is-flipping');});
-  if(Date.now()>=SALE_END){node.closest('.bf-countdown').textContent='Скидка завершилась. Действуют обычные цены.';document.querySelectorAll('.black-friday').forEach(plans=>{plans.classList.remove('black-friday');plans.querySelectorAll('[data-plan]').forEach(button=>{const plan=PLANS[button.dataset.plan];button.querySelector('.bf-old')?.remove();button.querySelector('.subscription-plan__price').innerHTML=money(plan.oldPrice)+' <small>₽ за '+period(plan)+'</small>';const savingsNote=button.querySelector('[data-quarter-savings]');if(savingsNote)savingsNote.textContent=savings(plan.oldPrice);const note=[...button.querySelectorAll('small')].find(n=>n.textContent.includes('на человека'));if(note)note.textContent='Около '+Math.ceil(plan.oldPrice/4)+' ₽ на человека, если вас четверо';});});document.querySelectorAll('.bf-heading').forEach(h=>h.textContent='Обычные цены');}
- });
- update();setInterval(update,1000);
+let couponStore, state, dialog, busy=false, visibleSince=0, lastList, retryAfter=0;
+function left() {
+  return state?.key === couponStore?.session?.key && state ? Math.max(0, Math.ceil((state.deadline-Date.now())/1000)) : 0;
 }
-export const saleActive = (now = Date.now()) => now >= Date.parse('2026-11-21T00:00:00+03:00') && now < SALE_END;
+export const saleActive = () => Boolean(state?.applied && left());
+export function countdownText() {
+  const seconds=left();
+  return String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');
+}
+export function clockMarkup() {
+  return '<div class="flip-clock" role="timer"><span class="flip-tile coupon-clock" data-coupon-clock>'+countdownText()+'</span></div>';
+}
+async function requestCoupon(action) {
+  const session=couponStore.session;
+  const response=await fetch(CLOUD.url+'/rest/v1/rpc/nz_first_offer_coupon',{
+    method:'POST',cache:'no-store',signal:AbortSignal.timeout(10000),
+    headers:{apikey:CLOUD.key,Authorization:'Bearer '+CLOUD.key,'Content-Type':'application/json'},
+    body:JSON.stringify({p_token:session.token,p_action:action})
+  });
+  if(!response.ok) throw new Error('coupon_unavailable');
+  const result=await response.json();
+  if(couponStore.session?.token!==session.token) throw new Error('session_changed');
+  state={key:session.key,applied:result.applied,deadline:Date.now()+Date.parse(result.expires_at)-Date.parse(result.server_now)};
+}
+function paintOffers() {
+  const active=saleActive();
+  for(const box of document.querySelectorAll('[data-coupon-box]')) {
+    if(box.dataset.discounted===String(active)) continue;
+    box.dataset.discounted=String(active);
+    box.classList.toggle('bf-shell',active);
+    box.querySelector('[data-coupon-head]').hidden=!active;
+    box.querySelector('.subscription-plans').classList.toggle('black-friday',active);
+    for(const button of box.querySelectorAll('[data-plan]')) {
+      const plan=PLANS[button.dataset.plan];
+      button.querySelector('.bf-old').hidden=!active;
+      button.querySelector('[data-current-price]').textContent=money(plan.price);
+      const family=button.querySelector('[data-family-price]');
+      if(family) family.textContent=Math.ceil(plan.price/4);
+      const quarter=button.querySelector('[data-quarter-savings]');
+      if(quarter) quarter.textContent=savings(plan.price);
+    }
+  }
+  for(const clock of document.querySelectorAll('[data-coupon-clock]')) {
+    const value=countdownText();
+    if(clock.textContent!==value) clock.textContent=value;
+  }
+}
+function closeCoupon() {
+  if(dialog){dialog.close();dialog.remove();dialog=null;}
+}
+function displayCoupon() {
+  dialog=document.createElement('dialog');
+  dialog.className='nz-coupon';
+  dialog.setAttribute('aria-labelledby','nz-coupon-title');
+  dialog.innerHTML='<p>Ваш персональный купон</p><h2 id="nz-coupon-title">Скидка 25%</h2><p>Действительна в течение десяти минут.</p>'+clockMarkup()+'<p role="status"></p><button autofocus class="btn btn--primary btn--lg btn--block">Применить купон</button>';
+  document.body.append(dialog);
+  dialog.addEventListener('cancel',event=>event.preventDefault());
+  const button=dialog.querySelector('button');
+  button.onclick=async()=>{
+    button.disabled=true;
+    try {
+      await requestCoupon('apply');
+      if(saleActive()) trackAction('coupon_applied');
+      closeCoupon();paintOffers();
+    } catch {if(dialog) dialog.querySelector('[role=status]').textContent='Проверьте соединение и нажмите ещё раз.';}
+    finally {button.disabled=false;}
+  };
+  dialog.showModal();
+  trackAction('coupon_shown');
+  playChime();
+  if(!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    for(let i=0;i<36;i++){
+      const star=document.createElement('i'),angle=i*2.4;
+      star.setAttribute('aria-hidden','true');star.textContent='✦';
+      star.style.setProperty('--x',Math.cos(angle)*(65+i*3)+'px');
+      star.style.setProperty('--y',Math.sin(angle)*(65+i*2)+'px');
+      star.style.color=['#d6ff83','#fd9eca','#c0a1ff'][i%3];
+      dialog.append(star);
+    }
+  }
+}
+let audioContext, chime;
+function armAudio(){
+  try {
+    audioContext ||= new (window.AudioContext||window.webkitAudioContext)();
+    audioContext.resume().catch(()=>{});
+    if(!chime) chime=fetch(new URL('../assets/coupon-stars.wav',import.meta.url)).then(r=>r.arrayBuffer()).then(bytes=>audioContext.decodeAudioData(bytes)).catch(()=>null);
+  }catch{}
+}
+function playChime(){
+  if(!audioContext || audioContext.state!=='running') return;
+  chime?.then(buffer=>{if(buffer && dialog?.open){const source=audioContext.createBufferSource();source.buffer=buffer;source.connect(audioContext.destination);source.start();}});
+}
+function visibleList(){
+  if(document.hidden) return null;
+  for(const list of [...document.querySelectorAll('[data-coupon-box] .subscription-plans')].reverse()){
+    const r=list.getBoundingClientRect(),top=Math.max(0,r.top),bottom=Math.min(innerHeight,r.bottom);
+    if(bottom-top<Math.min(48,r.height)) continue;
+    if(list.contains(document.elementFromPoint(r.left+r.width/2,top+(bottom-top)/2))) return list;
+  }
+  return null;
+}
+async function showFor(list){
+  if(busy || dialog || !couponStore.session?.token) return;
+  busy=true;
+  try {
+    await requestCoupon('show');
+    if(left() && !state.applied && list===visibleList()) displayCoupon();
+    paintOffers();
+  } catch {retryAfter=Date.now()+5000;}
+  finally {busy=false;}
+}
+export function initSaleCountdown(store){
+  if(!store) return;
+  couponStore=store;
+  window.addEventListener('pointerdown',armAudio,{once:true,capture:true});
+  window.addEventListener('keydown',armAudio,{once:true,capture:true});
+  function tick(){
+    if(dialog && (!left() || state.applied)) closeCoupon();
+    paintOffers();
+    if(dialog || busy || !store.session?.token) return;
+    if(state?.key===store.session.key && (state.applied || (Number.isFinite(state.deadline) && !left()))) return;
+    const list=visibleList();
+    if(list!==lastList){lastList=list;visibleSince=performance.now();}
+    if(list && performance.now()-visibleSince>=1000 && Date.now()>=retryAfter) void showFor(list);
+  }
+  document.addEventListener('click',e=>{
+    const list=e.target.closest?.('[data-plan]')?.closest('[data-coupon-box] .subscription-plans');
+    if(!list || !store.session?.token || Date.now()<retryAfter || (state?.key===store.session.key && (state.applied || (Number.isFinite(state.deadline) && !left())))) return;
+    e.preventDefault();e.stopImmediatePropagation();void showFor(list);
+  },true);
+  setInterval(tick,160);
+}
 export const money = value => Number(value).toLocaleString('ru-RU', { minimumFractionDigits: Number.isInteger(value) ? 0 : 2, maximumFractionDigits: 2 });
 export const PLANS = {
   individual: { title: 'Для себя', oldPrice: 399, get price() { return saleActive() ? 299 : 399; }, detail: 'Один профиль' },
@@ -37,11 +158,10 @@ export function offerMarkup({ completed = false } = {}) {
     <h2>${completed ? 'Ваша точка отсчёта готова' : 'Сделайте тренировку привычкой'}</h2>
     <p>Продолжайте тренировать функции мозга и отслеживайте результаты в удобных графиках, узнайте, как далеко вы сможете продвинуться!</p>
     <ul class="subscription-benefits"><li>Получите персональный разбор ваших результатов</li><li>Практические советы для повседневной жизни</li><li>Новые упражнения, уровни сложности</li><li>Замеры скорости чтения</li></ul>
-    ${saleActive() ? `<section class="bf-shell"><header class="bf-heading"><h3>Скидка до полуночи</h3><span>−25%</span></header><div class="bf-countdown"><p>До конца скидки</p>${clockMarkup()}</div>` : ''}
-    <div class="subscription-plans${saleActive() ? ' black-friday' : ''}">${Object.entries(PLANS).map(([id, plan]) => `<button class="subscription-plan glass${id === 'individual' ? ' subscription-plan--primary is-spotlit' : ''}" data-plan="${id}"${id === 'quarter' ? ' style="grid-column:1/-1"' : ''}>
-      <b>${plan.title}</b>${saleActive() ? `<span class="bf-old"><s>${money(plan.oldPrice)} ₽</s><strong>−25%</strong></span>` : ''}<span class="subscription-plan__price">${money(plan.price)} <small>₽ за ${period(plan)}</small></span><span>${plan.detail}</span>
-      ${id === 'quarter' ? `<small data-quarter-savings>${savings(plan.price)}</small>` : ''}${id === 'family' ? `<small>Около ${Math.ceil(plan.price/4)} ₽ на человека, если вас четверо</small>` : ''}<strong>Выбрать</strong></button>`).join('')}</div>
-    ${saleActive() ? '</section>' : ''}
+    <div data-coupon-box><div data-coupon-head hidden><header class="bf-heading"><h3>Купон применён</h3><span>−25%</span></header><div class="bf-countdown"><p>До конца скидки</p>${clockMarkup()}</div></div>
+    <div class="subscription-plans">${Object.entries(PLANS).map(([id, plan]) => `<button class="subscription-plan glass${id === 'individual' ? ' subscription-plan--primary is-spotlit' : ''}" data-plan="${id}"${id === 'quarter' ? ' style="grid-column:1/-1"' : ''}>
+      <b>${plan.title}</b><span class="bf-old" hidden><s>${money(plan.oldPrice)} ₽</s><strong>−25%</strong></span><span class="subscription-plan__price"><span data-current-price>${money(plan.price)}</span> <small>₽ за ${period(plan)}</small></span><span>${plan.detail}</span>
+      ${id === 'quarter' ? `<small data-quarter-savings>${savings(plan.price)}</small>` : ''}${id === 'family' ? `<small>Около <span data-family-price>${Math.ceil(plan.price/4)}</span> ₽ на человека, если вас четверо</small>` : ''}<strong>Выбрать</strong></button>`).join('')}</div></div>
     <p class="login__note">Разовая оплата за выбранный срок. Автоматических списаний нет.</p>
   </div>`;
 }
@@ -85,8 +205,9 @@ export async function openSubscription(store, { plan: selected = null } = {}) {
         if (s.node.querySelector('[data-family]')) await drawFamily();
         return;
       }
+      if (couponStore && state?.key !== store.session?.key) await requestCoupon('status').catch(()=>{});
       const promo = saleActive();
-      const chosen = PLANS[selected] ? { ...PLANS[selected], price: PLANS[selected].price, consentVersion: promo ? 'nov21-promo-v1' : selected === 'quarter' ? 'quarter-v1-once' : 'monthly-plans-v4-once', sale: promo } : null;
+      const chosen = PLANS[selected] ? { ...PLANS[selected], price: PLANS[selected].price, consentVersion: promo ? 'coupon-10m-v1' : selected === 'quarter' ? 'quarter-v1-once' : 'monthly-plans-v4-once', sale: promo } : null;
       if (!chosen) { selected = null; return draw(); }
       s.node.innerHTML = `<button class="link" data-back>← Другой тариф</button><h3 class="sheet__title">${chosen.title}</h3>
         <p class="subscription-price">${chosen.sale ? `<s>${money(chosen.oldPrice)} ₽</s> <span class="bf-checkout-badge">−25%</span><br>` : ''}<b>${money(chosen.price)} ₽</b> за ${period(chosen)}</p><p class="sheet__text">${chosen.detail}${chosen.months === 3 ? ' · ' + savings(chosen.price) : ''}</p>
@@ -100,7 +221,7 @@ export async function openSubscription(store, { plan: selected = null } = {}) {
       s.node.querySelector('[data-back]').onclick = () => { selected = null; draw(); };
       s.node.querySelector('[data-checkout]')?.addEventListener('submit', async event => {
         event.preventDefault();
-        if (chosen.sale !== saleActive()) { await draw(); return; }
+        if (chosen.sale !== saleActive()) { await draw(); errorText('Срок купона истёк. Проверьте новую цену перед оплатой.'); return; }
         const form = event.target; if (!form.reportValidity()) return;
         const buttons = [...form.querySelectorAll('button[type="submit"]')];
         if (buttons.some(item => item.disabled)) return;
