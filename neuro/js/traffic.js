@@ -1,4 +1,4 @@
-import { openFunnel as openOriginal } from './analytics.js?v=1.5.0';
+import { openFunnel as openOriginal } from './analytics.js?v=partner1';
 import { CLOUD } from './config.js?v=1.5.0';
 import { esc } from './util.js?v=1.5.0';
 import { loadLandingReport } from './landing-report.js?v=2';
@@ -6,11 +6,11 @@ export async function openFunnel(store){
  await openOriginal(store);
  const overlay=document.querySelector('.analytics-overlay'),host=overlay?.querySelector('[data-report]');if(!host)return;
  const title=[...host.querySelectorAll('b')].find(n=>n.textContent==='Новые посетители после переноса регистрации');
- const landing=document.createElement('section');host.prepend(landing);void loadLandingReport(landing,store.session.token);
+ const landing=document.createElement('section');host.append(landing);void loadLandingReport(landing,store.session.token);
  if(title)title.textContent='Воронка новых посетителей с 11 ноября';
  const old=[...host.querySelectorAll('b')].find(n=>n.textContent==='Вся история участников');
  if(old){const details=document.createElement('details');details.className='analytics-archive';const summary=document.createElement('summary');summary.textContent='Архив: участники за всё время';details.append(summary);old.before(details);let n=old;for(let i=0;i<4&&n;i++){const next=n.nextSibling;details.append(n);n=next;}old.remove();}
- const panel=document.createElement('section');panel.className='traffic-panel';panel.innerHTML='<h3>Посещения</h3><p class="reading-note">Загружаем графики…</p>';host.prepend(panel);
+ const panel=document.createElement('section');panel.className='traffic-panel';panel.innerHTML='<h3>Посещения</h3><p class="reading-note">Загружаем графики…</p>';host.querySelector('[data-main-funnel]')?.after(panel);
  const geo=document.createElement('section');panel.after(geo);
  try {
    const response=await fetch(CLOUD.url+'/rest/v1/rpc/nz_geo_report',{method:'POST',headers:{apikey:CLOUD.key,'Content-Type':'application/json'},body:JSON.stringify({p_token:store.session.token})});

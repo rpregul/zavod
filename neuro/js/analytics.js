@@ -54,8 +54,7 @@ export async function openFunnel(store) {
   try {
     await store.billing('status');
     const data = await rpc('nz_funnel_report', { p_token: store.session.token, p_days: 30 });
-    const f = data.funnel;
-    const steps = [
+    const steps = f => [
       ['Посетили', f.visitors],
       ['Начали пробную', f.trial_started],
       ['Сохранили все результаты', f.trial_completed],
@@ -67,22 +66,38 @@ export async function openFunnel(store) {
       ['Создали профиль после оплаты', f.profile_created_after_payment],
     ];
     const date = value => new Date(value).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day:'numeric',month:'short',hour:'2-digit',minute:'2-digit' });
-    const rows = steps.map(([title, count], index) => {
-      const share = index && f.visitors ? ' · ' + Math.round(count / f.visitors * 100) + '% посетителей' : '';
+    const rows = f => steps(f).map(([title, count], index) => {
+      const share = index && f.visitors ? ' · ' + (count / f.visitors * 100).toLocaleString('ru-RU',{maximumFractionDigits:2}) + '% посетителей' : '';
       return '<dt>' + title + '</dt><dd><b>' + count + '</b>' + share + '</dd>';
     }).join('');
-    host.innerHTML = '<b>Новые посетители после переноса регистрации</b>'
+    host.innerHTML = '<section data-main-funnel><h3>Воронка посетителей</h3><label>Источник первого перехода <select data-partner><option value="all">Все источники</option><option value="evgenia">Евгения</option><option value="m">Источник M</option><option value="unknown">Без атрибуции</option></select></label>'
       + '<p>С ' + date(data.cohort_start) + ' по ' + date(data.measured_at) + ' (МСК).</p>'
       + '<small>Каждый человек учитывается один раз на шаге. Доли рассчитаны от посетителей этой группы. Это текущий срез, участники ещё могут продолжить.</small>'
-      + '<dl>' + rows + '</dl>'
-      + '<small>Последний результат сохраняется до открытия общих итогов. Просмотр тарифа фиксируется, когда хотя бы половина карточки тарифа или блока предложения видна одну секунду. Пропуски событий возможны из-за сети, блокировщиков и закрытия вкладки. Покупка подтверждается сервером независимо от событий браузера.</small>'
+      + '<dl data-funnel-rows>' + rows(data.funnel) + '</dl><p data-sales hidden></p>'
+      + '<small>Последний результат сохраняется до открытия общих итогов. Просмотр тарифа фиксируется, когда хотя бы половина карточки тарифа или блока предложения видна одну секунду. Пропуски событий возможны из-за сети, блокировщиков и закрытия вкладки. Покупка подтверждается сервером независимо от событий браузера.</small></section>'
       + '<hr><b>Вся история участников</b><p>Профилей с именем и PIN: ' + data.totals.registrations
       + ' · гостевых профилей: ' + data.totals.guests + '</p><p>Начали пробную: ' + data.totals.trial_started
       + ' · сохранили все результаты: ' + data.totals.trial_completed + ' · покупателей: ' + data.totals.buyers + '</p>'
       + '<small>Именные профили включают регистрации до переноса. Гостевой профиль создаётся автоматически. Владелец и тестовые аккаунты исключены. До входа учитываются браузеры, после входа устройства объединяются по профилю.</small>'
-      + '<hr><b>Пробные тренировки</b><ul>'
-      + data.trials.map(t => '<li>' + esc(t.name) + ' — ' + (t.completed_at ? 'все результаты сохранены' : 'в процессе, результатов: ' + t.exercises)
-        + '<br><small>Начало: ' + date(t.started_at) + '</small></li>').join('') + '</ul>';
+      ;
+    const select = host.querySelector('[data-partner]');
+    const list = host.querySelector('[data-funnel-rows]');
+    const sales = host.querySelector('[data-sales]');
+    let request = 0;
+    select.onchange = async () => {
+      const version = ++request;
+      const partner = select.value;
+      sales.hidden = true;
+      if (partner === 'all') { list.innerHTML = rows(data.funnel); return; }
+      list.textContent = 'Загружаем…';
+      try {
+        const report = await rpc('nz_source_funnel',{p_token:store.session.token,p_days:30,p_partner:partner});
+        if (version !== request) return;
+        list.innerHTML = rows(report.funnel);
+        sales.textContent = 'По последнему источнику перед оплатой за период · покупателей: ' + report.sales.buyers + ' · выручка: ' + Number(report.sales.revenue).toLocaleString('ru-RU') + ' ₽';
+        sales.hidden = false;
+      } catch { if (version === request) list.textContent = 'Не удалось загрузить воронку источника.'; }
+    };
     try {
       const personal = await rpc('nz_personalization', { p_token: store.session.token, p_action: 'report', p_data: {} });
       if (host.isConnected) renderPersonalReport(host, personal);

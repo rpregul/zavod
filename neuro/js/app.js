@@ -1,5 +1,5 @@
 import { mountPractice } from './practice.js?v=games2';
-import { openFunnel } from './traffic.js?v=geo1';
+import { openFunnel } from './traffic.js?v=partner1';
 import { runColors } from './colors.js?v=games2';
 import { runPercent } from './percent.js?v=3';
 import { pairsFrame, runPairs } from './pairs.js?v=games2';

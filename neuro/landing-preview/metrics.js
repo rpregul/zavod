@@ -69,6 +69,22 @@ function start() {
       if (!res.ok) throw Error('events_unavailable');
     } catch { queue = batch.concat(queue).slice(-150); }
   }
+  if (/^\/neuro(?:\/index\.html|\/)?$/.test(location.pathname)) {
+    const url = new URL(location.href);
+    const second = url.searchParams.get('entry') === 'm';
+    if (second) {
+      url.searchParams.delete('entry');
+      history.replaceState(history.state, '', url);
+    }
+    const external = document.referrer && new URL(document.referrer).origin !== location.origin;
+    const previous = localStorage.getItem('nz.lastPartner');
+    // A bookmark or reload keeps the last known referral.
+    if (second || external || !previous) {
+      const partner = second ? 'm' : 'evgenia';
+      localStorage.setItem('nz.lastPartner', partner);
+      emit('session', 'partner_' + partner);
+    }
+  }
   emit('screen','landing_open');
   emit('session','landing_start',0, innerWidth < 768 ? 1 : 2);
   void flush();
