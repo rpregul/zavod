@@ -11,11 +11,12 @@ function art(id){return '<i class="art" role="img" aria-label="'+names[id]+'" st
 function focusTitle(){$('title').focus({preventScroll:true});window.scrollTo(0,0);}
 function showExample(){
  phase='example';selection=null;
- pairs=[{items:[0,7],hidden:1,answer:null}];choices=[4,7];
+ pairs=[{items:[0,7],hidden:1,answer:null}];choices=shuffle([4,7,8]);
+ $('tip').hidden=false;
  $('welcome').hidden=true;$('game').hidden=false;$('bank').hidden=true;
  $('counter').textContent='Без таймера';$('title').textContent='Попробуйте одну пару';
  $('hint').textContent='Запомните, что рядом с лисой.';
- $('rows').innerHTML='<div class="row">'+art(0)+'<span class="link"></span>'+art(7)+'</div>';
+ $('rows').innerHTML='<div class="row">'+art(0)+''+art(7)+'</div>';
  $('next').textContent='Я запомнил';focusTitle();
 }
 function startRound(){
@@ -24,7 +25,7 @@ function startRound(){
  choices=shuffle([...pairs.map(p=>p.items[p.hidden]),...deck.slice(6,13)]);
  document.querySelector('.fireworks')?.remove();phase='study';selection=null;$('welcome').hidden=true;$('game').hidden=false;$('bank').hidden=true;
  $('title').textContent='Запомните пары';$('hint').textContent='Свяжите два рисунка в каждой строке.';
- $('rows').innerHTML=pairs.map(p=>'<div class="row">'+art(p.items[0])+'<span class="link"></span>'+art(p.items[1])+'</div>').join('');
+ $('rows').innerHTML=pairs.map(p=>'<div class="row">'+art(p.items[0])+''+art(p.items[1])+'</div>').join('');
  $('next').textContent='Я запомнил';$('next').disabled=false;focusTitle();deadline=Date.now()+20000;
  clearInterval(clock);clock=setInterval(tick,100);tick();
 }
@@ -34,6 +35,7 @@ function tick(){
  if(!t) recall();
 }
 function recall(){
+ $('tip').hidden=true;
  const example=phase==='example';clearInterval(clock);phase=example?'try':'recall';
  const previous=pairs;pairs=shuffle(pairs);
  if(pairs.every((p,i)=>p===previous[i]))pairs.push(pairs.shift());
@@ -41,7 +43,7 @@ function recall(){
  if(example){$('title').textContent='Что было рядом с лисой?';$('hint').textContent='Перетащите слово или нажмите на слово и пропуск.';}
  $('rows').innerHTML=pairs.map((p,i)=>{
  const slot='<button class="slot" data-slot="'+i+'" aria-label="Пара для картинки '+names[p.items[1-p.hidden]]+'">＋</button>';
- return '<div class="row">'+(p.hidden===0?slot:art(p.items[0]))+'<span class="link"></span>'+(p.hidden===1?slot:art(p.items[1]))+'</div>';
+ return '<div class="row">'+(p.hidden===0?slot:art(p.items[0]))+''+(p.hidden===1?slot:art(p.items[1]))+'</div>';
  }).join('');
  $('bank').innerHTML=choices.map(id=>'<button class="word" aria-pressed="false" data-word="'+id+'">'+names[id]+'</button>').join('');
  $('bank').hidden=false;$('next').textContent='Проверить';refresh();$('next').hidden=example;focusTitle();
@@ -63,7 +65,7 @@ function assign(i,word){
  }
  pairs[i].answer=word;selection=null;refresh();$('status').textContent=names[word]+' — в паре с картинкой '+names[pairs[i].items[1-pairs[i].hidden]]+'.';
  if(phase==='try'){
-  phase='ready';$('title').textContent='Верно!';$('hint').textContent='Теперь попробуйте три пары.';
+  phase='ready';$('title').textContent='Верно!';$('hint').textContent='';
   $('bank').hidden=true;$('next').hidden=false;$('next').textContent='Начать упражнение';$('next').focus();
  }
 }
@@ -93,7 +95,7 @@ function finish(){
  $('title').textContent=['Попробуйте ещё раз','Хорошее начало!','Почти получилось!','Отличная память!'][score];$('counter').textContent=score+' / '+pairs.length;$('hint').textContent='Правильных ответов — '+score+' из '+pairs.length+'.';
  $('rows').innerHTML=pairs.map(p=>{
  const answer=p.items[p.hidden],right=p.answer===answer;
- return '<div class="row">'+art(p.items[1-p.hidden])+'<span class="link"></span><span class="'+(right?'correct':'wrong')+'">'+(right?'✓ ':'✕ ')+names[p.answer]+(right?'':'<small>Верно: '+names[answer]+'</small>')+'</span></div>';
+ return '<div class="row">'+art(p.items[1-p.hidden])+'<span class="'+(right?'correct':'wrong')+'">'+(right?'✓ ':'✕ ')+names[p.answer]+(right?'':'<small>Верно: '+names[answer]+'</small>')+'</span></div>';
  }).join('');
  $('next').textContent='Сыграть ещё раз';focusTitle();if(score===pairs.length)celebrate();
 }
