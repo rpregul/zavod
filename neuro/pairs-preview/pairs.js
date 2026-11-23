@@ -9,6 +9,15 @@ function shuffle(items){
 }
 function art(id){return '<i class="art" role="img" aria-label="'+names[id]+'" style="--x:'+id%5*25+'%;--y:'+Math.floor(id/5)*100/3+'%"></i>';}
 function focusTitle(){$('title').focus({preventScroll:true});window.scrollTo(0,0);}
+function showExample(){
+ phase='example';selection=null;
+ pairs=[{items:[0,7],hidden:1,answer:null}];choices=[4,7];
+ $('welcome').hidden=true;$('game').hidden=false;$('bank').hidden=true;
+ $('counter').textContent='Без таймера';$('title').textContent='Попробуйте одну пару';
+ $('hint').textContent='Запомните, что рядом с лисой.';
+ $('rows').innerHTML='<div class="row">'+art(0)+'<span class="link"></span>'+art(7)+'</div>';
+ $('next').textContent='Я запомнил';focusTitle();
+}
 function startRound(){
  const deck=shuffle(names.map((_,i)=>i));
  pairs=Array.from({length:3},(_,i)=>({items:deck.slice(i*2,i*2+2),hidden:Math.floor(Math.random()*2),answer:null}));
@@ -25,26 +34,38 @@ function tick(){
  if(!t) recall();
 }
 function recall(){
- clearInterval(clock);phase='recall';
+ const example=phase==='example';clearInterval(clock);phase=example?'try':'recall';
  const previous=pairs;pairs=shuffle(pairs);
  if(pairs.every((p,i)=>p===previous[i]))pairs.push(pairs.shift());
  $('title').textContent='Восстановите пары';$('hint').textContent='Перетащите слово в пропуск или коснитесь слова, а затем ячейки.';
+ if(example){$('title').textContent='Что было рядом с лисой?';$('hint').textContent='Перетащите слово или нажмите на слово и пропуск.';}
  $('rows').innerHTML=pairs.map((p,i)=>{
  const slot='<button class="slot" data-slot="'+i+'" aria-label="Пара для картинки '+names[p.items[1-p.hidden]]+'">＋</button>';
  return '<div class="row">'+(p.hidden===0?slot:art(p.items[0]))+'<span class="link"></span>'+(p.hidden===1?slot:art(p.items[1]))+'</div>';
  }).join('');
  $('bank').innerHTML=choices.map(id=>'<button class="word" aria-pressed="false" data-word="'+id+'">'+names[id]+'</button>').join('');
- $('bank').hidden=false;$('next').textContent='Проверить';refresh();focusTitle();
+ $('bank').hidden=false;$('next').textContent='Проверить';refresh();$('next').hidden=example;focusTitle();
 }
 function refresh(){
  document.querySelectorAll('[data-slot]').forEach((el,i)=>{
  const p=pairs[i];el.textContent=names[p.answer]||'＋';el.setAttribute('aria-label',names[p.items[1-p.hidden]]+' — '+(names[p.answer]||'пустая ячейка'));
  });
- document.querySelectorAll('[data-word]').forEach(el=>el.setAttribute('aria-pressed',String(+el.dataset.word===selection)));
+ document.querySelectorAll('[data-word]').forEach(el=>{
+  const word=Number(el.dataset.word);
+  el.hidden=pairs.some(p=>p.answer===word);
+  el.setAttribute('aria-pressed',String(word===selection));
+ });
  const count=pairs.filter(p=>p.answer!==null).length;$('counter').textContent=count+' / '+pairs.length;$('next').disabled=count!==pairs.length;
 }
 function assign(i,word){
+ if(phase==='try' && word!==pairs[i].items[pairs[i].hidden]){
+  selection=null;refresh();$('hint').textContent='Рядом с лисой был зонт. Попробуйте ещё раз.';return;
+ }
  pairs[i].answer=word;selection=null;refresh();$('status').textContent=names[word]+' — в паре с картинкой '+names[pairs[i].items[1-pairs[i].hidden]]+'.';
+ if(phase==='try'){
+  phase='ready';$('title').textContent='Верно!';$('hint').textContent='Теперь попробуйте три пары.';
+  $('bank').hidden=true;$('next').hidden=false;$('next').textContent='Начать упражнение';$('next').focus();
+ }
 }
 function celebrate(){
  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
@@ -78,10 +99,13 @@ function finish(){
 }
 $('start').onclick=async()=>{
  $('start').disabled=true;const img=new Image();img.src='art-c47f7c.webp';
- try{await img.decode();startRound();}catch{$('error').textContent='Картинки не загрузились. Попробуйте ещё раз.';}finally{$('start').disabled=false;}
+ try{await img.decode();showExample();}catch{$('error').textContent='Картинки не загрузились. Попробуйте ещё раз.';}finally{$('start').disabled=false;}
 };
-$('next').onclick=()=>{if(phase==='study')recall();else if(phase==='recall')finish();else startRound();};
-$('rows').onclick=e=>{const slot=e.target.closest('[data-slot]');if(slot&&selection!==null)assign(+slot.dataset.slot,selection);};
+$('next').onclick=()=>{if(phase==='study'||phase==='example')recall();else if(phase==='recall')finish();else startRound();};
+$('rows').onclick=e=>{const slot=e.target.closest('[data-slot]');if(!slot||!['recall','try'].includes(phase))return;
+ const i=Number(slot.dataset.slot);
+ if(selection!==null)assign(i,selection);
+ else if(pairs[i].answer!==null){pairs[i].answer=null;refresh();$('status').textContent='Слово возвращено в список.';}};
 const bank=$('bank');let suppressClick=false;
 bank.onclick=e=>{const word=e.target.closest('[data-word]');if(!word||suppressClick)return;selection=selection===+word.dataset.word?null:+word.dataset.word;refresh();};
 function targetSlot(x,y){return document.elementFromPoint(x,y)?.closest('[data-slot]');}
@@ -114,3 +138,4 @@ function endDrag(e){
  const dest=targetSlot(e.clientX,e.clientY);if(dest&&e.type==='pointerup')assign(+dest.dataset.slot,+word.dataset.word);}
 }
 bank.onpointerup=endDrag;bank.onpointercancel=endDrag;bank.onlostpointercapture=endDrag;
+

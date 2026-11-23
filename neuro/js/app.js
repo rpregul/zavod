@@ -1,3 +1,4 @@
+import { mountPractice } from './practice.js?v=1';
 import { openFunnel } from './traffic.js?v=geo1';
 import { runColors } from './colors.js?v=1.15.0';
 import { runPercent } from './percent.js?v=3';
@@ -662,13 +663,14 @@ function introScreen(id, { guided, idx, trial, sessionOrder = ORDER }) {
       <div class="intro__hero">
         <div class="intro__icon">${gi(e.icon, e.color, 'xxl')}</div>
         <h2>${e.title}</h2>
-        <p class="intro__lead">${e.lead}</p>
       </div>
-      <ol class="rules glass">${e.rules.map((r, i) => `<li style="--i:${i}"><b>${i + 1}</b><span>${r}</span></li>`).join('')}</ol>
-      <div class="intro__benefit"><p><b>Что тренирует.</b> ${esc(e.skill)}</p><p><b>В жизни.</b> ${esc(e.everyday)}</p></div>
-      <div class="intro__time">${glyph.clock}<span>${trial?.order_version === 5 ? (id === 'mem' ? '15 секунд на запоминание + 15 секунд на запись' : '30 секунд') : id === 'mem' ? '1 минута запоминаем + 1 минута пишем' : (id === 'percent' || id === 'market') && trial ? '30 секунд' : '1 минута'}</span></div>
-      <button class="btn btn--primary btn--lg btn--block btn--shine" data-r="go">${glyph.play}<span>Поехали</span></button>`;
+      <section class="practice glass">
+        <small>Проба без таймера</small><h3 data-prompt></h3>
+        <div data-example></div><p role="status"></p>
+        <button type="button" data-skip>Сразу к упражнению</button>
+      </section>`;
     mount(node, 'intro');
+    mountPractice(node, id, () => resolve('start'));
     node.addEventListener('click', (ev) => {
       const b = ev.target.closest('[data-r]');
       if (!b) return;
@@ -927,6 +929,7 @@ function boot() {
 }
 
 boot();
+
 
 
 
