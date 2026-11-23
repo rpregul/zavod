@@ -1,5 +1,5 @@
 import { makeHud } from './ui.js?v=1.5.0';
-import { haptic, sfx } from './fx.js?v=1.5.0';
+import { haptic, sfx } from './fx.js?v=games2';
 
 const LIMIT = 400;
 const FEEDBACK_MS = 750;
@@ -25,7 +25,7 @@ export function marketPoints(guess, total, tolerance = levels[0].tolerance) {
   return Math.max(0, 10 - Math.ceil(excess / tolerance));
 }
 
-export function runMarket(ctx, { step = '', trial = false } = {}) {
+export function runMarket(ctx, { step = '', trial = false, onStart } = {}) {
   return new Promise(resolve => {
     const duration = trial ? 30000 : 60000;
     const hud = makeHud(ctx, { label: 'Баллы', step });
@@ -61,17 +61,21 @@ export function runMarket(ctx, { step = '', trial = false } = {}) {
     const submit = stage.querySelector('.market-submit');
     const pause = stage.querySelector('.market-pause');
     const resume = pause.querySelector('button');
-    let level = 0;
+    let level = 0, correct = 0, practice = true, lastTick = 0, lastNotch = null;
+    hud.node.querySelector('.timer').hidden=true;
     let problem, score = 0, attempts = 0, totalError = 0, elapsed = 0;
     let since = performance.now(), frame, delay, animation;
     let locked = false, paused = false, finished = false;
-    const used = () => elapsed + (paused ? 0 : performance.now() - since);
+    const used = () => practice ? 0 : elapsed + (paused ? 0 : performance.now() - since);
 
     function formatPrice(cents) {
       return cents % 100 === 0 ? (cents / 100) + ' ₽' : money.format(cents / 100);
     }
 
     function updateGuess() {
+      const notch=Math.floor(Number(slider.value)/10), now=performance.now();
+      if(lastNotch!==null && notch!==lastNotch && now-lastTick>65){sfx('ruler');lastTick=now;}
+      lastNotch=notch;
       stage.style.setProperty('--pick', (100 - Number(slider.value) / 4) + '%');
       guess.textContent = slider.value + ' ₽';
       slider.setAttribute('aria-valuetext', guess.textContent);
@@ -83,9 +87,12 @@ export function runMarket(ctx, { step = '', trial = false } = {}) {
       level = Math.min(2, Math.floor(used() / duration * 3));
       stage.querySelector('[data-level]').textContent = 'Уровень ' + (level + 1) + ' / 3';
       stage.style.setProperty('--band', (200 * levels[level].tolerance / LIMIT) + '%');
-      problem = marketProblem(problem, Math.random, level);
+      problem = practice ? {first:2000,second:3000,total:5000} : marketProblem(problem, Math.random, level);
       first.textContent = formatPrice(problem.first);
-      second.textContent = formatPrice(problem.second);
+      stage.classList.toggle('market-practice', practice);
+      stage.querySelector('h2').textContent=practice?'Поймайте примерный диапазон':'Прикиньте сумму';
+      stage.querySelector('[data-level]').textContent=practice?'Попробуйте':'Уровень '+(level+1)+' / 3';
+      second.textContent = '+ ' + formatPrice(problem.second);
       feedback.textContent = '';
       exact.hidden = true;
       slider.disabled = false;
@@ -104,6 +111,12 @@ export function runMarket(ctx, { step = '', trial = false } = {}) {
       locked = true;
       const value = Number(slider.value);
       const points = marketPoints(value, problem.total, levels[level].tolerance);
+      if(practice){
+        if(points!==10){feedback.textContent='Передвиньте отметку в зелёную область';locked=false;return;}
+        practice=false;since=performance.now();hud.node.querySelector('.timer').hidden=false;
+        sfx('ok');onStart?.();next();tick();return;
+      }
+      if(points===10)correct++;
       attempts++;
       totalError += Math.abs(value * 100 - problem.total);
       score += points;
@@ -133,10 +146,10 @@ export function runMarket(ctx, { step = '', trial = false } = {}) {
       const averageError = attempts ? Math.round(totalError / attempts) / 100 : null;
       resolve(aborted ? null : {
         score,
-        meta: { attempts, average_error: averageError, duration_ms: duration, level: level + 1 },
+        meta: { attempts, correct, average_error: averageError, duration_ms: duration, level: level + 1 },
         extra: [
           { label: 'Оценок', value: attempts },
-          { label: 'Средняя погрешность', value: averageError === null ? '—' : money.format(averageError) },
+          { label: 'Верных ответов', value: correct },
         ],
       });
     }
@@ -144,6 +157,7 @@ export function runMarket(ctx, { step = '', trial = false } = {}) {
     function tick() {
       const ms = Math.min(duration, used());
       hud.setTime(duration - ms, ms / duration);
+      if(practice)return;
       if (ms >= duration) return finish();
       frame = requestAnimationFrame(tick);
     }

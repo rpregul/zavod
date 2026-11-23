@@ -14,7 +14,7 @@ function showExample(){
  pairs=[{items:[0,7],hidden:1,answer:null}];choices=shuffle([4,7,8]);
  $('tip').hidden=false;
  $('welcome').hidden=true;$('game').hidden=false;$('bank').hidden=true;
- $('counter').textContent='Без таймера';$('title').textContent='Попробуйте одну пару';
+ $('counter').hidden=true;$('title').textContent='Попробуйте одну пару';
  $('hint').textContent='Запомните, что рядом с лисой.';
  $('rows').innerHTML='<div class="row">'+art(0)+''+art(7)+'</div>';
  $('next').textContent='Я запомнил';focusTitle();
@@ -22,6 +22,7 @@ function showExample(){
 const mode = window.parent === window ? null : new URLSearchParams(location.search).get('mode');
 const full = mode === 'full';
 function startRound(){
+ $('counter').hidden=false;
  const deck=shuffle(names.map((_,i)=>i));
  pairs=Array.from({length:full ? 5 : 3},(_,i)=>({items:deck.slice(i*2,i*2+2),hidden:Math.floor(Math.random()*2),answer:null}));
  choices=shuffle([...pairs.map(p=>p.items[p.hidden]),...deck.slice(pairs.length*2,pairs.length*2+10-pairs.length)]);
@@ -39,6 +40,7 @@ function tick(){
 function recall(){
  $('tip').hidden=true;
  const example=phase==='example';clearInterval(clock);phase=example?'try':'recall';
+ $('counter').hidden=example;
  const previous=pairs;pairs=shuffle(pairs);
  if(pairs.every((p,i)=>p===previous[i]))pairs.push(pairs.shift());
  $('title').textContent='Восстановите пары';$('hint').textContent='Перетащите слово в пропуск или коснитесь слова, а затем ячейки.';
@@ -100,7 +102,7 @@ function finish(){
  return '<div class="row">'+art(p.items[1-p.hidden])+'<span class="'+(right?'correct':'wrong')+'">'+(right?'✓ ':'✕ ')+names[p.answer]+(right?'':'<small>Верно: '+names[answer]+'</small>')+'</span></div>';
  }).join('');
  if(mode==='trial'||full){
-  window.frameElement.dispatchEvent(new CustomEvent('pairs-result',{detail:{score,total:pairs.length,answers:pairs.map(p=>({given:names[p.answer],correct:names[p.items[p.hidden]]}))}}));
+  window.frameElement.dispatchEvent(new CustomEvent('pairs-result',{detail:{score,total:pairs.length,answers:pairs.map(p=>({picture:p.items[1-p.hidden],given:names[p.answer],correct:names[p.items[p.hidden]]}))}}));
   return;
  }
  $('next').textContent='Сыграть ещё раз';focusTitle();if(score===pairs.length)celebrate();
@@ -116,11 +118,19 @@ $('rows').onclick=e=>{const slot=e.target.closest('[data-slot]');if(!slot||!['re
  else if(pairs[i].answer!==null){pairs[i].answer=null;refresh();$('status').textContent='Слово возвращено в список.';}};
 const bank=$('bank');let suppressClick=false;
 bank.onclick=e=>{const word=e.target.closest('[data-word]');if(!word||suppressClick)return;selection=selection===+word.dataset.word?null:+word.dataset.word;refresh();};
-function targetSlot(x,y){return document.elementFromPoint(x,y)?.closest('[data-slot]');}
+function targetSlot(ghost){
+ const box=ghost.getBoundingClientRect();let best=null,largest=0;
+ for(const slot of document.querySelectorAll('[data-slot]')){
+  const r=slot.getBoundingClientRect();
+  const area=Math.max(0,Math.min(box.right,r.right)-Math.max(box.left,r.left))*Math.max(0,Math.min(box.bottom,r.bottom)-Math.max(box.top,r.top));
+  if(area>largest){largest=area;best=slot;}
+ }
+ return best;
+}
 function position(){
  if(!drag?.ghost)return;
  const {x,y,ghost}=drag;ghost.style.left=x+'px';ghost.style.top=y+'px';
- const slot=targetSlot(x,y);if(slot!==drag.slot){drag.slot?.classList.remove('over');slot?.classList.add('over');drag.slot=slot;}
+ const slot=targetSlot(ghost);if(slot!==drag.slot){drag.slot?.classList.remove('over');slot?.classList.add('over');drag.slot=slot;}
 }
 function autoScroll(){
  if(!drag?.ghost)return;
@@ -141,14 +151,16 @@ bank.onpointermove=e=>{
 };
 function endDrag(e){
  if(drag?.id!==e.pointerId)return;
+ if(drag.ghost && e.type==='pointerup'){drag.x=e.clientX;drag.y=e.clientY;position();}
  const {word,ghost,frame,slot}=drag;drag=null;cancelAnimationFrame(frame);slot?.classList.remove('over');
  if(ghost){ghost.remove();suppressClick=true;setTimeout(()=>suppressClick=false,0);
- const dest=targetSlot(e.clientX,e.clientY);if(dest&&e.type==='pointerup')assign(+dest.dataset.slot,+word.dataset.word);}
+ const dest=slot;if(dest&&e.type==='pointerup')assign(+dest.dataset.slot,+word.dataset.word);}
 }
 bank.onpointerup=endDrag;bank.onpointercancel=endDrag;bank.onlostpointercapture=endDrag;
 
 
 if(['trial','full','practice'].includes(mode)){
+ document.body.classList.add('embedded');
  document.querySelector('header').hidden=true;
  $('start').click();
 }

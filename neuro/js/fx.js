@@ -27,7 +27,8 @@ export function sfx(kind) {
   try {
     actx = actx || new (window.AudioContext || window.webkitAudioContext)();
     if (actx.state === 'suspended') actx.resume();
-    if (kind === 'tap') tone(660, 0, 0.07, 'sine', 0.05);
+    if (kind === 'ruler') tone(390,0,.039,'sine',.021);
+    else if (kind === 'tap') tone(660, 0, 0.07, 'sine', 0.05);
     else if (kind === 'ok') { tone(740, 0, 0.09); tone(988, 0.07, 0.12); }
     else if (kind === 'bad') tone(170, 0, 0.18, 'triangle', 0.07);
     else if (kind === 'tick') tone(880, 0, 0.05, 'square', 0.025);

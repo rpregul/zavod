@@ -66,7 +66,7 @@ function makeCard(cardIdx) {
   return c;
 }
 
-export function runDobble(ctx, { step = '', shortTrial = false } = {}) {
+export function runDobble(ctx, { step = '', shortTrial = false, onStart } = {}) {
   const phaseMs = shortTrial ? 30000 : DOBBLE_MS;
   return new Promise((resolve) => {
     ensureSprite();
@@ -78,9 +78,9 @@ export function runDobble(ctx, { step = '', shortTrial = false } = {}) {
 
     const stage = el('div', 'stage dob pre');
     stage.innerHTML = `
-      <div class="dob__slot dob__slot--center"><span class="dob__tag">общая карта</span><div class="dob__holder"></div></div>
-      <div class="dob__slot dob__slot--mine"><span class="dob__tag">ваша карта</span><div class="dob__holder"></div></div>
-      <div class="dob__help">Найдите одинаковый рисунок на двух картах и нажмите на него</div>`;
+      <div class="dob__slot dob__slot--center"><div class="dob__holder"></div></div>
+      <div class="dob__slot dob__slot--mine"><div class="dob__holder"></div></div>
+      <aside class="match-tip"><span aria-hidden="true">✦</span> Найдите и нажмите на повторяющийся элемент</aside>`;
     root.appendChild(stage);
     const centerHolder = stage.querySelector('.dob__slot--center .dob__holder');
     const mineHolder = stage.querySelector('.dob__slot--mine .dob__holder');
@@ -158,7 +158,23 @@ export function runDobble(ctx, { step = '', shortTrial = false } = {}) {
 
     stage.addEventListener('pointerdown', (e) => {
       const g = e.target.closest('.sym');
-      if (!g || !playing || locked) return;
+      if (!g || locked || finished) return;
+      if (!playing) {
+        if(Number(g.dataset.s)!==commonSymbol(mine,center))return;
+        locked=true;sfx('done');haptic(14);
+        stage.querySelector('.match-tip').remove();
+        stage.querySelectorAll('.guide').forEach(n=>n.classList.remove('guide'));
+        const rect=g.getBoundingClientRect();sparkle(rect.x+rect.width/2,rect.y+rect.height/2,12);
+        setTimeout(()=>{
+          if(ctx.aborted)return;
+          mine=deck.pop();center=deck.pop();mineEl=makeCard(mine);centerEl=makeCard(center);
+          mineHolder.replaceChildren(mineEl);centerHolder.replaceChildren(centerEl);
+          playing=true;locked=false;lastAt=performance.now();onStart?.();
+          hud.node.querySelector('.timer').hidden=false;
+          timerRef=startTimer(ctx,phaseMs,{onTick:(left,frac)=>hud.setTime(left,frac),onEnd:finish});
+        },480);
+        return;
+      }
       e.preventDefault();
       const symIdx = Number(g.dataset.s);
       if (symIdx === commonSymbol(mine, center)) success(symIdx, g);
@@ -183,23 +199,16 @@ export function runDobble(ctx, { step = '', shortTrial = false } = {}) {
           meta: { errors, avg: Number(avg.toFixed(2)) },
           extra: [
             { label: 'Ошибок', value: errors },
-            { label: 'Сек. на пару', value: avg ? avg.toFixed(1) : '—' },
+            { label: 'Верных ответов', value: score },
           ],
         });
       }, 650);
     }
 
-    (async () => {
-      await countdown(ctx, root);
-      if (ctx.aborted) return;
-      stage.classList.remove('pre');
-      playing = true;
-      lastAt = performance.now();
-      timerRef = startTimer(ctx, phaseMs, {
-        onTick: (left, frac) => hud.setTime(left, frac),
-        onEnd: finish,
-      });
-    })();
+    stage.classList.remove('pre');
+    hud.node.querySelector('.timer').hidden=true;
+    stage.querySelectorAll('.sym[data-s="'+commonSymbol(mine,center)+'"]').forEach(n=>n.classList.add('guide'));
+
   });
 }
 

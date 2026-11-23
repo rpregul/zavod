@@ -31,3 +31,5 @@
 .market-pause[hidden],.market-exact[hidden]{display:none}
 @media(max-height:480px){.market-heading{top:10px;left:20%;right:auto}.market-heading h2{font-size:14px}.market-ruler{top:84px;bottom:36px}}
 @media(prefers-reduced-motion:reduce){.market-board{transition:none}}
+
+.market-practice .market-scale::after{content:"";position:absolute;inset:77.5% 0 2.5%;border-radius:12px;background:linear-gradient(0deg,#96e7b455,#80dfaea8,#96e7b455);pointer-events:none}.market-practice .market-heading h2{font-size:clamp(15px,4vw,24px)}

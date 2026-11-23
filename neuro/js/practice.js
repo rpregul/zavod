@@ -1,5 +1,6 @@
 // A single untimed action on the instruction screen, outside the scored round.
 export function mountPractice(host, id, start) {
+  if (id==='colors') {host.querySelector('[data-skip]').hidden=true;host.querySelector('small').hidden=true;}
   const prompt = host.querySelector('[data-prompt]');
   const field = host.querySelector('[data-example]');
   const feedback = host.querySelector('[role=status]');
@@ -13,7 +14,7 @@ export function mountPractice(host, id, start) {
       feedback.textContent = hint;
       return;
     }
-    show('Верно!', '<button class="btn btn--primary btn--lg" data-begin>Начать упражнение</button>');
+    show('Верно!', '<button class="btn btn--primary btn--lg btn--block btn--shine" data-begin>Начать упражнение</button>');
     const button = field.querySelector('[data-begin]');
     button.onclick = start;
     button.focus();

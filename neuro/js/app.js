@@ -1,9 +1,9 @@
-import { mountPractice } from './practice.js?v=1';
+import { mountPractice } from './practice.js?v=games2';
 import { openFunnel } from './traffic.js?v=geo1';
-import { runColors } from './colors.js?v=1.15.0';
+import { runColors } from './colors.js?v=games2';
 import { runPercent } from './percent.js?v=3';
-import { pairsFrame, runPairs } from './pairs.js?v=1';
-import { runMarket } from './market.js?v=3';
+import { pairsFrame, runPairs } from './pairs.js?v=games2';
+import { runMarket } from './market.js?v=games2';
 import { initReminders, openReminders } from './reminders.js?v=1.5.0';
 import { openRoutine, ownComparisonMarkup } from './routine.js?v=multi1';
 import { askQuestion, completePersonalSurvey, paintPersonal, selectedExercises, initPersonalization, flushPersonalization } from './personalization.js?v=multi1';
@@ -14,11 +14,11 @@ import { store, cloudOn } from './store.js?v=1.11.0';
 import * as S from './stats.js?v=1.6.0';
 import { el, esc, plural, dayStr, fmtLong, fmtShort, weekdayName, sleep, logicalDay } from './util.js?v=1.5.0';
 import { glyph, gi } from './icons.js?v=1.5.0';
-import { initFx, initRipple, confetti, haptic, sfx, countUp, toast } from './fx.js?v=1.5.0';
+import { initFx, initRipple, confetti, haptic, sfx, countUp, toast } from './fx.js?v=games2';
 import { lineChart, heatmap, ringSvg } from './charts.js?v=1.6.0';
 import { makeCtx, sheet, confirmSheet } from './ui.js?v=1.5.0';
 import { runSchulte } from './schulte.js?v=center1';
-import { runDobble } from './dobble.js?v=1.15.0';
+import { runDobble } from './dobble.js?v=games2';
 import { runMemory } from './memory.js?v=1.15.0';
 import { BILLING } from './config.js?v=1.5.0';
 import { openSubscription, initSaleCountdown, requireSubscription, offerMarkup, acceptFamilyInvite, finishPaymentReturn } from './subscription.js?v=coupon1';
@@ -675,11 +675,11 @@ function introScreen(id, { guided, idx, trial, sessionOrder = ORDER }) {
     mount(node, 'intro');
     if(id==='pairs'){
       const practice=node.querySelector('.practice');
-      const skip=practice.querySelector('[data-skip]');
+
       const frame=pairsFrame('practice');
       frame.addEventListener('pairs-ready',()=>resolve('start'),{once:true});
-      practice.replaceChildren(frame,skip);
-      skip.onclick=()=>resolve('start');
+      practice.className='pairs-intro';
+      practice.replaceChildren(frame);
     } else mountPractice(node, id, () => resolve('start'));
     node.addEventListener('click', (ev) => {
       const b = ev.target.closest('[data-r]');
@@ -698,7 +698,7 @@ function resultScreen(id, rec, res, { guided, idx, isLast, trial = false, sessio
     const record = prevBest !== null && rec.score > prevBest;
     const first = prev === null;
     let chip;
-    if (first) chip = '<span class="delta delta--first">Первая попытка: ваша точка отсчёта</span>';
+    if (first) chip = '';
     else if (record) chip = `<span class="delta delta--rec">🏆 Новый рекорд! ${sign(rec.score - prevBest)}</span>`;
     else {
       const d = rec.score - prev.score;
@@ -717,7 +717,7 @@ function resultScreen(id, rec, res, { guided, idx, isLast, trial = false, sessio
       </div>
       <div class="xstats">${(res.extra || []).map((x) => `<div class="xstat glass"><b>${x.value}</b><small>${x.label}</small></div>`).join('')}</div>
       ${res.detail ? `<div class="detail glass">${res.detail}</div>` : ''}
-      ${report ? `<div class="detail glass coaching-card"><h3>${esc(report.label)}</h3><p>${esc(report.text)}</p>${!trial ? `<p><b>Как тренироваться:</b> ${esc(report.tip)}</p><p><b>В повседневной жизни:</b> ${esc(report.everyday)}</p><p class="login__note">${esc(report.routine)}</p>` : '<p class="login__note">Подсказки по дальнейшим занятиям откроются с подпиской.</p>'}</div>` : ''}
+      ${report && !/точка отсч[её]та/i.test(report.label) && !['colors','dob','pairs'].includes(id) ? `<div class="detail glass coaching-card"><h3>${esc(report.label)}</h3><p>${esc(report.text)}</p>${!trial ? `<p><b>Как тренироваться:</b> ${esc(report.tip)}</p><p><b>В повседневной жизни:</b> ${esc(report.everyday)}</p><p class="login__note">${esc(report.routine)}</p>` : '<p class="login__note">Подсказки по дальнейшим занятиям откроются с подпиской.</p>'}</div>` : ''}
       <div class="result__actions">
         ${guided ? `<button class="btn btn--primary btn--lg btn--block btn--shine" data-r="next"><span>${next ? `Дальше: ${next.title}` : 'Завершить зарядку'}</span>${glyph.arrow}</button>` : ''}
         <div class="row2">
@@ -726,7 +726,8 @@ function resultScreen(id, rec, res, { guided, idx, isLast, trial = false, sessio
         </div>
       </div>`;
     mount(node, 'result');
-    countUp(node.querySelector('[data-count]'), rec.score, { dur: 900 });
+    if (['colors','dob','pairs'].includes(id)) node.querySelector('.score').remove();
+    else countUp(node.querySelector('[data-count]'), rec.score, { dur: 900 });
     setTimeout(() => {
       if (record || (id==='pairs' && rec.score===rec.meta.total)) { confetti({ count: 150 }); sfx('done'); haptic([20, 40, 20, 40, 30]); }
       else if (first || rec.score > 0) sfx('ok');
@@ -742,7 +743,7 @@ function resultScreen(id, rec, res, { guided, idx, isLast, trial = false, sessio
 async function playOne(id, { inspection = false, guided = false, idx = 0, trial = null, sessionOrder = ORDER } = {}) {
   for (;;) {
     trackExercise('intro', id);
-    const go = id === 'sch_f' ? 'start' : await introScreen(id, { guided, idx, trial, sessionOrder });
+    const go = ['sch_f','market','dob'].includes(id) ? 'start' : await introScreen(id, { guided, idx, trial, sessionOrder });
     if (go === 'back') return null;
     for (;;) {
       const root = el('div', 'play');
@@ -755,10 +756,10 @@ async function playOne(id, { inspection = false, guided = false, idx = 0, trial 
       await keepAwake(true);
       let exerciseStart = performance.now();
       const markStart = () => { exerciseStart = performance.now(); trackExercise('start', id); };
-      if (id !== 'sch_f') markStart();
-      const res = await EX[id].run(ctx, { ownerSkip: store.session?.key === 'рома', onStart: id === 'sch_f' ? markStart : undefined, trial: Boolean(trial), shortTrial: trial?.order_version >= 5, step: guided ? `${idx + 1} / ${sessionOrder.length}` : '' });
+      if (!['sch_f','market','dob'].includes(id)) markStart();
+      const res = await EX[id].run(ctx, { ownerSkip: true, onStart: markStart, trial: Boolean(trial), shortTrial: trial?.order_version >= 5, step: guided ? `${idx + 1} / ${sessionOrder.length}` : '' });
       await keepAwake(false);
-      if (res?.skipped) return { skipped: true };
+      if (res?.skipped) {trackAction('test_visit_skip');return { skipped: true };}
       trackExercise(res ? 'complete' : 'quit', id, performance.now() - exerciseStart);
       if (!res) return null;
       if (inspection) return { inspected: true };
