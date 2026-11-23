@@ -2,4 +2,9 @@
 
 .fireworks{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:8}.fireworks i{position:absolute;width:7px;height:7px;border-radius:50%;opacity:0}
 
-#tip{display:flex;align-items:flex-start;gap:10px;margin:0 0 16px;padding:13px 15px;background:#fff2dc;color:#584330;border-radius:16px}#tip p{margin:0;font-size:.94rem;line-height:1.45}#hint:empty{display:none}#hint:empty+#rows{margin-top:14px}
+.intro .subtitle{margin:8px auto 24px}
+#tip{display:grid;grid-template-columns:32px minmax(0,1fr);align-items:start;gap:10px;margin:0 0 16px;padding:15px;background:linear-gradient(120deg,#f3ebfc,#f8f5fc);border:1px solid #e6d9f2;border-radius:16px;color:#40304e}
+.tip-icon{display:grid;place-items:center;width:32px;height:32px;border-radius:11px;background:#e7d6f8;color:#6b4187;font-size:23px;line-height:1}
+#tip strong{display:block;font-size:1rem;line-height:1.3}
+#tip p{margin:7px 0 0;padding-left:10px;border-left:2px solid #cdb3e2;color:#62516f;font-size:.94rem;line-height:1.4}
+#hint:empty{display:none}#hint:empty+#rows{margin-top:14px}
