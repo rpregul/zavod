@@ -7,7 +7,7 @@
       location.replace('training.html' + location.search + location.hash);
     }
   })();
-</script><link rel="preload" as="image" type="image/webp" fetchpriority="high" media="(min-resolution:1.5dppx)" href="landing-preview/amethyst-hd.webp"><link rel="preload" as="image" type="image/webp" fetchpriority="high" media="(max-width:680px) and (resolution < 1.5dppx)" href="landing-preview/amethyst-mobile.webp"><link rel="preload" as="image" type="image/webp" fetchpriority="high" media="(min-width:681px) and (resolution < 1.5dppx)" href="landing-preview/amethyst-wide.webp"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><link rel="stylesheet" href="landing-preview/landing.css?v=17"><link rel="stylesheet" href="landing-preview/reading-demo.css?v=2"><script defer src="landing-preview/reading-demo.js?v=19"></script><script defer src="landing-preview/landing.js?v=19"></script><script type="module" src="landing-preview/metrics.js?v=partner1"></script><style>
+</script><link rel="preload" as="image" type="image/webp" fetchpriority="high" media="(min-resolution:1.5dppx)" href="landing-preview/amethyst-hd.webp"><link rel="preload" as="image" type="image/webp" fetchpriority="high" media="(max-width:680px) and (resolution < 1.5dppx)" href="landing-preview/amethyst-mobile.webp"><link rel="preload" as="image" type="image/webp" fetchpriority="high" media="(min-width:681px) and (resolution < 1.5dppx)" href="landing-preview/amethyst-wide.webp"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><link rel="stylesheet" href="landing-preview/landing.css?v=17"><link rel="stylesheet" href="landing-preview/reading-demo.css?v=2"><script defer src="landing-preview/reading-demo.js?v=19"></script><script defer src="landing-preview/landing.js?v=19"></script><script type="module" src="landing-preview/metrics.js?v=hero5"></script><style>
 /* Presentation and warm-up share the original tracked hero section. */
 .top { position: relative; z-index: 1; min-height: 76px; }
 .hero { display: block; width: 100%; margin: -76px 0 0; padding: 0 0 clamp(44px,6vw,80px); }
@@ -45,14 +45,43 @@
 @media (max-width:680px) and (min-resolution:1.5dppx) {
   .hero-copy { background-image: linear-gradient(90deg,rgba(255,217,197,.62),transparent 57%),url("landing-preview/amethyst-hd.webp"); }
 }
+@media(max-width:680px){
+.hero-copy h1 { max-width:83%;font-size:clamp(32px,8.8vw,52px); }
+.hero-copy .lead { max-width:min(64%,32ch); padding:8px 10px; margin-left:-10px; border-radius:12px; background:rgba(255,222,204,.84); }
+}
 </style></head>
 <body><header class="wrap top"><a class="brand" data-landing-control="land_brand" href="./">Нейро<span>тренажёр</span></a><nav class="top-actions" aria-label="Тренажёр и вход"><a class="top-login" href="training.html?login=1" data-landing-control="land_login">Войти</a></nav></header>
 <main>
 <section data-landing-section="land_section_hero" class="wrap hero">
 <div class="hero-copy">
 <h1>Зарядка для<br class="hero-break"> <em>вашего мозга</em></h1>
-<p class="lead">Упражнения на внимание, память и чтение. Выделите 5–7 минут в день и следите за своими результатами.</p>
-<div class="hero-action"><a class="cta" href="training.html?start=1" data-training-entry="hero">Начать тренировку <span aria-hidden="true">↗</span></a><p class="fine">Первое занятие бесплатно, без карты</p></div>
+<p class="lead">Пока заваривается кофе, успейте потренировать память и внимание. Пять коротких игр, пять минут — и вы увидите, что даётся легко и над чем стоит поработать.</p>
+<script>
+(() => {
+  const copy = [
+    ['Зарядка для', 'вашего мозга', 'Пока заваривается кофе, успейте потренировать память и внимание. Пять коротких игр, пять минут — и вы увидите, что даётся легко и над чем стоит поработать.'],
+    ['Дочитали абзац.', 'А о чём он был?', 'Приходится возвращаться глазами на пару строк выше? Попробуйте пять коротких игр на внимание и память. В конце получите свои результаты и план тренировок.'],
+    ['Три пары картинок. 20 секунд.', 'Сколько запомните?', 'Кажется, что все три? Проверьте себя в бесплатной нейрозарядке. Вас ждут пять коротких игр, а в финале — те самые пары и ваш результат.']
+  ];
+  let index = 0;
+  try {
+    let visitor = localStorage.getItem('nz.visitor');
+    if (!/^[0-9a-f-]{36}$/i.test(visitor || '')) {
+      visitor = crypto.randomUUID();
+      localStorage.setItem('nz.visitor', visitor);
+    }
+    index = parseInt(visitor.slice(0,8),16) % 3;
+  } catch { /* The baseline remains available without storage. */ }
+  const root = document.querySelector('.hero-copy');
+  const [title, accent, description] = copy[index];
+  const emphasis = document.createElement('em');
+  emphasis.textContent = accent;
+  root.querySelector('h1').replaceChildren(title + ' ', emphasis);
+  root.querySelector('.lead').textContent = description;
+  root.dataset.heroVariant = ['a','b','c'][index];
+})();
+</script>
+<div class="hero-action"><a class="cta" href="training.html?start=1" data-training-entry="hero">Начать тренировку <span aria-hidden="true">↗</span></a><p class="fine">Бесплатно · около 5 минут · без карты</p></div>
 </div>
 <div class="hero-demo">
 <div class="demo-orbit" aria-hidden="true"></div>

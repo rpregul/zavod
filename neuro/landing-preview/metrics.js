@@ -85,6 +85,17 @@ function start() {
       emit('session', 'partner_' + partner);
     }
   }
+  const variant = document.querySelector('.hero-copy')?.dataset.heroVariant;
+  if (['a','b','c'].includes(variant)) {
+    const exposure = () => {
+      if (document.visibilityState !== 'visible') return;
+      document.removeEventListener('visibilitychange', exposure);
+      once('impression', 'land_hero5_' + variant);
+      void flush();
+    };
+    if (document.visibilityState === 'visible') once('impression', 'land_hero5_' + variant);
+    else document.addEventListener('visibilitychange', exposure);
+  }
   emit('screen','landing_open');
   emit('session','landing_start',0, innerWidth < 768 ? 1 : 2);
   void flush();
