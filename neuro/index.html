@@ -7,7 +7,7 @@
       location.replace('training.html' + location.search + location.hash);
     }
   })();
-</script><link rel="preload" as="image" type="image/webp" fetchpriority="high" media="(max-width:680px)" href="landing-preview/amethyst-mobile.webp"><link rel="preload" as="image" type="image/webp" fetchpriority="high" media="(min-width:681px)" href="landing-preview/amethyst-wide.webp"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><link rel="stylesheet" href="landing-preview/landing.css?v=17"><link rel="stylesheet" href="landing-preview/reading-demo.css?v=2"><script defer src="landing-preview/reading-demo.js?v=19"></script><script defer src="landing-preview/landing.js?v=19"></script><script type="module" src="landing-preview/metrics.js?v=partner1"></script><style>
+</script><link rel="preload" as="image" type="image/webp" fetchpriority="high" media="(min-resolution:1.5dppx)" href="landing-preview/amethyst-hd.webp"><link rel="preload" as="image" type="image/webp" fetchpriority="high" media="(max-width:680px) and (resolution < 1.5dppx)" href="landing-preview/amethyst-mobile.webp"><link rel="preload" as="image" type="image/webp" fetchpriority="high" media="(min-width:681px) and (resolution < 1.5dppx)" href="landing-preview/amethyst-wide.webp"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><link rel="stylesheet" href="landing-preview/landing.css?v=17"><link rel="stylesheet" href="landing-preview/reading-demo.css?v=2"><script defer src="landing-preview/reading-demo.js?v=19"></script><script defer src="landing-preview/landing.js?v=19"></script><script type="module" src="landing-preview/metrics.js?v=partner1"></script><style>
 /* Presentation and warm-up share the original tracked hero section. */
 .top { position: relative; z-index: 1; min-height: 76px; }
 .hero { display: block; width: 100%; margin: -76px 0 0; padding: 0 0 clamp(44px,6vw,80px); }
@@ -38,6 +38,12 @@
   .hero-action { margin-top: auto; }
   .hero-action .fine { color:#49354b; }
   .hero-demo { margin-top: 12px; }
+}
+@media (min-resolution:1.5dppx) {
+  .hero-copy { background-image: linear-gradient(90deg,#ffd7c0 15%,rgba(255,215,192,0) 62%),url("landing-preview/amethyst-hd.webp"); }
+}
+@media (max-width:680px) and (min-resolution:1.5dppx) {
+  .hero-copy { background-image: linear-gradient(90deg,rgba(255,217,197,.62),transparent 57%),url("landing-preview/amethyst-hd.webp"); }
 }
 </style></head>
 <body><header class="wrap top"><a class="brand" data-landing-control="land_brand" href="./">Нейро<span>тренажёр</span></a><nav class="top-actions" aria-label="Тренажёр и вход"><a class="top-login" href="training.html?login=1" data-landing-control="land_login">Войти</a></nav></header>
